@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/detailsPages/accountpages/login.dart';
-// import 'pages/main_dashboard.dart'; // Main
+// import 'pages/detailsPages/accountpages/login.dart';
+import 'pages/main_dashboard.dart'; // Main
 
 void main() {
   runApp(const MyApp());
@@ -13,8 +13,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: const MainDashboard(),
-      home: const LoginPage(),
+      home: const MainDashboard(),
+      // home: const LoginPage(),
     );
   }
 }
