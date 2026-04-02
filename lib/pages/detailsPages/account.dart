@@ -3,11 +3,13 @@ import 'package:nyxproject/pages/detailsPages/accountpages/aboutus.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/contactus.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/editprofile.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/help.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myorder.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/mywishlist.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
+import 'package:path/path.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -22,7 +24,7 @@ class AccountPage extends StatelessWidget {
               children: [
                 _header(),
                 SizedBox(height: 5),
-                _accountTab(),
+                _accountTab(context),
                 Divider(),
                 _section("Account"),
                 _menuItem(
@@ -174,7 +176,7 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _accountTab(){
+  Widget _accountTab(BuildContext context){
     return Container(
       height: 110,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -182,6 +184,37 @@ class AccountPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 13, 27, 42),
         borderRadius: BorderRadius.circular(10)
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Text("Login to your account.",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
+          ),
+          SizedBox(height: 10,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                }, 
+                child: Text("Login",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
+              ),
+              Text("or",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: (){}, 
+                child: Text("Sign Up",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
