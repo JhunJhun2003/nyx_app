@@ -9,7 +9,6 @@ import 'package:nyxproject/pages/detailsPages/accountpages/myorder.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/mywishlist.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
-import 'package:path/path.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
