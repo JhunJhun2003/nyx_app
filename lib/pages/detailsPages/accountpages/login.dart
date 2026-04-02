@@ -41,6 +41,8 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               _header(),
               SizedBox(height: 10),
+              _MainIcon(),
+              Divider(),
               _inputform(),
               _forget(),
               _login(),
@@ -48,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
               _continuewith("--- or Continue With ---"),
               SizedBox(height: 15),
               _choice(),
-
+              Divider()
             ],
           ),
         ),
@@ -175,7 +177,8 @@ class _LoginPageState extends State<LoginPage> {
           "Forget passeowrd?",
           style: TextStyle(
             fontFamily: "Custom",
-            fontSize: 15
+            fontSize: 15,
+            color: Colors.black,
           ),
         )
       ),
@@ -186,13 +189,17 @@ class _LoginPageState extends State<LoginPage> {
     return Center(
       // padding: EdgeInsets.symmetric(horizontal: 10),
       child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(350, 50),
+          backgroundColor: Colors.red,
+        ),
         onPressed: (){},
         child: Text(
           "Login",
            style: TextStyle(
               fontFamily: "Custom",
               fontSize: 15,
-              color: Colors.black
+              color: Colors.white
             ),
         ),
       ),
@@ -249,5 +256,9 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  
+  Widget _MainIcon(){
+    return Center(
+      child: Icon(FontAwesomeIcons.user, size: 200,),
+    );
+  }
 }

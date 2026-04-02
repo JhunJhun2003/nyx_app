@@ -8,6 +8,7 @@ import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myorder.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/mywishlist.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 
 class AccountPage extends StatelessWidget {
@@ -196,7 +197,7 @@ class AccountPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: Size(100, 40)),
                 onPressed: (){
                   Navigator.push(
                     context,
@@ -207,8 +208,13 @@ class AccountPage extends StatelessWidget {
               ),
               Text("or",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: (){}, 
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: Size(100, 40)),
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignupPage()),
+                    );
+                }, 
                 child: Text("Sign Up",style: TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),),
               ),
             ],
