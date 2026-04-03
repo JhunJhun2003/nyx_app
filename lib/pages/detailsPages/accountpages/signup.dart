@@ -143,44 +143,6 @@ class _SignupPageState extends State<SignupPage> {
 
           const SizedBox(height: 10),
 
-          SizedBox(
-            child: Text("NRC",style: TextStyle(fontFamily: "Custom",fontSize: 15)),
-          ),
-          
-          const SizedBox(height: 10),
-
-          Row(
-            children: [
-              _dropdownBox("1"),
-              const SizedBox(width: 8),
-              const Text("/", style: TextStyle(color: Colors.white)),
-              const SizedBox(width: 8),
-              Expanded(child: _dropdownBox("MA KA TA")),
-              const SizedBox(width: 8),
-              _dropdownBox("(N)"),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // 🔷 Bottom TextField
-          TextField(
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "NRC Number",
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: const Color(0xFF0F2A3D),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
           TextFormField(
             controller: _controller,
             readOnly: true, // 👈 prevents typing
@@ -268,25 +230,7 @@ class _SignupPageState extends State<SignupPage> {
       ),
     );
   }
-
-  Widget _dropdownBox(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      height: 45,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F2A3D),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(text, style: const TextStyle(color: Colors.white)),
-          const SizedBox(width: 6),
-          const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-        ],
-      ),
-    );
-  }
+  
 }
 
 
