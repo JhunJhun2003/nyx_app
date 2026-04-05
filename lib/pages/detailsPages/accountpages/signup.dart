@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import '../../../db_helper.dart';
 
 DBHelper dbHelper = DBHelper();
@@ -55,6 +56,8 @@ class _SignupPageState extends State<SignupPage> {
               _header(),
               SizedBox(height: 10),
               _Userinput(),
+              SizedBox(height: 240),
+              _footer(),
             ],
           ),
         ),
@@ -273,12 +276,90 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
           ),
+          
+          SizedBox(height: 10),
 
           Row(
-            children: [],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Already have an account?", 
+                style: TextStyle(
+                  fontFamily: "Custom", 
+                  fontSize: 15, 
+                  color: Color.fromARGB(255, 13, 27, 42)
+                ),
+              ),
+              TextButton(
+                onPressed: (){}, 
+                child: Text("Login",
+                style: TextStyle(
+                  fontFamily: "Custom", 
+                  fontSize: 15, 
+                  color: Colors.red
+                ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+  
+  bool _isChecked = false;
+
+  Widget _footer(){
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CheckboxListTile(
+          title: const Text("By registration, I have read agree the"),
+          value: _isChecked,
+          onChanged: (bool? value) {
+            setState(() {
+              _isChecked = value!;
+            });
+          },
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => termsPage()),
+                    );
+                }, 
+                child: Text("Terms & Conditions",
+                  style: TextStyle(
+                    fontFamily: "Custom", 
+                    fontSize: 15, 
+                    color: Colors.red
+                  ),
+                ),
+              ),
+              Text("and"),
+              TextButton(
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => termsPage()),
+                    );
+                }, 
+                child: Text("Privacy Policy",
+                  style: TextStyle(
+                    fontFamily: "Custom", 
+                    fontSize: 15, 
+                    color: Colors.red
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
