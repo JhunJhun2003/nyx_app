@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/OTP.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import '../../../db_helper.dart';
@@ -352,7 +353,7 @@ class _SignupPageState extends State<SignupPage> {
                 onPressed: (){
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => termsPage()),
+                    MaterialPageRoute(builder: (context) => OTPpage()),
                   );
                 }, 
                 child: Text("Privacy Policy",
