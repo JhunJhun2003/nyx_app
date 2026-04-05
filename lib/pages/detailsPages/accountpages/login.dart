@@ -195,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         onPressed: (){},
         child: Text(
-          "Login",
+          "LOGIN",
            style: TextStyle(
               fontFamily: "Custom",
               fontSize: 15,

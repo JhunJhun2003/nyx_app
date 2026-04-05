@@ -155,17 +155,17 @@ class _SignupPageState extends State<SignupPage> {
               prefixIcon: const Icon(Icons.calendar_today, color: Colors.white),
 
               filled: true,
-              fillColor: const Color(0xFF1E2A38),
+              fillColor: Color.fromARGB(255, 13, 27, 42),
 
-              contentPadding: const EdgeInsets.symmetric(vertical: 18),
+              // contentPadding: const EdgeInsets.symmetric(vertical: 18),
 
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
               ),
 
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
               ),
 
@@ -206,6 +206,73 @@ class _SignupPageState extends State<SignupPage> {
           ),
 
           const SizedBox(height: 10),
+
+          TextFormField(
+            controller: confirmPasswordController,
+            obscureText: true,
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+            decoration: InputDecoration(
+              hintText: "Confirm Password",
+              filled: true,
+              fillColor: Color.fromARGB(255, 13, 27, 42),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15)
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Confirm password";
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 35),
+
+          // SIGN UP BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(350, 50),
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () async {
+
+                // 1. Validate form
+               if (formKey.currentState!.validate()) {
+                // 2. Check password match
+                if (passwordController.text != confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Passwords do not match")),
+                  );
+                  return;
+                }
+                // 3. Save user
+                await dbHelper.insertUser(
+                  emailController.text.trim(),
+                  passwordController.text.trim(),
+                );
+                // 4. Success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Account created successfully!")),
+                );
+                // 5. Go back to login
+                Navigator.pop(context);
+                }
+              },
+              child: const Text("SIGN UP",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  fontSize: 15,
+                  color: Colors.white
+                ),
+              ),
+            ),
+          ),
 
           Row(
             children: [],
