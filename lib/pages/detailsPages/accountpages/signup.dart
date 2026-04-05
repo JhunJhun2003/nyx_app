@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import '../../../db_helper.dart';
 
@@ -290,7 +291,12 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
               TextButton(
-                onPressed: (){}, 
+                onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                }, 
                 child: Text("Login",
                 style: TextStyle(
                   fontFamily: "Custom", 
@@ -331,7 +337,7 @@ class _SignupPageState extends State<SignupPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => termsPage()),
-                    );
+                  );
                 }, 
                 child: Text("Terms & Conditions",
                   style: TextStyle(
@@ -347,7 +353,7 @@ class _SignupPageState extends State<SignupPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => termsPage()),
-                    );
+                  );
                 }, 
                 child: Text("Privacy Policy",
                   style: TextStyle(
