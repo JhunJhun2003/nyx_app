@@ -13,7 +13,7 @@ class ShopPage extends StatelessWidget {
               children: [
                 _header(),
                 SizedBox(height: 5),
-                
+                _searchBar(),
               ],
             ),
           ),
@@ -35,16 +35,44 @@ class ShopPage extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
-          const Row(
+          Row(
             children: [
-              Icon(Icons.language, color: Colors.white),
-              SizedBox(width: 10),
-              Icon(Icons.notifications_none, color: Colors.white),
-              SizedBox(width: 10),
-              Icon(Icons.shopping_cart_outlined, color: Colors.white),
+              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
+              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
+              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
             ],
           )
         ],
+      ),
+    );
+  }
+
+  Widget _searchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      child: TextField(
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+        cursorColor: Colors.white,
+        decoration: InputDecoration(
+          hintText: "What are you looking for ?",
+          hintStyle: TextStyle(
+            fontFamily: 'Custom',
+            color: Colors.white,
+          ),
+          filled: true,
+          fillColor: Color.fromARGB(255, 13, 27, 42),
+          suffixIcon: const Icon(Icons.search),
+          suffixIconColor: Colors.white,
+          // suffixIcon: const Icon(Icons.tune),
+          // suffixIconColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+        ),
       ),
     );
   }

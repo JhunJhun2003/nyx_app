@@ -51,13 +51,11 @@ class DashBoard extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
-          const Row(
+          Row(
             children: [
-              Icon(Icons.language, color: Colors.white),
-              SizedBox(width: 10),
-              Icon(Icons.notifications_none, color: Colors.white),
-              SizedBox(width: 10),
-              Icon(Icons.shopping_cart_outlined, color: Colors.white),
+              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
+              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
+              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
             ],
           )
         ],
