@@ -1,6 +1,7 @@
 // import 'package:flutter/foundation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 // import 'package:nyxproject/pages/main_dashboard.dart';
 import '../../../db_helper.dart';
 import 'package:http/http.dart' as http;
@@ -222,6 +223,12 @@ class _LoginPageState extends State<LoginPage> {
             if (success) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Login success")),
+              );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DashBoard(),
+                ),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
