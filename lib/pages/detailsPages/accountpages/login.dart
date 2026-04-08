@@ -3,8 +3,26 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 // import 'package:nyxproject/pages/main_dashboard.dart';
 import '../../../db_helper.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 // import 'lib/pages/detailsPages/accountpages/signup.dart';
 // import 'home.dart';
+
+Future<bool> loginUser(String email, String password) async {
+  final url = Uri.parse(""); // emulator fix - API Here
+
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "email": email,
+      "password": password,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+  return data["success"];
+}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
 
   double get screenWidth => MediaQuery.of(context).size.width;
 
-  // final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -193,7 +211,25 @@ class _LoginPageState extends State<LoginPage> {
           minimumSize: const Size(350, 50),
           backgroundColor: Colors.red,
         ),
-        onPressed: (){},
+        onPressed: () async {
+          if (_formKey.currentState!.validate()) {
+
+            bool success = await loginUser(
+              emailController.text.trim(),
+              passwordController.text.trim(),
+            );
+
+            if (success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Login success")),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Invalid login")),
+              );
+            }
+          }
+        },
         child: Text(
           "LOGIN",
            style: TextStyle(
