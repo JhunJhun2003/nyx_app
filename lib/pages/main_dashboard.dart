@@ -26,17 +26,19 @@ class _MainDashboardState extends State<MainDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _header(),
-          const SizedBox(height: 0),
-          Expanded(
-            child: Container(
-              color: Colors.red, // 👈 see spacing clearly
-              child: pages[currentPageIndex],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _header(),
+            const SizedBox(height: 0),
+            Expanded(
+              child: Container(
+                color: Colors.red, // 👈 see spacing clearly
+                child: pages[currentPageIndex],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 13, 27, 42),
@@ -62,7 +64,7 @@ class _MainDashboardState extends State<MainDashboard> {
 
   Widget _header() {
   return Container(
-    margin: const EdgeInsets.only(bottom: 0), // 👈 space below header
+    margin: const EdgeInsets.only(bottom: 5), // 👈 space below header
     color: const Color.fromARGB(255, 13, 27, 42),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
     child: Row(
