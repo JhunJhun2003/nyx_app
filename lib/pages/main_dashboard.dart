@@ -63,8 +63,7 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   Widget _header() {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 5), // 👈 space below header
+  return Container( // 👈 space below header
     color: const Color.fromARGB(255, 13, 27, 42),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
     child: Row(

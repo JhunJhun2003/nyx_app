@@ -16,7 +16,7 @@ class _ShopPageState extends State<ShopPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // _header(),
+                SizedBox(height: 5),
                 _searchBar(),
               ],
             ),
@@ -24,32 +24,6 @@ class _ShopPageState extends State<ShopPage> {
         ),
     );
   }
-
-  // Widget _header() {
-  // return Container(
-  //   color: const Color.fromARGB(255, 13, 27, 42),
-  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-  //   child: Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       SizedBox(
-  //           height: 30,
-  //           child: Image.asset(
-  //             'assets/images/logo1.png',
-  //             fit: BoxFit.contain,
-  //           ),
-  //         ),
-  //         Row(
-  //           children: [
-  //             IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
-  //             IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
-  //             IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
-  //           ],
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _searchBar() {
     return Container(
