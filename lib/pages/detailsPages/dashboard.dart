@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
-class DashBoard extends StatelessWidget {
+class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
 
+  @override
+  State<DashBoard> createState() => _DashBoardState();
+}
+
+class _DashBoardState extends State<DashBoard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,8 +18,8 @@ class DashBoard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(),
-              SizedBox(height: 5),
+              // _header(),
+              // SizedBox(height: 5),
               _searchBar(),
               _banner(),
               _section("Categories"),
@@ -37,31 +42,31 @@ class DashBoard extends StatelessWidget {
     );
   }
 
-  Widget _header() {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(
-            height: 30,
-            child: Image.asset(
-              'assets/images/logo1.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
+  // Widget _header() {
+  // return Container(
+  //   color: const Color.fromARGB(255, 13, 27, 42),
+  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  //   child: Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       SizedBox(
+  //           height: 30,
+  //           child: Image.asset(
+  //             'assets/images/logo1.png',
+  //             fit: BoxFit.contain,
+  //           ),
+  //         ),
+  //         Row(
+  //           children: [
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
+  //           ],
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _searchBar() {
     return Container(
@@ -249,20 +254,4 @@ class DashBoard extends StatelessWidget {
       },
     );
   }
-
-  // Widget _bottomNav() {
-  //   return BottomNavigationBar(
-  //     backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-  //     selectedItemColor: Colors.white,
-  //     unselectedItemColor: Colors.grey,
-  //     type: BottomNavigationBarType.fixed,
-  //     items: const [
-  //       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.store), label: "Shop"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Classes"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
-  //     ],
-  //   );
-  // }
 }

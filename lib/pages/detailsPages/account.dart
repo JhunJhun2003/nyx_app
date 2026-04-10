@@ -11,9 +11,14 @@ import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
+  @override
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,8 +27,7 @@ class AccountPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _header(),
-                SizedBox(height: 5),
+                // _header(),
                 _accountTab(context),
                 Divider(),
                 _section("Account"),
@@ -134,31 +138,31 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _header() {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(
-            height: 30,
-            child: Image.asset(
-              'assets/images/logo1.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
+  // Widget _header() {
+  // return Container(
+  //   color: const Color.fromARGB(255, 13, 27, 42),
+  //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  //   child: Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       SizedBox(
+  //           height: 30,
+  //           child: Image.asset(
+  //             'assets/images/logo1.png',
+  //             fit: BoxFit.contain,
+  //           ),
+  //         ),
+  //         Row(
+  //           children: [
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
+  //             IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
+  //           ],
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _section(String title) {
     return Padding(
@@ -255,20 +259,5 @@ class AccountPage extends StatelessWidget {
       ),
     );
   }
-//   // 🔹 Logout Button
-//   Widget _logoutButton() {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 40),
-//       child: ElevatedButton.icon(
-//         onPressed: () {},
-//         icon: const Icon(Icons.logout),
-//         label: const Text("Log Out"),
-//         style: ElevatedButton.styleFrom(
-//           backgroundColor: const Color(0xFF0D1B2A),
-//           padding: const EdgeInsets.symmetric(vertical: 14),
-//         ),
-//       ),
-//     );
-//   }
 }
 
