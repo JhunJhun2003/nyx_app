@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ProductDetails extends StatefulWidget {
-  const ProductDetails({super.key});
+  final int index;
+  const ProductDetails({super.key, required this.index});
 
   @override
   State<ProductDetails> createState() => _ProductDetailsState();

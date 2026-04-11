@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -206,22 +207,32 @@ class _DashBoardState extends State<DashBoard> {
       ),
       itemCount: 4,
       itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: BoxBorder.all(color: Colors.black, width: 2),
-          ),
-          child: Column(
-            children: const [
-              Expanded(child: Icon(Icons.image, size: 80)),
-              Padding(
-                padding: EdgeInsets.all(6),
-                child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetails(index: index),
               ),
-              Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-              SizedBox(height: 6)
-            ],
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: BoxBorder.all(color: Colors.black, width: 2),
+            ),
+            child: Column(
+              children: const [
+                Expanded(child: Icon(Icons.image, size: 80)),
+                Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                ),
+                Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                SizedBox(height: 6)
+              ],
+            ),
           ),
         );
       },
