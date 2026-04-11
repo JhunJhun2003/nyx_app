@@ -119,37 +119,47 @@ class _DashBoardState extends State<DashBoard> {
         itemBuilder: (context, index) {
           final item = categories[index];
 
-          return Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                // Circle Image
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color.fromARGB(255, 13, 27, 42),
-                  ),
-                  child: Image.asset(
-                    item["image"]!,
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.contain,
-                  ),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(index: index),
                 ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  item["name"]!,
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 13, 27, 42),
-                    fontFamily: 'Custom',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Column(
+                children: [
+                  // Circle Image
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color.fromARGB(255, 13, 27, 42),
+                    ),
+                    child: Image.asset(
+                      item["image"]!,
+                      width: 30,
+                      height: 30,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
-              ],
+            
+                  const SizedBox(height: 6),
+            
+                  Text(
+                    item["name"]!,
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 13, 27, 42),
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -161,7 +171,10 @@ class _DashBoardState extends State<DashBoard> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),
       height: 190,
-      color: Color.fromARGB(255, 13, 27, 42),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Color.fromARGB(255, 13, 27, 42),
+      ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: 5,
