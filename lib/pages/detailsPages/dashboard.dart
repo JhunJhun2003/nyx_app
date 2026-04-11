@@ -166,27 +166,37 @@ class _DashBoardState extends State<DashBoard> {
         scrollDirection: Axis.horizontal,
         itemCount: 5,
         itemBuilder: (context, index) {
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(left: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Expanded(child: Icon(Icons.image, size: 80)),
-                Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(index: index),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text("45,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-                ),
-                SizedBox(height: 6)
-              ],
+              );
+            },
+            child: Container(
+              width: 140,
+              margin: const EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Expanded(child: Icon(Icons.image, size: 80)),
+                  Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text("45,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                  ),
+                  SizedBox(height: 6)
+                ],
+              ),
             ),
           );
         },
