@@ -18,6 +18,8 @@ class _ShopPageState extends State<ShopPage> {
               children: [
                 SizedBox(height: 5),
                 _searchBar(),
+                _filterbar(),
+                _gridCards()
               ],
             ),
           ),
@@ -52,6 +54,108 @@ class _ShopPageState extends State<ShopPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _filterbar(){
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Text("Brand : ", 
+            style: TextStyle(
+              fontFamily: "Custom", 
+              fontSize: 15, 
+              color: Color.fromARGB(255, 251, 0, 0),
+              fontWeight: FontWeight.w700
+            ),
+          ),
+          SizedBox(
+            child: ElevatedButton(
+              onPressed: (){}, 
+              child: Text(
+                "All",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.black
+                )
+              ),
+            )
+          ),
+          SizedBox(
+            child: ElevatedButton(
+              onPressed: (){}, 
+              child: Text(
+                "Brand",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.black
+                ),
+              )
+            ),
+          ),
+          SizedBox(
+            child: ElevatedButton(
+              onPressed: (){}, 
+              child: Text(
+                "Brand",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.black
+                ),
+              )
+            ),
+          ),
+          SizedBox(
+            child: ElevatedButton(
+              onPressed: (){}, 
+              child: Text(
+                "Brand",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.black
+                ),
+              )
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _gridCards() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: 15,
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: BoxBorder.all(color: Colors.black, width: 2),
+          ),
+          child: Column(
+            children: const [
+              Expanded(child: Icon(Icons.image, size: 150)),
+              Padding(
+                padding: EdgeInsets.all(5),
+                child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+              ),
+              Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+              SizedBox(height: 6)
+            ],
+          ),
+        );
+      },
     );
   }
 }
