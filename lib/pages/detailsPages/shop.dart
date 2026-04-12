@@ -29,10 +29,11 @@ class _ShopPageState extends State<ShopPage> {
 
   Widget _searchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
+          fontFamily: "Custom",
         ),
         cursorColor: Colors.white,
         decoration: InputDecoration(
@@ -43,7 +44,7 @@ class _ShopPageState extends State<ShopPage> {
           ),
           filled: true,
           fillColor: Color.fromARGB(255, 13, 27, 42),
-          suffixIcon: const Icon(Icons.search),
+          suffixIcon: Icon(Icons.search),
           suffixIconColor: Colors.white,
           // suffixIcon: const Icon(Icons.tune),
           // suffixIconColor: Colors.white,

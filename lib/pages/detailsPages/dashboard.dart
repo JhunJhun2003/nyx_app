@@ -44,10 +44,13 @@ class _DashBoardState extends State<DashBoard> {
 
   Widget _searchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-        style: const TextStyle(
+        onSubmitted: (value) {
+        },
+        style: TextStyle(
           color: Colors.white,
+          fontFamily: "Custom",
         ),
         cursorColor: Colors.white,
         decoration: InputDecoration(
@@ -58,15 +61,15 @@ class _DashBoardState extends State<DashBoard> {
           ),
           filled: true,
           fillColor: Color.fromARGB(255, 13, 27, 42),
-          suffixIcon: const Icon(Icons.search),
+          suffixIcon: IconButton(
+            onPressed:(){}, 
+            icon: Icon(Icons.search),
+          ),
           suffixIconColor: Colors.white,
-          // suffixIcon: const Icon(Icons.tune),
-          // suffixIconColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
+            borderSide: BorderSide.none,)
         ),
       ),
     );
