@@ -7,48 +7,117 @@ class ShopPage extends StatefulWidget {
   State<ShopPage> createState() => _ShopPageState();
 }
 
+/// 🔹 PRODUCT MODEL
+class Product {
+  final String name;
+  final String brand;
+
+  Product({required this.name, required this.brand});
+}
+
 class _ShopPageState extends State<ShopPage> {
+
+  /// 🔹 BRAND LIST
+  final List<String> brands = [
+    "All",
+    "Adidas",
+    "Puma",
+    "Gucci",
+  ];
+
+  /// 🔹 PRODUCT LIST
+  final List<Product> allProducts = [
+    Product(name: "Shuttlecock", brand: "Adidas"),
+    Product(name: "Football", brand: "Puma"),
+    Product(name: "Basketball", brand: "Gucci"),
+    Product(name: "Running Shoes", brand: "Adidas"),
+    Product(name: "Tennis Racket", brand: "Puma"),
+    Product(name: "Gucci Bag", brand: "Gucci"),
+    Product(name: "Adidas Shirt", brand: "Adidas"),
+    Product(name: "Puma Shorts", brand: "Puma"),
+  ];
+
+  List<Product> filteredProducts = [];
+
+  String selectedBrand = "All";
+  String searchQuery = "";
+
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredProducts = List.from(allProducts); // show all initially
+  }
+
+  void _applyFilters() {
+    List<Product> results = allProducts;
+
+    if (searchQuery.trim().isNotEmpty) {
+      results = results.where((product) {
+        return product.name
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase());
+      }).toList();
+    }
+
+    if (selectedBrand != "All") {
+      results = results.where((product) {
+        return product.brand == selectedBrand;
+      }).toList();
+    }
+
+    setState(() {
+      filteredProducts = results;
+    });
+  }
+
+  void _clearSearch() {
+    _controller.clear();
+    searchQuery = "";
+    _applyFilters();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFE0E0E0),
       body: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 5),
-                _searchBar(),
-                _filterbar(),
-                _gridCards()
-              ],
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 5),
+              _searchBar(),
+              _filterBar(),
+              _gridCards(),
+            ],
           ),
         ),
+      ),
     );
   }
 
   Widget _searchBar() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 5),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: TextField(
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: "Custom",
-        ),
+        controller: _controller,
+        onChanged: (value) {
+          searchQuery = value;
+          _applyFilters();
+        },
+        style: const TextStyle(color: Colors.white),
         cursorColor: Colors.white,
         decoration: InputDecoration(
-          hintText: "What are you looking for ?",
-          hintStyle: TextStyle(
-            fontFamily: 'Custom',
-            color: Colors.white,
-          ),
+          hintText: "What are you looking for?",
+          hintStyle: const TextStyle(color: Colors.white70),
           filled: true,
-          fillColor: Color.fromARGB(255, 13, 27, 42),
-          suffixIcon: Icon(Icons.search),
-          suffixIconColor: Colors.white,
-          // suffixIcon: const Icon(Icons.tune),
-          // suffixIconColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          fillColor: const Color(0xFF0D1B2A),
+          prefixIcon: const Icon(Icons.search, color: Colors.white),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.clear, color: Colors.white),
+            onPressed: _clearSearch,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
@@ -58,69 +127,46 @@ class _ShopPageState extends State<ShopPage> {
     );
   }
 
-  Widget _filterbar(){
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Text("Brand : ", 
-            style: TextStyle(
-              fontFamily: "Custom", 
-              fontSize: 15, 
-              color: Color.fromARGB(255, 251, 0, 0),
-              fontWeight: FontWeight.w700
-            ),
-          ),
-          SizedBox(
-            child: ElevatedButton(
-              onPressed: (){}, 
-              child: Text(
-                "All",
-                style: TextStyle(
-                  fontFamily: "Custom",
-                  color: Colors.black
-                )
+  Widget _filterBar() {
+    return Container(
+      height: 45,
+      margin: const EdgeInsets.all(10),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemCount: brands.length,
+        itemBuilder: (context, index) {
+          final brand = brands[index];
+          final isSelected = brand == selectedBrand;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedBrand = brand;
+              });
+              _applyFilters();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Color(0xFF0D1B2A)
+                    : Colors.grey.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
               ),
-            )
-          ),
-          SizedBox(
-            child: ElevatedButton(
-              onPressed: (){}, 
-              child: Text(
-                "Brand",
-                style: TextStyle(
-                  fontFamily: "Custom",
-                  color: Colors.black
+              child: Center(
+                child: Text(
+                  brand,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              )
+              ),
             ),
-          ),
-          SizedBox(
-            child: ElevatedButton(
-              onPressed: (){}, 
-              child: Text(
-                "Brand",
-                style: TextStyle(
-                  fontFamily: "Custom",
-                  color: Colors.black
-                ),
-              )
-            ),
-          ),
-          SizedBox(
-            child: ElevatedButton(
-              onPressed: (){}, 
-              child: Text(
-                "Brand",
-                style: TextStyle(
-                  fontFamily: "Custom",
-                  color: Colors.black
-                ),
-              )
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -129,30 +175,44 @@ class _ShopPageState extends State<ShopPage> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
+      padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
         childAspectRatio: 0.75,
       ),
-      itemCount: 15,
+      itemCount: filteredProducts.length,
       itemBuilder: (context, index) {
+        final product = filteredProducts[index];
+
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: BoxBorder.all(color: Colors.black, width: 2),
+            border: Border.all(color: Colors.black12),
           ),
           child: Column(
-            children: const [
-              Expanded(child: Icon(Icons.image, size: 150)),
-              Padding(
-                padding: EdgeInsets.all(5),
-                child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+            children: [
+              const Expanded(
+                child: Icon(Icons.image, size: 160),
               ),
-              Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-              SizedBox(height: 6)
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(
+                  product.name,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              Text(
+                product.brand,
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+              const Text(
+                "35,000 Ks",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
             ],
           ),
         );

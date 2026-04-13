@@ -172,10 +172,10 @@ class _DashBoardState extends State<DashBoard> {
 
   Widget _horizontalCards() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       height: 190,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        // borderRadius: BorderRadius.circular(15),
         color: Color.fromARGB(255, 13, 27, 42),
       ),
       child: ListView.builder(
@@ -193,7 +193,7 @@ class _DashBoardState extends State<DashBoard> {
             },
             child: Container(
               width: 140,
-              margin: const EdgeInsets.only(left: 10),
+              margin: const EdgeInsets.only(left: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -201,7 +201,7 @@ class _DashBoardState extends State<DashBoard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Expanded(child: Icon(Icons.image, size: 80)),
+                  Expanded(child: Icon(Icons.image, size: 120)),
                   Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
@@ -250,7 +250,7 @@ class _DashBoardState extends State<DashBoard> {
             ),
             child: Column(
               children: const [
-                Expanded(child: Icon(Icons.image, size: 80)),
+                Expanded(child: Icon(Icons.image, size: 120)),
                 Padding(
                   padding: EdgeInsets.all(6),
                   child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
