@@ -29,7 +29,7 @@ class DashBoard extends StatelessWidget {
               _gridCards(),
               _section("Hot Item"),
               _gridCards(),
-              const SizedBox(height: 20)
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -38,26 +38,32 @@ class DashBoard extends StatelessWidget {
   }
 
   Widget _header() {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(
             height: 30,
-            child: Image.asset(
-              'assets/images/logo1.png',
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset('assets/images/logo1.png', fit: BoxFit.contain),
           ),
           Row(
             children: [
-              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.language, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.notifications_none, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.shopping_cart_outlined, color: Colors.white),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -67,16 +73,11 @@ class DashBoard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-        style: const TextStyle(
-          color: Colors.white,
-        ),
+        style: const TextStyle(color: Colors.white),
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for ?",
-          hintStyle: TextStyle(
-            fontFamily: 'Custom',
-            color: Colors.white,
-          ),
+          hintStyle: TextStyle(fontFamily: 'Custom', color: Colors.white),
           filled: true,
           fillColor: Color.fromARGB(255, 13, 27, 42),
           suffixIcon: const Icon(Icons.search),
@@ -103,7 +104,7 @@ class DashBoard extends StatelessWidget {
         color: Colors.amber,
         image: DecorationImage(
           image: AssetImage("assets/images/Group1208.png"),
-          fit: BoxFit.cover
+          fit: BoxFit.cover,
         ),
       ),
     );
@@ -112,25 +113,32 @@ class DashBoard extends StatelessWidget {
   Widget _section(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Text(title,
-       style: const TextStyle(
-        color: Color.fromARGB(255, 13, 27, 42), 
-        fontWeight: FontWeight.w900,
-        fontFamily: 'Custom',
-        )
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Color.fromARGB(255, 13, 27, 42),
+          fontWeight: FontWeight.w900,
+          fontFamily: 'Custom',
+        ),
       ),
     );
   }
 
+  // Widget _categories() {
+  //   final categories = [
+  //     {"image": "assets/images/badminton1.png", "name": "Badminton"},
+  //     {"image": "assets/images/basketball.png", "name": "Basketball"},
+  //     {"image": "assets/images/boxing.png", "name": "Boxing"},
+  //     {"image": "assets/images/golf.jpg", "name": "Golf"},
+  //     {"image": "assets/images/football.png", "name": "Football"},
+  //     {"image": "assets/images/tennis_catagory.png", "name": "Tennis"},
+  //   ];
   Widget _categories() {
-    final categories = [
-      {"image": "assets/images/badminton1.png", "name": "Badminton"},
-      {"image": "assets/images/basketball.png", "name": "Basketball"},
-      {"image": "assets/images/boxing.png", "name": "Boxing"},
-      {"image": "assets/images/golf.jpg", "name": "Golf"},
-      {"image": "assets/images/football.png", "name": "Football"},
-      {"image": "assets/images/tennis_catagory.png", "name": "Tennis"},
-    ];
+    final categories = Api.categories; // Using API data
+
+    if (categories.isEmpty) {
+      return const Center(child: Text('No categories available'));
+    }
 
     return SizedBox(
       height: 110,
@@ -138,39 +146,55 @@ class DashBoard extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          final item = categories[index];
+          final item = categories[index]; // This is a Category object
 
           return Padding(
             padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                // Circle Image
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color.fromARGB(255, 13, 27, 42),
+            child: GestureDetector(
+              onTap: () {
+                print("Selected: ${item.name}");
+              },
+              child: Column(
+                children: [
+                  // Circle Image
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color.fromARGB(255, 13, 27, 42),
+                    ),
+                    child: item.imageUrl != null
+                        ? Image.network(
+                            item.imageUrl!, // Use dot notation
+                            width: 30,
+                            height: 30,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.error,
+                                size: 30,
+                                color: Colors.red,
+                              );
+                            },
+                          )
+                        : const Icon(
+                            Icons.sports,
+                            size: 30,
+                            color: Colors.white,
+                          ),
                   ),
-                  child: Image.asset(
-                    item["image"]!,
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.contain,
+                  const SizedBox(height: 6),
+                  Text(
+                    item.name ?? 'Unknown', // Use dot notation
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 13, 27, 42),
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  item["name"]!,
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 13, 27, 42),
-                    fontFamily: 'Custom',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -200,13 +224,22 @@ class DashBoard extends StatelessWidget {
                 Expanded(child: Icon(Icons.image, size: 80)),
                 Padding(
                   padding: EdgeInsets.all(8.0),
-                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                  child: Text(
+                    "Badminton Shuttlecock",
+                    style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text("45,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                  child: Text(
+                    "45,000 Ks",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Custom',
+                    ),
+                  ),
                 ),
-                SizedBox(height: 6)
+                SizedBox(height: 6),
               ],
             ),
           );
@@ -219,7 +252,7 @@ class DashBoard extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
@@ -239,10 +272,19 @@ class DashBoard extends StatelessWidget {
               Expanded(child: Icon(Icons.image, size: 80)),
               Padding(
                 padding: EdgeInsets.all(6),
-                child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                child: Text(
+                  "Badminton Shuttlecock",
+                  style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
+                ),
               ),
-              Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-              SizedBox(height: 6)
+              Text(
+                "35,000 Ks",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Custom',
+                ),
+              ),
+              SizedBox(height: 6),
             ],
           ),
         );
