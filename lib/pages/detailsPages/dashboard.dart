@@ -42,55 +42,16 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-<<<<<<< HEAD
-  Widget _header() {
-    return Container(
-      color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SizedBox(
-            height: 30,
-            child: Image.asset('assets/images/logo1.png', fit: BoxFit.contain),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.language, color: Colors.white),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.notifications_none, color: Colors.white),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.shopping_cart_outlined, color: Colors.white),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-=======
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
   Widget _searchBar() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-<<<<<<< HEAD
-        style: const TextStyle(color: Colors.white),
-=======
         onSubmitted: (value) {
         },
         style: TextStyle(
           color: Colors.white,
           fontFamily: "Custom",
         ),
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for ?",
@@ -141,21 +102,21 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // Widget _categories() {
-  //   final categories = [
-  //     {"image": "assets/images/badminton1.png", "name": "Badminton"},
-  //     {"image": "assets/images/basketball.png", "name": "Basketball"},
-  //     {"image": "assets/images/boxing.png", "name": "Boxing"},
-  //     {"image": "assets/images/golf.jpg", "name": "Golf"},
-  //     {"image": "assets/images/football.png", "name": "Football"},
-  //     {"image": "assets/images/tennis_catagory.png", "name": "Tennis"},
-  //   ];
   Widget _categories() {
-    final categories = Api.categories; // Using API data
+    final categories = [
+      {"image": "assets/images/badminton1.png", "name": "Badminton"},
+      {"image": "assets/images/basketball.png", "name": "Basketball"},
+      {"image": "assets/images/boxing.png", "name": "Boxing"},
+      {"image": "assets/images/golf.jpg", "name": "Golf"},
+      {"image": "assets/images/football.png", "name": "Football"},
+      {"image": "assets/images/tennis_catagory.png", "name": "Tennis"},
+    ];
+  // Widget _categories() {
+  //   final categories = Api.categories; // Using API data
 
-    if (categories.isEmpty) {
-      return const Center(child: Text('No categories available'));
-    }
+  //   if (categories.isEmpty) {
+  //     return const Center(child: Text('No categories available'));
+  //   }
 
     return SizedBox(
       height: 110,
@@ -165,14 +126,6 @@ class _DashBoardState extends State<DashBoard> {
         itemBuilder: (context, index) {
           final item = categories[index]; // This is a Category object
 
-<<<<<<< HEAD
-          return Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: GestureDetector(
-              onTap: () {
-                print("Selected: ${item.name}");
-              },
-=======
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -184,7 +137,6 @@ class _DashBoardState extends State<DashBoard> {
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 16),
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
               child: Column(
                 children: [
                   // Circle Image
@@ -194,31 +146,6 @@ class _DashBoardState extends State<DashBoard> {
                       shape: BoxShape.circle,
                       color: Color.fromARGB(255, 13, 27, 42),
                     ),
-<<<<<<< HEAD
-                    child: item.imageUrl != null
-                        ? Image.network(
-                            item.imageUrl!, // Use dot notation
-                            width: 30,
-                            height: 30,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.error,
-                                size: 30,
-                                color: Colors.red,
-                              );
-                            },
-                          )
-                        : const Icon(
-                            Icons.sports,
-                            size: 30,
-                            color: Colors.white,
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    item.name ?? 'Unknown', // Use dot notation
-=======
                     child: Image.asset(
                       item["image"]!,
                       width: 30,
@@ -231,16 +158,11 @@ class _DashBoardState extends State<DashBoard> {
             
                   Text(
                     item["name"]!,
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
                     style: const TextStyle(
                       color: Color.fromARGB(255, 13, 27, 42),
                       fontFamily: 'Custom',
                       fontSize: 12,
-<<<<<<< HEAD
-                      fontWeight: FontWeight.w900,
-=======
                       fontWeight: FontWeight.w900
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
                     ),
                   ),
                 ],
@@ -264,38 +186,6 @@ class _DashBoardState extends State<DashBoard> {
         scrollDirection: Axis.horizontal,
         itemCount: 5,
         itemBuilder: (context, index) {
-<<<<<<< HEAD
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(left: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Expanded(child: Icon(Icons.image, size: 80)),
-                Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Badminton Shuttlecock",
-                    style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    "45,000 Ks",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                ),
-                SizedBox(height: 6),
-              ],
-=======
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -327,7 +217,6 @@ class _DashBoardState extends State<DashBoard> {
                   SizedBox(height: 6)
                 ],
               ),
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
             ),
           );
         },
@@ -348,33 +237,6 @@ class _DashBoardState extends State<DashBoard> {
       ),
       itemCount: 4,
       itemBuilder: (context, index) {
-<<<<<<< HEAD
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: BoxBorder.all(color: Colors.black, width: 2),
-          ),
-          child: Column(
-            children: const [
-              Expanded(child: Icon(Icons.image, size: 80)),
-              Padding(
-                padding: EdgeInsets.all(6),
-                child: Text(
-                  "Badminton Shuttlecock",
-                  style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
-                ),
-              ),
-              Text(
-                "35,000 Ks",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Custom',
-                ),
-              ),
-              SizedBox(height: 6),
-            ],
-=======
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -401,30 +263,9 @@ class _DashBoardState extends State<DashBoard> {
                 SizedBox(height: 6)
               ],
             ),
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
           ),
         );
       },
     );
   }
-<<<<<<< HEAD
-
-  // Widget _bottomNav() {
-  //   return BottomNavigationBar(
-  //     backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-  //     selectedItemColor: Colors.white,
-  //     unselectedItemColor: Colors.grey,
-  //     type: BottomNavigationBarType.fixed,
-  //     items: const [
-  //       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.store), label: "Shop"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Classes"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
-  //       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
-  //     ],
-  //   );
-  // }
 }
-=======
-}
->>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
