@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 
-class DashBoard extends StatelessWidget {
+class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
 
+  @override
+  State<DashBoard> createState() => _DashBoardState();
+}
+
+class _DashBoardState extends State<DashBoard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,7 +19,6 @@ class DashBoard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(),
               SizedBox(height: 5),
               _searchBar(),
               _banner(),
@@ -37,6 +42,7 @@ class DashBoard extends StatelessWidget {
     );
   }
 
+<<<<<<< HEAD
   Widget _header() {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
@@ -69,26 +75,37 @@ class DashBoard extends StatelessWidget {
     );
   }
 
+=======
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
   Widget _searchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
+<<<<<<< HEAD
         style: const TextStyle(color: Colors.white),
+=======
+        onSubmitted: (value) {
+        },
+        style: TextStyle(
+          color: Colors.white,
+          fontFamily: "Custom",
+        ),
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for ?",
           hintStyle: TextStyle(fontFamily: 'Custom', color: Colors.white),
           filled: true,
           fillColor: Color.fromARGB(255, 13, 27, 42),
-          suffixIcon: const Icon(Icons.search),
+          suffixIcon: IconButton(
+            onPressed:(){}, 
+            icon: Icon(Icons.search),
+          ),
           suffixIconColor: Colors.white,
-          // suffixIcon: const Icon(Icons.tune),
-          // suffixIconColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
+            borderSide: BorderSide.none,)
         ),
       ),
     );
@@ -148,12 +165,26 @@ class DashBoard extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = categories[index]; // This is a Category object
 
+<<<<<<< HEAD
           return Padding(
             padding: const EdgeInsets.only(left: 16),
             child: GestureDetector(
               onTap: () {
                 print("Selected: ${item.name}");
               },
+=======
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(index: index),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
               child: Column(
                 children: [
                   // Circle Image
@@ -163,6 +194,7 @@ class DashBoard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: Color.fromARGB(255, 13, 27, 42),
                     ),
+<<<<<<< HEAD
                     child: item.imageUrl != null
                         ? Image.network(
                             item.imageUrl!, // Use dot notation
@@ -186,11 +218,29 @@ class DashBoard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     item.name ?? 'Unknown', // Use dot notation
+=======
+                    child: Image.asset(
+                      item["image"]!,
+                      width: 30,
+                      height: 30,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+            
+                  const SizedBox(height: 6),
+            
+                  Text(
+                    item["name"]!,
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
                     style: const TextStyle(
                       color: Color.fromARGB(255, 13, 27, 42),
                       fontFamily: 'Custom',
                       fontSize: 12,
+<<<<<<< HEAD
                       fontWeight: FontWeight.w900,
+=======
+                      fontWeight: FontWeight.w900
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
                     ),
                   ),
                 ],
@@ -204,13 +254,17 @@ class DashBoard extends StatelessWidget {
 
   Widget _horizontalCards() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       height: 190,
-      color: Color.fromARGB(255, 13, 27, 42),
+      decoration: BoxDecoration(
+        // borderRadius: BorderRadius.circular(15),
+        color: Color.fromARGB(255, 13, 27, 42),
+      ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: 5,
         itemBuilder: (context, index) {
+<<<<<<< HEAD
           return Container(
             width: 140,
             margin: const EdgeInsets.only(left: 10),
@@ -241,6 +295,39 @@ class DashBoard extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
               ],
+=======
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(index: index),
+                ),
+              );
+            },
+            child: Container(
+              width: 140,
+              margin: const EdgeInsets.only(left: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Expanded(child: Icon(Icons.image, size: 120)),
+                  Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text("45,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                  ),
+                  SizedBox(height: 6)
+                ],
+              ),
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
             ),
           );
         },
@@ -261,6 +348,7 @@ class DashBoard extends StatelessWidget {
       ),
       itemCount: 4,
       itemBuilder: (context, index) {
+<<<<<<< HEAD
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -286,11 +374,40 @@ class DashBoard extends StatelessWidget {
               ),
               SizedBox(height: 6),
             ],
+=======
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetails(index: index),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: BoxBorder.all(color: Colors.black, width: 2),
+            ),
+            child: Column(
+              children: const [
+                Expanded(child: Icon(Icons.image, size: 120)),
+                Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                ),
+                Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                SizedBox(height: 6)
+              ],
+            ),
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd
           ),
         );
       },
     );
   }
+<<<<<<< HEAD
 
   // Widget _bottomNav() {
   //   return BottomNavigationBar(
@@ -308,3 +425,6 @@ class DashBoard extends StatelessWidget {
   //   );
   // }
 }
+=======
+}
+>>>>>>> d9eba5bab90bb88952724dd93d7fe63925faf2fd

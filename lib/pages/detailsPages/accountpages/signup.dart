@@ -3,6 +3,12 @@ import 'package:nyxproject/pages/detailsPages/accountpages/OTP.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import '../../../db_helper.dart';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+
+// Future<bool> signupUser(String name, String email, String date, String password) async {
+//   final url = Uri.parse("");
+// }
 
 DBHelper dbHelper = DBHelper();
 
