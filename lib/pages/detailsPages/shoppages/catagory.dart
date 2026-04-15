@@ -2,32 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/models/product.dart';
 
+class Catagory extends StatefulWidget {
+  final int index;
 
-class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+  const Catagory({super.key, required this.index});
 
   @override
-  State<ShopPage> createState() => _ShopPageState();
+  State<Catagory> createState() => _CatagoryState();
 }
 
-class _ShopPageState extends State<ShopPage> {
+
+class _CatagoryState extends State<Catagory> {
 
   final List<String> brands = [
     "All",
-    "Adidas",
-    "Puma",
-    "Gucci",
+    "Badminton",
+    "Football",
+    "Golf",
+    "Tennis",
+    "Boxing",
+    "Basketball"
   ];
 
   final List<Product> allProducts = [
-    Product(name: "Shuttlecock", brand: "Adidas", price: 30000, catagories: '',),
-    Product(name: "Football", brand: "Puma", price: 40000, catagories: ''),
-    Product(name: "Basketball", brand: "Gucci", price: 50000, catagories: '',),
-    Product(name: "Running Shoes", brand: "Adidas", price: 35000, catagories: '',),
-    Product(name: "Tennis Racket", brand: "Puma", price: 40000, catagories: ''),
-    Product(name: "Gucci Bag", brand: "Gucci", price: 50000, catagories: '',),
-    Product(name: "Adidas Shirt", brand: "Adidas", price: 34000, catagories: '',),
-    Product(name: "Puma Shorts", brand: "Puma", price: 40000, catagories: ''),
+    Product(name: "Shuttlecock", catagories: "Badminton", price: 45000, brand: '',),
+    Product(name: "Football", catagories: "Football", price: 35000, brand: ''),
+    Product(name: "Shoe", catagories: "Golf", price: 95000, brand: ''),
+    Product(name: "Hand Glove", catagories: "Golf", price: 65000, brand: ''),
+    Product(name: "Golf Bag", catagories: "Golf", price: 125000, brand: ''),
+    Product(name: "Shuttlecock", catagories: "Tennis", price: 55000, brand: ''),
+    Product(name: "Gloves", catagories: "Boxing", price: 34000, brand: ''),
+    Product(name: "Basketball", catagories: "Basketball", price: 50000, brand: ''),
   ];
 
   List<Product> filteredProducts = [];
@@ -40,7 +45,7 @@ class _ShopPageState extends State<ShopPage> {
   @override
   void initState() {
     super.initState();
-    filteredProducts = allProducts; // show all initially
+    filteredProducts = allProducts ; // show all initially
   }
 
   void _clearSearch() {
@@ -61,10 +66,12 @@ class _ShopPageState extends State<ShopPage> {
             ListTile(
               title: const Text("Price: Low to High"),
               onTap: () {
-                selectedSort = "low";
+                setState(() {
+                  selectedSort = "low";
+                });
                 _applyFilters();
                 Navigator.pop(context);
-              },
+              }
             ),
             ListTile(
               title: const Text("Price: High to Low"),
@@ -101,7 +108,7 @@ class _ShopPageState extends State<ShopPage> {
 
     if (selectedBrand != "All") {
       results = results.where((product) {
-        return product.brand == selectedBrand;
+        return product.catagories == selectedBrand; // ✅ correct
       }).toList();
     }
 
@@ -121,15 +128,16 @@ class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               const SizedBox(height: 5),
+              _header(),
+              const SizedBox(height: 5),
               _searchBar(),
               _filterBar(),
-              _gridCards(),
+              _gridCards()
             ],
           ),
         ),
@@ -137,9 +145,52 @@ class _ShopPageState extends State<ShopPage> {
     );
   }
 
+  Widget _header() {
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: (){
+              Navigator.pop(context);
+            }, 
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded, 
+              color: Colors.white,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              "Catagories",
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600
+              ),
+            ),
+          ),
+          SizedBox(
+            child: IconButton(
+              onPressed: (){
+              }, 
+              icon: Icon(
+                Icons.message, 
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _searchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
         controller: _controller,
         onChanged: (value) {
@@ -223,40 +274,53 @@ class _ShopPageState extends State<ShopPage> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
+      padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
         childAspectRatio: 0.75,
       ),
       itemCount: filteredProducts.length,
       itemBuilder: (context, index) {
-        final Product product = filteredProducts[index];
+        final product = filteredProducts[index];
+
         return GestureDetector(
           onTap: () {
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetails(product: product),
-                ),
-              );
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetails(product: product),
+              ),
+            );
           },
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: BoxBorder.all(color: Colors.black, width: 2),
+              border: Border.all(color: Colors.black12),
             ),
             child: Column(
-              children: const [
-                Expanded(child: Icon(Icons.image, size: 120)),
-                Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+              children: [
+                const Expanded(
+                  child: Icon(Icons.image, size: 160),
                 ),
-                Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-                SizedBox(height: 6)
+                Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Text(
+                    product.name,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                Text(
+                  product.catagories,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                Text(
+                  "${product.price.toString()} Ks",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
               ],
             ),
           ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/catagory.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
+import 'package:nyxproject/models/product.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -8,7 +10,30 @@ class DashBoard extends StatefulWidget {
   State<DashBoard> createState() => _DashBoardState();
 }
 
+
 class _DashBoardState extends State<DashBoard> {
+
+  final List<Product> allProducts = [
+    Product(name: "Shuttlecock", price: 45000, catagories: '', brand: '',),
+    Product(name: "Football", price: 35000, catagories: '', brand: ''),
+    Product(name: "Shoe", price: 95000, catagories: '', brand: '',),
+    Product(name: "Hand Glove",price: 65000, catagories: '', brand: '',),
+    Product(name: "Golf Bag", price: 125000, catagories: '', brand: ''),
+    Product(name: "Shuttlecock", price: 55000, catagories: '', brand: '',),
+    Product(name: "Gloves", price: 34000, catagories: '', brand: '',),
+    Product(name: "Basketball", price: 50000, catagories: '', brand: ''),
+  ];
+
+  List<Product> filteredProducts = [];
+
+  String searchQuery = "";
+
+  @override
+  void initState() {
+    super.initState();
+    filteredProducts = allProducts ; // show all initially
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +72,12 @@ class _DashBoardState extends State<DashBoard> {
       padding: EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
         onSubmitted: (value) {
+          setState(() {
+            searchQuery = value;
+            filteredProducts = allProducts.where((product) {
+              return product.name.toLowerCase().contains(value.toLowerCase());
+            }).toList();
+          });
         },
         style: TextStyle(
           color: Colors.white,
@@ -127,7 +158,7 @@ class _DashBoardState extends State<DashBoard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProductDetails(index: index),
+                  builder: (context) => Catagory(index: index),
                 ),
               );
             },
@@ -180,14 +211,16 @@ class _DashBoardState extends State<DashBoard> {
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 5,
+        itemCount: filteredProducts.length,
         itemBuilder: (context, index) {
+          final Product product = filteredProducts[index];
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProductDetails(index: index),
+                  builder: (context) => ProductDetails(product: product),
                 ),
               );
             },
@@ -200,15 +233,15 @@ class _DashBoardState extends State<DashBoard> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Expanded(child: Icon(Icons.image, size: 120)),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+                    child: Text(product.name, style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("45,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
+                    child: Text("${product.price.toString()} Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
                   ),
                   SizedBox(height: 6)
                 ],
@@ -231,16 +264,17 @@ class _DashBoardState extends State<DashBoard> {
         crossAxisSpacing: 12,
         childAspectRatio: 0.75,
       ),
-      itemCount: 4,
+      itemCount: filteredProducts.length,
       itemBuilder: (context, index) {
+        final Product product = filteredProducts[index];
         return GestureDetector(
           onTap: () {
             Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProductDetails(index: index),
-              ),
-            );
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(product: product),
+                ),
+              );
           },
           child: Container(
             decoration: BoxDecoration(
