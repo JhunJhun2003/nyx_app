@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/models/product.dart';
+// import 'package:nyxproject/pages/detailsPages/shoppages/catagory.dart';
 
 class ProductDetails extends StatefulWidget {
-  final int index;
-  const ProductDetails({super.key, required this.index});
+  final Product product;
+
+  const ProductDetails({super.key, required this.product});
 
   @override
   State<ProductDetails> createState() => _ProductDetailsState();
@@ -76,6 +79,18 @@ class _ProductDetailsState extends State<ProductDetails> {
             ),
           ),
 
+          Expanded(
+            child: Text(
+              "Product Details",
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600
+              ),
+            ),
+          ),
+
           SizedBox(
             child: Row(
               children: [
@@ -132,10 +147,10 @@ class _ProductDetailsState extends State<ProductDetails> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "25,000 Ks",
+              "${widget.product.price} Ks",
               style: TextStyle(
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
             SizedBox(
@@ -179,10 +194,10 @@ class _ProductDetailsState extends State<ProductDetails> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Product Name",
+              widget.product.name,
               style: TextStyle(
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
             SizedBox(
