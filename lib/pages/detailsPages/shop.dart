@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
+
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -11,8 +13,9 @@ class ShopPage extends StatefulWidget {
 class Product {
   final String name;
   final String brand;
+  final int price;
 
-  Product({required this.name, required this.brand});
+  Product({required this.name, required this.brand, required this.price});
 }
 
 class _ShopPageState extends State<ShopPage> {
@@ -27,14 +30,14 @@ class _ShopPageState extends State<ShopPage> {
 
   /// 🔹 PRODUCT LIST
   final List<Product> allProducts = [
-    Product(name: "Shuttlecock", brand: "Adidas"),
-    Product(name: "Football", brand: "Puma"),
-    Product(name: "Basketball", brand: "Gucci"),
-    Product(name: "Running Shoes", brand: "Adidas"),
-    Product(name: "Tennis Racket", brand: "Puma"),
-    Product(name: "Gucci Bag", brand: "Gucci"),
-    Product(name: "Adidas Shirt", brand: "Adidas"),
-    Product(name: "Puma Shorts", brand: "Puma"),
+    Product(name: "Shuttlecock", brand: "Adidas", price: 30000,),
+    Product(name: "Football", brand: "Puma", price: 40000),
+    Product(name: "Basketball", brand: "Gucci", price: 50000,),
+    Product(name: "Running Shoes", brand: "Adidas", price: 35000,),
+    Product(name: "Tennis Racket", brand: "Puma", price: 40000),
+    Product(name: "Gucci Bag", brand: "Gucci", price: 50000,),
+    Product(name: "Adidas Shirt", brand: "Adidas", price: 34000,),
+    Product(name: "Puma Shorts", brand: "Puma", price: 40000),
   ];
 
   List<Product> filteredProducts = [];
@@ -48,6 +51,51 @@ class _ShopPageState extends State<ShopPage> {
   void initState() {
     super.initState();
     filteredProducts = List.from(allProducts); // show all initially
+  }
+
+  void _clearSearch() {
+    _controller.clear();
+    searchQuery = "";
+    _applyFilters();
+  }
+
+  String selectedSort = "None";
+
+  void _showSortBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text("Price: Low to High"),
+              onTap: () {
+                selectedSort = "low";
+                _applyFilters();
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text("Price: High to Low"),
+              onTap: () {
+                selectedSort = "high";
+                _applyFilters();
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text("Name: A-Z"),
+              onTap: () {
+                selectedSort = "az";
+                _applyFilters();
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _applyFilters() {
@@ -67,15 +115,17 @@ class _ShopPageState extends State<ShopPage> {
       }).toList();
     }
 
+    if (selectedSort == "low") {
+      results.sort((a, b) => a.price.compareTo(b.price));
+    } else if (selectedSort == "high") {
+      results.sort((a, b) => b.price.compareTo(a.price));
+    } else if (selectedSort == "az") {
+      results.sort((a, b) => a.name.compareTo(b.name));
+    }
+
     setState(() {
       filteredProducts = results;
     });
-  }
-
-  void _clearSearch() {
-    _controller.clear();
-    searchQuery = "";
-    _applyFilters();
   }
 
   @override
@@ -110,13 +160,21 @@ class _ShopPageState extends State<ShopPage> {
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for?",
-          hintStyle: const TextStyle(color: Colors.white70),
           filled: true,
           fillColor: const Color(0xFF0D1B2A),
           prefixIcon: const Icon(Icons.search, color: Colors.white),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.clear, color: Colors.white),
-            onPressed: _clearSearch,
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.tune, color: Colors.white),
+                onPressed: _showSortBottomSheet, // 🔥 open sort UI
+              ),
+              IconButton(
+                icon: const Icon(Icons.clear, color: Colors.white),
+                onPressed: _clearSearch,
+              ),
+            ],
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
@@ -186,34 +244,44 @@ class _ShopPageState extends State<ShopPage> {
       itemBuilder: (context, index) {
         final product = filteredProducts[index];
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: Column(
-            children: [
-              const Expanded(
-                child: Icon(Icons.image, size: 160),
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetails(index: index),
               ),
-              Padding(
-                padding: const EdgeInsets.all(6),
-                child: Text(
-                  product.name,
-                  style: const TextStyle(fontSize: 12),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Column(
+              children: [
+                const Expanded(
+                  child: Icon(Icons.image, size: 160),
                 ),
-              ),
-              Text(
-                product.brand,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-              const Text(
-                "35,000 Ks",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Text(
+                    product.name,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                Text(
+                  product.brand,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                Text(
+                  "${product.price.toString()} Ks",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+              ],
+            ),
           ),
         );
       },
