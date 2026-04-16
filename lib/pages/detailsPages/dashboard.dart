@@ -113,7 +113,6 @@ class _DashBoardState extends State<DashBoard> {
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.amber,
         image: DecorationImage(
           image: AssetImage("assets/images/Group1208.png"),
           fit: BoxFit.cover
