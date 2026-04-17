@@ -23,6 +23,7 @@ class _ProductDetailsState extends State<ProductDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
+              SizedBox(height: 5),
               _imageSpace(),
               SizedBox(height: 5),
               _priceTag(),
@@ -425,12 +426,14 @@ class _ProductDetailsState extends State<ProductDetails> {
           color: isSelected ? Colors.red : Colors.grey[300],
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-            fontFamily: "Custom"
+        child: Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+              fontFamily: "Custom"
+            ),
           ),
         ),
       ),
@@ -441,7 +444,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     return Center(
       child: Text(
         "This is Description",
-        key: ValueKey(1),
+        key: ValueKey("Description"),
       ),
     );
   }
@@ -450,7 +453,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     return Center(
       child: Text(
         "This is Specification",
-        key: ValueKey(2),
+        key: ValueKey("Specification"),
       ),
     );
   }
