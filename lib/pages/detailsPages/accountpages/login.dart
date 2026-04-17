@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      MainDashboard(sessionService: widget.sessionService!),
+                      MainDashboard(sessionService: widget.sessionService),
                 ),
               );
             },
