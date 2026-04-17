@@ -156,8 +156,8 @@ class _SignupPageState extends State<SignupPage> {
 
           TextFormField(
             controller: _controller,
-            readOnly: true, // 👈 prevents typing
-            onTap: _selectDate, // 👈 open date picker
+            readOnly: true,
+            onTap: _selectDate,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: "Date of Birth",
@@ -167,8 +167,6 @@ class _SignupPageState extends State<SignupPage> {
 
               filled: true,
               fillColor: Color.fromARGB(255, 13, 27, 42),
-
-              // contentPadding: const EdgeInsets.symmetric(vertical: 18),
 
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),

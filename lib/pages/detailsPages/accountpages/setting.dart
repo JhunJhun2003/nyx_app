@@ -50,35 +50,35 @@ class _SettingState extends State<Setting> {
   }
 
   Widget _header() {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: (){
-              Navigator.pop(context);
-          }, 
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded, 
-            color: Colors.white,
-            ),
-          ),
-          Expanded(
-            child: const Text(
-              "Setting", 
-              style: TextStyle(
-                fontFamily: "Custom",
-                color: Colors.white,
-                fontSize: 18,
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: (){
+                Navigator.pop(context);
+            }, 
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded, 
+              color: Colors.white,
               ),
             ),
-          ),
-      ],
-    ),
-  );
+            Expanded(
+              child: const Text(
+                "Setting", 
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
