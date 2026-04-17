@@ -4,9 +4,11 @@ import 'package:nyxproject/pages/detailsPages/classes.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
 import 'package:nyxproject/pages/detailsPages/shop.dart';
 import 'package:nyxproject/pages/detailsPages/account.dart';
+import 'package:nyxproject/services/session_service.dart';
 
 class MainDashboard extends StatefulWidget {
-  const MainDashboard({super.key});
+  final SessionService sessionService;
+  const MainDashboard({super.key , required this.sessionService});
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
@@ -15,13 +17,13 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int currentPageIndex = 0;
 
-  final pages = [
-    DashBoard(),
-    ShopPage(),
-    ClassesPage(),
-    CartPage(),
-    AccountPage()
-  ];
+  List<Widget> get pages => [
+        DashBoard(),
+        ShopPage(),
+        ClassesPage(),
+        CartPage(),
+        AccountPage(sessionService: widget.sessionService),
+      ];
 
   @override
   Widget build(BuildContext context) {

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/OTP.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
-import '../../../db_helper.dart';
+import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/util/Api.dart';
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
 
@@ -10,10 +11,9 @@ import '../../../db_helper.dart';
 //   final url = Uri.parse("");
 // }
 
-DBHelper dbHelper = DBHelper();
-
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  final SessionService sessionService;
+  const SignupPage({super.key, required this.sessionService});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -252,27 +252,42 @@ class _SignupPageState extends State<SignupPage> {
                 backgroundColor: Colors.red,
               ),
               onPressed: () async {
-
-                // 1. Validate form
-               if (formKey.currentState!.validate()) {
-                // 2. Check password match
+                if (!formKey.currentState!.validate()) return;
                 if (passwordController.text != confirmPasswordController.text) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Passwords do not match")),
                   );
                   return;
                 }
-                // 3. Save user
-                await dbHelper.insertUser(
-                  emailController.text.trim(),
-                  passwordController.text.trim(),
+
+                final Map<String, dynamic> signupResult = await Api.signupUser(
+                  name: nameController.text.trim(),
+                  email: emailController.text.trim(),
+                  phone: "",
+                  dateOfBirth: _controller.text.trim(),
+                  password: passwordController.text.trim(),
                 );
-                // 4. Success message
+
+                if (!mounted) return;
+                final bool success = signupResult['success'] == true;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Account created successfully!")),
+                  SnackBar(
+                    content: Text(
+                      signupResult['message']?.toString() ??
+                          (success ? "Account created successfully!" : "Signup failed"),
+                    ),
+                  ),
                 );
-                // 5. Go back to login
-                Navigator.pop(context);
+
+                if (success) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(
+                        sessionService: widget.sessionService,
+                      ),
+                    ),
+                  );
                 }
               },
               child: const Text("SIGN UP",
@@ -301,7 +316,11 @@ class _SignupPageState extends State<SignupPage> {
                 onPressed: (){
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(
+                        sessionService: widget.sessionService,
+                      ),
+                    ),
                   );
                 }, 
                 child: Text("Login",
