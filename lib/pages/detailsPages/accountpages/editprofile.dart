@@ -47,6 +47,8 @@ class _editProfileState extends State<editProfile> {
               customInput(label: "Email :", hint: "Enter your email"),
               customInput(label: "Phone :", hint: "Enter your phone number"),
               customInput(label: "Address :", hint: "Enter your Address"),
+              SizedBox(height: 10),
+              
             ],
           ),
         ),
