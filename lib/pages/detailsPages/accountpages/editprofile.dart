@@ -48,7 +48,7 @@ class _editProfileState extends State<editProfile> {
               customInput(label: "Phone :", hint: "Enter your phone number"),
               customInput(label: "Address :", hint: "Enter your Address"),
               SizedBox(height: 10),
-              
+              _saveChange(),
             ],
           ),
         ),
@@ -169,6 +169,21 @@ class _editProfileState extends State<editProfile> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _saveChange(){
+    return Center(
+      // padding: EdgeInsetsDirectional.symmetric(),
+      child: ElevatedButton.icon(
+        onPressed: (){}, 
+        icon: Icon(Icons.save_alt),
+        label: Text("Save Change", style: TextStyle(color: Colors.white,fontFamily: 'Custom'),),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          iconColor: Colors.white
+        ),
       ),
     );
   }
