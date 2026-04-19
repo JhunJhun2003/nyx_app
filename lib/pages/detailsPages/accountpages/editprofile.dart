@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -26,9 +28,11 @@ class _EditProfileState extends State<EditProfile> {
 
   bool _isLoading = true;
   bool _isUpdating = false;
+  bool _isUploading = false;
   String? _imageUrl;
   String? _errorMessage;
   Map<String, dynamic>? _originalUserData;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -55,10 +59,6 @@ class _EditProfileState extends State<EditProfile> {
     try {
       final String? token = widget.sessionService.getToken();
 
-      print(
-        '🔍 Token from SessionService: ${token != null ? "Exists" : "Null"}',
-      );
-
       if (token == null || token.isEmpty) {
         setState(() {
           _errorMessage = 'No authentication token found.\nPlease login again.';
@@ -68,8 +68,6 @@ class _EditProfileState extends State<EditProfile> {
       }
 
       final result = await Api.getMyProfile(token: token);
-
-      print(' API Result success: ${result['success']}');
 
       setState(() {
         if (result['success']) {
@@ -82,7 +80,6 @@ class _EditProfileState extends State<EditProfile> {
         _isLoading = false;
       });
     } catch (e) {
-      print(' Exception: $e');
       setState(() {
         _errorMessage = 'Error loading profile: $e';
         _isLoading = false;
@@ -93,25 +90,20 @@ class _EditProfileState extends State<EditProfile> {
   void _populateForm(Map<String, dynamic> userData) {
     _nameController.text = userData['name']?.toString() ?? '';
 
-    // Handle date of birth properly
     final dob = userData['dateOfBirth'];
     if (dob != null && dob.toString().isNotEmpty && dob.toString() != 'null') {
       _dobController.text = dob.toString();
     } else {
-      _dobController.text = ''; // Empty if no date
+      _dobController.text = '';
     }
 
     _emailController.text = userData['email']?.toString() ?? '';
     _phoneController.text = userData['phone']?.toString() ?? '';
     _addressController.text = userData['address']?.toString() ?? '';
     _imageUrl = userData['image_url']?.toString();
-
-    print('🖼️ Image URL: $_imageUrl');
-    print('📅 Date of Birth from API: ${_dobController.text}');
   }
 
   Future<void> _selectDate() async {
-    // Parse existing date if available
     DateTime? initialDate;
     if (_dobController.text.isNotEmpty && _dobController.text != 'null') {
       try {
@@ -134,107 +126,278 @@ class _EditProfileState extends State<EditProfile> {
     );
 
     if (pickedDate != null) {
-      // Format: YYYY-MM-DD (API expects this exact format)
       final String formattedDate =
           "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
 
       setState(() {
         _dobController.text = formattedDate;
       });
-
-      print('✅ Date selected: $formattedDate');
-
-      // Optional: Show confirmation
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Date of Birth set to: $formattedDate'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
     }
   }
 
-Future<void> _updateProfile() async {
-  setState(() {
-    _isUpdating = true;
-    _errorMessage = null;
-  });
+  // ========== IMAGE PICKER METHODS ==========
 
-  try {
-    final String? token = widget.sessionService.getToken();
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 80,
+      );
 
-    if (token == null) {
-      setState(() {
-        _errorMessage = 'Session expired. Please login again.';
-        _isUpdating = false;
-      });
-      return;
-    }
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
 
-    final response = await _callUpdateProfileAPI(token);
-
-    final bool isSuccess = response['status'] == 'success' || 
-                           response['status'] == 'Edit Profile';
-
-    if (isSuccess) {
-      // Save the new token
-      final String? newToken = response['new_token'];
-      
-      if (newToken != null && newToken.isNotEmpty) {
-        await widget.sessionService.saveToken(newToken);
-        print(' New token saved after profile update');
-      }
-
-      if (mounted) {
+        // Show preview
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Profile updated successfully'),
+            content: Text('Image selected! Click Update to save'),
             backgroundColor: Colors.green,
           ),
         );
       }
+    } catch (e) {
+      print('Error picking image: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+    }
+  }
 
-      // Refresh the current page data (stay on same page)
-      await _loadUserProfile();
-      
-      //  IMPORTANT: Do NOT navigate back - stay on this page
-      // Comment out or remove: Navigator.pop(context, true);
-      
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo taken! Click Update to save'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error taking picture: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error taking picture: $e')));
+    }
+  }
+
+  void _showImagePickerDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Change Profile Picture',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.photo_library, size: 28),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, size: 28),
+              title: const Text('Take a Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera();
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== UPLOAD IMAGE TO SERVER ==========
+
+  Future<void> _uploadImageToServer(String token) async {
+    if (_selectedImage == null) return;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final result = await Api.uploadProfileImage(
+        token: token,
+        imageFile: _selectedImage!,
+      );
+
+      if (result['status'] == 'success') {
+        // Save new token if returned
+        if (result['new_token'] != null) {
+          await widget.sessionService.saveToken(result['new_token']);
+          print('✅ New token saved after image upload');
+        }
+
+        print('✅ Image uploaded successfully');
+
+        // Clear selected image after upload
+        setState(() {
+          _selectedImage = null;
+        });
+
+        // Refresh profile to get new image URL
+        await _loadUserProfile();
+      } else {
+        print('❌ Upload failed: ${result['message']}');
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+    } finally {
       setState(() {
-        _isUpdating = false;
+        _isUploading = false;
       });
-      
-    } else {
+    }
+  }
+
+  // ========== UPDATE PROFILE ==========
+
+  Future<void> _updateProfile() async {
+    setState(() {
+      _isUpdating = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final String? token = widget.sessionService.getToken();
+
+      if (token == null) {
+        setState(() {
+          _errorMessage = 'Session expired. Please login again.';
+          _isUpdating = false;
+        });
+        return;
+      }
+
+      final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/update");
+
+      // Create multipart request
+      final request = http.MultipartRequest('PUT', uri);
+
+      // Add headers
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+
+      // Add all text fields
+      request.fields['name'] = _nameController.text.trim();
+      request.fields['email'] = _emailController.text.trim();
+      request.fields['phone'] = _phoneController.text.trim();
+      request.fields['dateOfbirth'] = _dobController.text.trim();
+      request.fields['address'] = _addressController.text.trim();
+
+      // Add image if selected (matching Postman)
+      if (_selectedImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', _selectedImage!.path),
+        );
+        print('✅ Image added to request: ${_selectedImage!.path}');
+      }
+
+      print("📡 Update URL: $uri");
+      print("📦 Fields: ${request.fields}");
+      print("📸 Image included: ${_selectedImage != null}");
+
+      // Send request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print("Update Response Status: ${response.statusCode}");
+      print("Update Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        final String? newToken = responseData['result'];
+
+        if (newToken != null && newToken.isNotEmpty) {
+          await widget.sessionService.saveToken(newToken);
+          print('✅ New token saved');
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // Clear selected image and refresh
+        setState(() {
+          _selectedImage = null;
+        });
+
+        await _loadUserProfile();
+
+        setState(() {
+          _isUpdating = false;
+        });
+      } else {
+        String errorMessage = 'Server error: ${response.statusCode}';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage =
+              errorData['message'] ?? errorData['status'] ?? errorMessage;
+        } catch (e) {}
+
+        setState(() {
+          _errorMessage = errorMessage;
+          _isUpdating = false;
+        });
+      }
+    } catch (e) {
+      print(' Update error: $e');
       setState(() {
-        _errorMessage = response['message'] ?? 'Update failed';
+        _errorMessage = 'Update failed: $e';
         _isUpdating = false;
       });
     }
-  } catch (e) {
-    print(' Update error: $e');
-    setState(() {
-      _errorMessage = 'Update failed: $e';
-      _isUpdating = false;
-    });
   }
-}
+
   Future<Map<String, dynamic>> _callUpdateProfileAPI(String token) async {
     final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/update");
-
-    print("📡 Update URL: $uri");
 
     final Map<String, dynamic> updateData = {
       'name': _nameController.text.trim(),
       'email': _emailController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'dateOfbirth': _dobController.text.trim(), // ← FIXED: lowercase 'b'
+      'dateOfbirth': _dobController.text.trim(),
       'address': _addressController.text.trim(),
     };
-
-    print("📦 Update Data: $updateData");
-    print(
-      "🔑 Token: ${token.substring(0, token.length > 20 ? 20 : token.length)}...",
-    );
 
     try {
       final http.Response response = await http
@@ -249,9 +412,6 @@ Future<void> _updateProfile() async {
           )
           .timeout(const Duration(seconds: 30));
 
-      print("Update Response Status: ${response.statusCode}");
-      print("Update Response Body: ${response.body}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.body.isEmpty) {
           return {
@@ -261,7 +421,6 @@ Future<void> _updateProfile() async {
         }
 
         final responseData = jsonDecode(response.body);
-
         final String? tokenFromResponse = responseData['result'];
 
         return {
@@ -285,7 +444,6 @@ Future<void> _updateProfile() async {
         return {'status': 'error', 'message': errorMessage};
       }
     } catch (e) {
-      print("Update Profile Error: $e");
       return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
@@ -309,11 +467,7 @@ Future<void> _updateProfile() async {
                         color: Colors.red,
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
+                      Text(_errorMessage!, textAlign: TextAlign.center),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _loadUserProfile,
@@ -392,12 +546,9 @@ Future<void> _updateProfile() async {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(
               Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
@@ -428,7 +579,18 @@ Future<void> _updateProfile() async {
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: Colors.black, width: 2),
         ),
-        child: _imageUrl != null && _imageUrl!.isNotEmpty
+        child: _isUploading
+            ? const Center(child: CircularProgressIndicator())
+            : _selectedImage != null
+            ? ClipOval(
+                child: Image.file(
+                  _selectedImage!,
+                  width: 160,
+                  height: 160,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : _imageUrl != null && _imageUrl!.isNotEmpty
             ? ClipOval(
                 child: Image.network(
                   _imageUrl!,
@@ -440,7 +602,6 @@ Future<void> _updateProfile() async {
                     return const Center(child: CircularProgressIndicator());
                   },
                   errorBuilder: (context, error, stackTrace) {
-                    print('❌ Image error: $error');
                     return const Icon(Icons.person, size: 160);
                   },
                 ),
@@ -453,14 +614,9 @@ Future<void> _updateProfile() async {
   Widget _edit() {
     return Center(
       child: GestureDetector(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image change coming soon')),
-          );
-        },
+        onTap: _showImagePickerDialog,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
               'Change Profile',
@@ -469,7 +625,13 @@ Future<void> _updateProfile() async {
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.all(4),
-              child: const Icon(Icons.mode_edit, size: 20),
+              child: _isUploading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.mode_edit, size: 20),
             ),
           ],
         ),

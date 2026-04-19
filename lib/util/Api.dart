@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:nyxproject/util/Constant.dart';
 
@@ -394,4 +395,62 @@ class Api {
       return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
+
+  // Upload profile image
+static Future<Map<String, dynamic>> uploadProfileImage({
+  required String token,
+  required File imageFile,
+}) async {
+  final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/uploadImage");
+  
+  print("📡 Upload URL: $uri");
+  
+  try {
+    // Create multipart request
+    final request = http.MultipartRequest('POST', uri);
+    
+    // Add headers
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    });
+    
+    // Add image file
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image', // Field name expected by your API
+        imageFile.path,
+      ),
+    );
+    
+    // Send request
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    
+    print("Upload Response Status: ${response.statusCode}");
+    print("Upload Response Body: ${response.body}");
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = jsonDecode(response.body);
+      
+      // Extract token if returned
+      final String? newToken = responseData['result'];
+      
+      return {
+        'status': 'success',
+        'message': 'Image uploaded successfully',
+        'new_token': newToken,
+        'data': responseData,
+      };
+    } else {
+      return {
+        'status': 'error',
+        'message': 'Failed to upload image: ${response.statusCode}',
+      };
+    }
+  } catch (e) {
+    print("Upload Image Error: $e");
+    return {'status': 'error', 'message': 'Network error: $e'};
+  }
+}
 }
