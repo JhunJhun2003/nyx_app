@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/product.dart';
+import 'package:nyxproject/util/Api.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -8,51 +10,80 @@ class DashBoard extends StatefulWidget {
   State<DashBoard> createState() => _DashBoardState();
 }
 
-
 class _DashBoardState extends State<DashBoard> {
+  List<Category> _categoriesList = [];
+  bool _isLoadingCategories = true;
+  String? _categoriesError;
 
   final List<Product> allProducts = [
-    Product(name: "Shuttlecock", price: 45000, catagories: '', brand: '',),
+    Product(name: "Shuttlecock", price: 45000, catagories: '', brand: ''),
     Product(name: "Football", price: 35000, catagories: '', brand: ''),
-    Product(name: "Shoe", price: 95000, catagories: '', brand: '',),
-    Product(name: "Hand Glove",price: 65000, catagories: '', brand: '',),
+    Product(name: "Shoe", price: 95000, catagories: '', brand: ''),
+    Product(name: "Hand Glove", price: 65000, catagories: '', brand: ''),
     Product(name: "Golf Bag", price: 125000, catagories: '', brand: ''),
-    Product(name: "Shuttlecock", price: 55000, catagories: '', brand: '',),
-    Product(name: "Gloves", price: 34000, catagories: '', brand: '',),
+    Product(name: "Shuttlecock", price: 55000, catagories: '', brand: ''),
+    Product(name: "Gloves", price: 34000, catagories: '', brand: ''),
     Product(name: "Basketball", price: 50000, catagories: '', brand: ''),
   ];
 
   List<Product> filteredProducts = [];
-
   String searchQuery = "";
 
   @override
   void initState() {
     super.initState();
-    filteredProducts = allProducts ; // show all initially
+    filteredProducts = allProducts;
+    _loadCategories();  // No token needed
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+      _categoriesError = null;
+    });
+
+    try {
+      // No token required - public access
+      final result = await Api.getAllCategories();
+      
+      if (result['success']) {
+        setState(() {
+          _categoriesList = result['data'];
+          _isLoadingCategories = false;
+        });
+        print(' Loaded ${_categoriesList.length} categories');
+      } else {
+        setState(() {
+          _categoriesError = result['message'];
+          _isLoadingCategories = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _categoriesError = 'Error loading categories: $e';
+        _isLoadingCategories = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      // bottomNavigationBar: _bottomNav(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _searchBar(),
               _banner(),
               _section("Categories"),
-              // _categories(),
-              Divider(),
+              _categoriesWidget(),
+              const Divider(),
               _section("Happy Hour Sales"),
-              // _HappyHourSalesCards(),
-              Divider(),
+              const Divider(),
               _section("Special Promotion"),
-              // _SpecialPromotionCards(),
               _section("New Arrival"),
               _gridCards(),
               _section("Hot Item"),
@@ -67,7 +98,7 @@ class _DashBoardState extends State<DashBoard> {
 
   Widget _searchBar() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
         onSubmitted: (value) {
           setState(() {
@@ -77,25 +108,26 @@ class _DashBoardState extends State<DashBoard> {
             }).toList();
           });
         },
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontFamily: "Custom",
         ),
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for ?",
-          hintStyle: TextStyle(fontFamily: 'Custom', color: Colors.white),
+          hintStyle: const TextStyle(fontFamily: 'Custom', color: Colors.white),
           filled: true,
-          fillColor: Color.fromARGB(255, 13, 27, 42),
+          fillColor: const Color.fromARGB(255, 13, 27, 42),
           suffixIcon: IconButton(
-            onPressed:(){}, 
-            icon: Icon(Icons.search),
+            onPressed: () {},
+            icon: const Icon(Icons.search),
           ),
           suffixIconColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,)
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -108,7 +140,7 @@ class _DashBoardState extends State<DashBoard> {
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        image: DecorationImage(
+        image: const DecorationImage(
           image: AssetImage("assets/images/Group1208.png"),
           fit: BoxFit.cover,
         ),
@@ -125,249 +157,125 @@ class _DashBoardState extends State<DashBoard> {
           color: Color.fromARGB(255, 13, 27, 42),
           fontWeight: FontWeight.w900,
           fontFamily: 'Custom',
+          fontSize: 16,
         ),
       ),
     );
   }
 
-  // Widget _categories() {
-  //   // Use API categories instead of static data
-  //   final categories = Api.categories;
+  Widget _categoriesWidget() {
+    if (_isLoadingCategories) {
+      return const SizedBox(
+        height: 110,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-  //   if (categories.isEmpty) {
-  //     return const Center(child: Text('No categories available'));
-  //   }
+    if (_categoriesError != null) {
+      return SizedBox(
+        height: 110,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _categoriesError!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _loadCategories,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+                ),
+                child: const Text('Retry', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-  //   return SizedBox(
-  //     height: 110,
-  //     child: ListView.builder(
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: categories.length,
-  //       itemBuilder: (context, index) {
-  //         final item = categories[index]; // Category object
+    if (_categoriesList.isEmpty) {
+      return const SizedBox(
+        height: 110,
+        child: Center(
+          child: Text('No categories available'),
+        ),
+      );
+    }
 
-  //         return Padding(
-  //           padding: const EdgeInsets.only(left: 16),
-  //           child: Column(
-  //             children: [
-  //               // Circle Image
-  //               Container(
-  //                 padding: const EdgeInsets.all(12),
-  //                 decoration: const BoxDecoration(
-  //                   shape: BoxShape.circle,
-  //                   color: Color.fromARGB(255, 13, 27, 42),
-  //                 ),
-  //                 child: item.imageUrl != null
-  //                     ? Image.network(
-  //                         item.imageUrl!, // Use .imageUrl for API
-  //                         width: 30,
-  //                         height: 30,
-  //                         fit: BoxFit.contain,
-  //                         errorBuilder: (context, error, stackTrace) {
-  //                           return const Icon(
-  //                             Icons.error,
-  //                             size: 30,
-  //                             color: Colors.red,
-  //                           );
-  //                         },
-  //                       )
-  //                     : const Icon(Icons.sports, size: 30, color: Colors.white),
-  //               ),
-  //               const SizedBox(height: 6),
-  //               Text(
-  //                 item.name ?? 'Unknown', // Use .name for API
-  //                 style: const TextStyle(
-  //                   color: Color.fromARGB(255, 13, 27, 42),
-  //                   fontFamily: 'Custom',
-  //                   fontSize: 12,
-  //                   fontWeight: FontWeight.w900,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categoriesList.length,
+        itemBuilder: (context, index) {
+          final category = _categoriesList[index];
 
-  // Widget _HappyHourSalesCards() {
-  //   final products = Api.products;
-
-  //   if (products.isEmpty) {
-  //     return const Center(child: Text('No products available'));
-  //   }
-
-  //   // Filter products that have 'happy hour sales' in their tags
-  //   final happyHourProducts = products.where((product) {
-  //     return product.tags?.toLowerCase().contains("happy hour sales") ?? false;
-  //   }).toList();
-
-  //   if (happyHourProducts.isEmpty) {
-  //     return const Center(
-  //       child: Text('No products with "happy hour sales" tag available'),
-  //     );
-  //   }
-
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(vertical: 8),
-  //     height: 190,
-  //     color: const Color.fromARGB(255, 13, 27, 42),
-  //     child: ListView.builder(
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: happyHourProducts.length, // Use actual count
-  //       itemBuilder: (context, index) {
-  //         final product = happyHourProducts[index]; // Get actual product
-
-  //         return Container(
-  //           width: 140,
-  //           margin: const EdgeInsets.only(left: 10),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(12),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               // Product Image
-  //               Expanded(
-  //                 child: product.images != null
-  //                     ? ClipRRect(
-  //                         borderRadius: const BorderRadius.vertical(
-  //                           top: Radius.circular(12),
-  //                         ),
-  //                         child: Image.network(
-  //                           product.images!,
-  //                           width: double.infinity,
-  //                           height: double.infinity,
-  //                           fit: BoxFit.cover,
-  //                           errorBuilder: (context, error, stackTrace) {
-  //                             return const Icon(Icons.image, size: 80);
-  //                           },
-  //                         ),
-  //                       )
-  //                     : const Icon(Icons.image, size: 80),
-  //               ),
-
-  //               // Product Name
-  //               Padding(
-  //                 padding: const EdgeInsets.all(8.0),
-  //                 child: Text(
-  //                   product.productName ?? 'Unknown Product',
-  //                   style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
-  //                   maxLines: 2,
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //               ),
-
-  //               // Product Price
-  //               Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 8),
-  //                 child: Text(
-  //                   '${product.price ?? '0'} Ks',
-  //                   style: const TextStyle(
-  //                     fontWeight: FontWeight.bold,
-  //                     fontFamily: 'Custom',
-  //                   ),
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 6),
-  //             ],
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
-
-  // Widget _SpecialPromotionCards() {
-  //   final products = Api.products;
-
-  //   if (products.isEmpty) {
-  //     return const Center(child: Text('No products available'));
-  //   }
-
-  //   // Filter products that have 'special promotion' in their tags
-  //   final specialPromotionProducts = products.where((product) {
-  //     return product.tags?.toLowerCase().contains("special promotion") ?? false;
-  //   }).toList();
-
-  //   if (specialPromotionProducts.isEmpty) {
-  //     return const Center(
-  //       child: Text('No products with "special promotion" tag available'),
-  //     );
-  //   }
-
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(vertical: 8),
-  //     height: 190,
-  //     color: const Color.fromARGB(255, 13, 27, 42),
-  //     child: ListView.builder(
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: specialPromotionProducts.length, // Use actual count
-  //       itemBuilder: (context, index) {
-  //         final product = specialPromotionProducts[index]; // Get actual product
-
-  //         return Container(
-  //           width: 140,
-  //           margin: const EdgeInsets.only(left: 10),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(12),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               // Product Image
-  //               Expanded(
-  //                 child: product.images != null
-  //                     ? ClipRRect(
-  //                         borderRadius: const BorderRadius.vertical(
-  //                           top: Radius.circular(12),
-  //                         ),
-  //                         child: Image.network(
-  //                           product.images!,
-  //                           width: double.infinity,
-  //                           height: double.infinity,
-  //                           fit: BoxFit.cover,
-  //                           errorBuilder: (context, error, stackTrace) {
-  //                             return const Icon(Icons.image, size: 80);
-  //                           },
-  //                         ),
-  //                       )
-  //                     : const Icon(Icons.image, size: 80),
-  //               ),
-
-  //               // Product Name
-  //               Padding(
-  //                 padding: const EdgeInsets.all(8.0),
-  //                 child: Text(
-  //                   product.productName ?? 'Unknown Product',
-  //                   style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
-  //                   maxLines: 2,
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //               ),
-
-  //               // Product Price
-  //               Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 8),
-  //                 child: Text(
-  //                   '${product.price ?? '0'} Ks',
-  //                   style: const TextStyle(
-  //                     fontWeight: FontWeight.bold,
-  //                     fontFamily: 'Custom',
-  //                   ),
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 6),
-  //             ],
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
+          return Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Column(
+              children: [
+                // Circle Image
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to category products page
+                    print('Category tapped: ${category.name}');
+                  },
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color.fromARGB(255, 13, 27, 42),
+                    ),
+                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              category.imageUrl!,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.sports,
+                                  size: 30,
+                                  color: Colors.white,
+                                );
+                              },
+                            ),
+                          )
+                        : const Icon(Icons.sports, size: 30, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 13, 27, 42),
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _gridCards() {
     return GridView.builder(
@@ -389,28 +297,50 @@ class _DashBoardState extends State<DashBoard> {
             border: Border.all(color: Colors.black, width: 2),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.image, size: 80),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.network(
+                    'https://via.placeholder.com/150',
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(Icons.image, size: 50),
+                      );
+                    },
+                  ),
+                ),
+              ),
               Padding(
-                padding: EdgeInsets.all(6),
-                child: Text(
-                  "Badminton Shuttlecock",
-                  style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Badminton Shuttlecock",
+                      style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "35,000 Ks",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Custom',
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                "35,000 Ks",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Custom',
-                ),
-              ),
-              SizedBox(height: 6),
             ],
           ),
         );
       },
     );
   }
-
 }

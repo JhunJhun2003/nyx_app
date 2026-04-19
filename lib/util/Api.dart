@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/util/Constant.dart';
 
 class Api {
@@ -397,60 +398,122 @@ class Api {
   }
 
   // Upload profile image
-static Future<Map<String, dynamic>> uploadProfileImage({
-  required String token,
-  required File imageFile,
-}) async {
-  final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/uploadImage");
-  
-  print("📡 Upload URL: $uri");
-  
-  try {
-    // Create multipart request
-    final request = http.MultipartRequest('POST', uri);
-    
-    // Add headers
-    request.headers.addAll({
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    });
-    
-    // Add image file
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'image', // Field name expected by your API
-        imageFile.path,
-      ),
-    );
-    
-    // Send request
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    
-    print("Upload Response Status: ${response.statusCode}");
-    print("Upload Response Body: ${response.body}");
-    
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-      
-      // Extract token if returned
-      final String? newToken = responseData['result'];
-      
-      return {
-        'status': 'success',
-        'message': 'Image uploaded successfully',
-        'new_token': newToken,
-        'data': responseData,
-      };
-    } else {
-      return {
-        'status': 'error',
-        'message': 'Failed to upload image: ${response.statusCode}',
-      };
+  static Future<Map<String, dynamic>> uploadProfileImage({
+    required String token,
+    required File imageFile,
+  }) async {
+    final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/uploadImage");
+
+    print("📡 Upload URL: $uri");
+
+    try {
+      // Create multipart request
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add headers
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+
+      // Add image file
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image', // Field name expected by your API
+          imageFile.path,
+        ),
+      );
+
+      // Send request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print("Upload Response Status: ${response.statusCode}");
+      print("Upload Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+
+        // Extract token if returned
+        final String? newToken = responseData['result'];
+
+        return {
+          'status': 'success',
+          'message': 'Image uploaded successfully',
+          'new_token': newToken,
+          'data': responseData,
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': 'Failed to upload image: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print("Upload Image Error: $e");
+      return {'status': 'error', 'message': 'Network error: $e'};
     }
-  } catch (e) {
-    print("Upload Image Error: $e");
-    return {'status': 'error', 'message': 'Network error: $e'};
   }
-}
+
+  static List<Category> categories = [];
+  // Get all categories - No authentication required
+  static Future<Map<String, dynamic>> getAllCategories() async {
+    final Uri uri = Uri.parse("${Constant.API_URL}/homecategory/category");
+
+    print("📡 Categories URL: $uri");
+
+    try {
+      final http.Response response = await http
+          .get(uri, headers: Constant.headers)
+          .timeout(const Duration(seconds: 30));
+
+      print("Categories Response Status: ${response.statusCode}");
+      print("Categories Response Body: ${response.body}");
+
+      if (response.body.isEmpty) {
+        return {'success': false, 'message': 'Empty response from server'};
+      }
+
+      dynamic responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          'success': false,
+          'message': 'Invalid response format from server',
+        };
+      }
+
+      if (responseData is Map<String, dynamic>) {
+        bool isSuccess = responseData['status'] == 'success';
+
+        if (isSuccess &&
+            responseData['result'] != null &&
+            responseData['result'] is List) {
+          final List categoriesList = responseData['result'];
+
+          // Convert to List<Category>
+          List<Category> categories = categoriesList
+              .map((category) => Category.fromJson(category))
+              .toList();
+
+          return {
+            'success': true,
+            'data': categories,
+            'message': 'Categories fetched successfully',
+          };
+        }
+
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to fetch categories',
+        };
+      }
+
+      return {'success': false, 'message': 'Invalid response format'};
+    } catch (e) {
+      print("Get Categories Error: $e");
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
