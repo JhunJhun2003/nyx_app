@@ -21,6 +21,12 @@ class SessionService {
     await _prefs.setString(_keyUserData, jsonEncode(user.toJson()));
   }
   
+  //  ADD THIS METHOD - Save/Update token only
+  Future<void> saveToken(String token) async {
+    await _prefs.setString(_keyUserToken, token);
+    print(' Token updated in session');
+  }
+  
   // Check if user is logged in
   bool isLoggedIn() {
     return _prefs.getBool(_keyIsLoggedIn) ?? false;

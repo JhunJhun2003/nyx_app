@@ -39,7 +39,7 @@ class _AccountPageState extends State<AccountPage> {
               _menuItem(Icons.edit, "Edit Profile", () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => editProfile()),
+                  MaterialPageRoute(builder: (context) => EditProfile(sessionService: widget.sessionService)),
                 );
               }),
               _menuItem(Icons.shopping_cart_outlined, "My Orders", () {
