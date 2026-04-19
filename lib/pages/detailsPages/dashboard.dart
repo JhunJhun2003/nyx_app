@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/catagory.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/models/product.dart';
 
 class DashBoard extends StatefulWidget {
@@ -48,13 +46,13 @@ class _DashBoardState extends State<DashBoard> {
               _searchBar(),
               _banner(),
               _section("Categories"),
-              _categories(),
+              // _categories(),
               Divider(),
               _section("Happy Hour Sales"),
-              _horizontalCards(),
+              // _HappyHourSalesCards(),
               Divider(),
               _section("Special Promotion"),
-              _horizontalCards(),
+              // _SpecialPromotionCards(),
               _section("New Arrival"),
               _gridCards(),
               _section("Hot Item"),
@@ -132,129 +130,244 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _categories() {
-    final categories = [
-      {"image": "assets/images/badminton1.png", "name": "Badminton"},
-      {"image": "assets/images/basketball.png", "name": "Basketball"},
-      {"image": "assets/images/boxing.png", "name": "Boxing"},
-      {"image": "assets/images/golf.jpg", "name": "Golf"},
-      {"image": "assets/images/football.png", "name": "Football"},
-      {"image": "assets/images/tennis_catagory.png", "name": "Tennis"},
-    ];
   // Widget _categories() {
-  //   final categories = Api.categories; // Using API data
+  //   // Use API categories instead of static data
+  //   final categories = Api.categories;
 
   //   if (categories.isEmpty) {
   //     return const Center(child: Text('No categories available'));
   //   }
 
-    return SizedBox(
-      height: 110,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final item = categories[index]; // This is a Category object
+  //   return SizedBox(
+  //     height: 110,
+  //     child: ListView.builder(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: categories.length,
+  //       itemBuilder: (context, index) {
+  //         final item = categories[index]; // Category object
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Catagory(index: index),
-                ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Column(
-                children: [
-                  // Circle Image
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromARGB(255, 13, 27, 42),
-                    ),
-                    child: Image.asset(
-                      item["image"]!,
-                      width: 30,
-                      height: 30,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-            
-                  const SizedBox(height: 6),
-            
-                  Text(
-                    item["name"]!,
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 13, 27, 42),
-                      fontFamily: 'Custom',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  //         return Padding(
+  //           padding: const EdgeInsets.only(left: 16),
+  //           child: Column(
+  //             children: [
+  //               // Circle Image
+  //               Container(
+  //                 padding: const EdgeInsets.all(12),
+  //                 decoration: const BoxDecoration(
+  //                   shape: BoxShape.circle,
+  //                   color: Color.fromARGB(255, 13, 27, 42),
+  //                 ),
+  //                 child: item.imageUrl != null
+  //                     ? Image.network(
+  //                         item.imageUrl!, // Use .imageUrl for API
+  //                         width: 30,
+  //                         height: 30,
+  //                         fit: BoxFit.contain,
+  //                         errorBuilder: (context, error, stackTrace) {
+  //                           return const Icon(
+  //                             Icons.error,
+  //                             size: 30,
+  //                             color: Colors.red,
+  //                           );
+  //                         },
+  //                       )
+  //                     : const Icon(Icons.sports, size: 30, color: Colors.white),
+  //               ),
+  //               const SizedBox(height: 6),
+  //               Text(
+  //                 item.name ?? 'Unknown', // Use .name for API
+  //                 style: const TextStyle(
+  //                   color: Color.fromARGB(255, 13, 27, 42),
+  //                   fontFamily: 'Custom',
+  //                   fontSize: 12,
+  //                   fontWeight: FontWeight.w900,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 
-  Widget _horizontalCards() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      height: 190,
-      decoration: BoxDecoration(
-        // borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 13, 27, 42),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: filteredProducts.length,
-        itemBuilder: (context, index) {
-          final Product product = filteredProducts[index];
+  // Widget _HappyHourSalesCards() {
+  //   final products = Api.products;
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetails(product: product),
-                ),
-              );
-            },
-            child: Container(
-              width: 140,
-              margin: const EdgeInsets.only(left: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: Icon(Icons.image, size: 120)),
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(product.name, style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("${product.price.toString()} Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-                  ),
-                  SizedBox(height: 6)
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  //   if (products.isEmpty) {
+  //     return const Center(child: Text('No products available'));
+  //   }
+
+  //   // Filter products that have 'happy hour sales' in their tags
+  //   final happyHourProducts = products.where((product) {
+  //     return product.tags?.toLowerCase().contains("happy hour sales") ?? false;
+  //   }).toList();
+
+  //   if (happyHourProducts.isEmpty) {
+  //     return const Center(
+  //       child: Text('No products with "happy hour sales" tag available'),
+  //     );
+  //   }
+
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(vertical: 8),
+  //     height: 190,
+  //     color: const Color.fromARGB(255, 13, 27, 42),
+  //     child: ListView.builder(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: happyHourProducts.length, // Use actual count
+  //       itemBuilder: (context, index) {
+  //         final product = happyHourProducts[index]; // Get actual product
+
+  //         return Container(
+  //           width: 140,
+  //           margin: const EdgeInsets.only(left: 10),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               // Product Image
+  //               Expanded(
+  //                 child: product.images != null
+  //                     ? ClipRRect(
+  //                         borderRadius: const BorderRadius.vertical(
+  //                           top: Radius.circular(12),
+  //                         ),
+  //                         child: Image.network(
+  //                           product.images!,
+  //                           width: double.infinity,
+  //                           height: double.infinity,
+  //                           fit: BoxFit.cover,
+  //                           errorBuilder: (context, error, stackTrace) {
+  //                             return const Icon(Icons.image, size: 80);
+  //                           },
+  //                         ),
+  //                       )
+  //                     : const Icon(Icons.image, size: 80),
+  //               ),
+
+  //               // Product Name
+  //               Padding(
+  //                 padding: const EdgeInsets.all(8.0),
+  //                 child: Text(
+  //                   product.productName ?? 'Unknown Product',
+  //                   style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
+  //                   maxLines: 2,
+  //                   overflow: TextOverflow.ellipsis,
+  //                 ),
+  //               ),
+
+  //               // Product Price
+  //               Padding(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 8),
+  //                 child: Text(
+  //                   '${product.price ?? '0'} Ks',
+  //                   style: const TextStyle(
+  //                     fontWeight: FontWeight.bold,
+  //                     fontFamily: 'Custom',
+  //                   ),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 6),
+  //             ],
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
+
+  // Widget _SpecialPromotionCards() {
+  //   final products = Api.products;
+
+  //   if (products.isEmpty) {
+  //     return const Center(child: Text('No products available'));
+  //   }
+
+  //   // Filter products that have 'special promotion' in their tags
+  //   final specialPromotionProducts = products.where((product) {
+  //     return product.tags?.toLowerCase().contains("special promotion") ?? false;
+  //   }).toList();
+
+  //   if (specialPromotionProducts.isEmpty) {
+  //     return const Center(
+  //       child: Text('No products with "special promotion" tag available'),
+  //     );
+  //   }
+
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(vertical: 8),
+  //     height: 190,
+  //     color: const Color.fromARGB(255, 13, 27, 42),
+  //     child: ListView.builder(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: specialPromotionProducts.length, // Use actual count
+  //       itemBuilder: (context, index) {
+  //         final product = specialPromotionProducts[index]; // Get actual product
+
+  //         return Container(
+  //           width: 140,
+  //           margin: const EdgeInsets.only(left: 10),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               // Product Image
+  //               Expanded(
+  //                 child: product.images != null
+  //                     ? ClipRRect(
+  //                         borderRadius: const BorderRadius.vertical(
+  //                           top: Radius.circular(12),
+  //                         ),
+  //                         child: Image.network(
+  //                           product.images!,
+  //                           width: double.infinity,
+  //                           height: double.infinity,
+  //                           fit: BoxFit.cover,
+  //                           errorBuilder: (context, error, stackTrace) {
+  //                             return const Icon(Icons.image, size: 80);
+  //                           },
+  //                         ),
+  //                       )
+  //                     : const Icon(Icons.image, size: 80),
+  //               ),
+
+  //               // Product Name
+  //               Padding(
+  //                 padding: const EdgeInsets.all(8.0),
+  //                 child: Text(
+  //                   product.productName ?? 'Unknown Product',
+  //                   style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
+  //                   maxLines: 2,
+  //                   overflow: TextOverflow.ellipsis,
+  //                 ),
+  //               ),
+
+  //               // Product Price
+  //               Padding(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 8),
+  //                 child: Text(
+  //                   '${product.price ?? '0'} Ks',
+  //                   style: const TextStyle(
+  //                     fontWeight: FontWeight.bold,
+  //                     fontFamily: 'Custom',
+  //                   ),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 6),
+  //             ],
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 
   Widget _gridCards() {
     return GridView.builder(
@@ -267,38 +380,37 @@ class _DashBoardState extends State<DashBoard> {
         crossAxisSpacing: 12,
         childAspectRatio: 0.75,
       ),
-      itemCount: filteredProducts.length,
+      itemCount: 4,
       itemBuilder: (context, index) {
-        final Product product = filteredProducts[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetails(product: product),
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.black, width: 2),
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.image, size: 80),
+              Padding(
+                padding: EdgeInsets.all(6),
+                child: Text(
+                  "Badminton Shuttlecock",
+                  style: TextStyle(fontSize: 12, fontFamily: 'Custom'),
                 ),
-              );
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: BoxBorder.all(color: Colors.black, width: 2),
-            ),
-            child: Column(
-              children: const [
-                Expanded(child: Icon(Icons.image, size: 120)),
-                Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
+              ),
+              Text(
+                "35,000 Ks",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Custom',
                 ),
-                Text("35,000 Ks", style: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'Custom',)),
-                SizedBox(height: 6)
-              ],
-            ),
+              ),
+              SizedBox(height: 6),
+            ],
           ),
         );
       },
     );
   }
+
 }

@@ -114,7 +114,7 @@ class _BadmintonClassState extends State<BadmintonClass> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: BoxBorder.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.black, width: 2),
         ),
         child: 
           Image(
