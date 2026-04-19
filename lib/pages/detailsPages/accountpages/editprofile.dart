@@ -258,10 +258,10 @@ class _EditProfileState extends State<EditProfile> {
         // Save new token if returned
         if (result['new_token'] != null) {
           await widget.sessionService.saveToken(result['new_token']);
-          print('✅ New token saved after image upload');
+          print(' New token saved after image upload');
         }
 
-        print('✅ Image uploaded successfully');
+        print(' Image uploaded successfully');
 
         // Clear selected image after upload
         setState(() {
@@ -271,7 +271,7 @@ class _EditProfileState extends State<EditProfile> {
         // Refresh profile to get new image URL
         await _loadUserProfile();
       } else {
-        print('❌ Upload failed: ${result['message']}');
+        print(' Upload failed: ${result['message']}');
       }
     } catch (e) {
       print('Error uploading image: $e');
@@ -324,12 +324,12 @@ class _EditProfileState extends State<EditProfile> {
         request.files.add(
           await http.MultipartFile.fromPath('image', _selectedImage!.path),
         );
-        print('✅ Image added to request: ${_selectedImage!.path}');
+        print(' Image added to request: ${_selectedImage!.path}');
       }
 
-      print("📡 Update URL: $uri");
-      print("📦 Fields: ${request.fields}");
-      print("📸 Image included: ${_selectedImage != null}");
+      print(" Update URL: $uri");
+      print(" Fields: ${request.fields}");
+      print(" Image included: ${_selectedImage != null}");
 
       // Send request
       final streamedResponse = await request.send();
@@ -344,7 +344,7 @@ class _EditProfileState extends State<EditProfile> {
 
         if (newToken != null && newToken.isNotEmpty) {
           await widget.sessionService.saveToken(newToken);
-          print('✅ New token saved');
+          print(' New token saved');
         }
 
         if (mounted) {
