@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/services/session_service.dart';
 import 'pages/main_dashboard.dart'; // Main
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final sessionService = SessionService();
+  await sessionService.init();
+
+  runApp(MyApp(sessionService: sessionService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final SessionService sessionService;
+  const MyApp({required this.sessionService, super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainDashboard(),
+      // home: sessionService.isLoggedIn()
+      //     ? MainDashboard(sessionService: sessionService)
+      //     : LoginPage(sessionService: sessionService),
+      home:MainDashboard(sessionService: sessionService),
+      // home: const ProductDetails(),
     );
   }
 }

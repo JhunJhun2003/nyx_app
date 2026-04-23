@@ -24,6 +24,17 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	
+	<!-- Camera and Photo Library Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take profile pictures</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs gallery access to select profile pictures</string>
+	
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save profile pictures to your gallery</string>
+	
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

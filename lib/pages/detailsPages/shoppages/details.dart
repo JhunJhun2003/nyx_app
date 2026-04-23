@@ -127,7 +127,7 @@ class _ProductDetailsState extends State<ProductDetails> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: BoxBorder.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.black, width: 2),
         ),
         child: Icon(Icons.image, size: 160),
       ),
@@ -195,7 +195,8 @@ class _ProductDetailsState extends State<ProductDetails> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.product.name,
+              // widget.product.name,
+              "Product Name",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -474,11 +475,11 @@ class _ProductDetailsState extends State<ProductDetails> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: BoxBorder.all(color: Colors.black, width: 2),
+            border: Border.all(color: Colors.black, width: 2),
           ),
           child: Column(
-            children: const [
-              Expanded(child: Icon(Icons.image, size: 150)),
+            children: [
+              const Icon(Icons.image, size: 150),
               Padding(
                 padding: EdgeInsets.all(6),
                 child: Text("Badminton Shuttlecock", style: TextStyle(fontSize: 12,fontFamily: 'Custom',)),
