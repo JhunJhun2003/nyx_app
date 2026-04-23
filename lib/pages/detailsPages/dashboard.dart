@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/util/Api.dart';
 
+import 'shoppages/catagory.dart';
+
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
 
@@ -107,7 +109,12 @@ class _DashBoardState extends State<DashBoard> {
               const SizedBox(height: 5),
               _searchBar(),
               _banner(),
-              _section("Categories"),
+              _section("Categories",(){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+                );
+              }),
               _categoriesWidget(),
               const Divider(),
               
@@ -168,7 +175,12 @@ class _DashBoardState extends State<DashBoard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        _section(tagName),
+        _section(tagName,(){
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+          );
+        }),
         const SizedBox(height: 5),
         SizedBox(
           height: 220,
@@ -334,17 +346,30 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _section(String title) {
+  Widget _section(String title, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Color.fromARGB(255, 13, 27, 42),
-          fontWeight: FontWeight.w900,
-          fontFamily: 'Custom',
-          fontSize: 18,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Custom',
+              fontSize: 18,
+            ),
+          ),
+          IconButton(
+            onPressed: onTap, 
+            icon: Icon(
+              Icons.arrow_forward_ios_sharp, 
+              color: Color.fromARGB(255, 13, 27, 42),
+              size: 18,
+            ),
+          ),
+        ],
       ),
     );
   }
