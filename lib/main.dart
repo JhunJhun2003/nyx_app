@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
-// import 'pages/detailsPages/accountpages/login.dart';
 import 'pages/main_dashboard.dart'; // Main
 
 void main() {
@@ -15,7 +13,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MainDashboard(),
-      // home: const ProductDetails(),
     );
   }
 }

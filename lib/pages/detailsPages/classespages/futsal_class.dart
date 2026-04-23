@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class BadmintonClass extends StatefulWidget {
-  const BadmintonClass({super.key});
+class futsalClass extends StatefulWidget {
+  const futsalClass({super.key});
 
   @override
-  State<BadmintonClass> createState() => _BadmintonClassState();
+  State<futsalClass> createState() => _futsalClassState();
 }
 
-class _BadmintonClassState extends State<BadmintonClass> {
+class _futsalClassState extends State<futsalClass> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,54 +23,50 @@ class _BadmintonClassState extends State<BadmintonClass> {
               _section("Training Level"),
               SizedBox(height: 5),
               SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    const SizedBox(width: 10),
-                    trainingCard(
-                      icon: Icons.sports,
-                      title: "Beginner",
-                      description:
-                          "Focus on proper grip, basic footwork, and foundational strokes for a solid start.",
-                      isSelected: true,
-                    ),
-                    const SizedBox(width: 10),
-                    trainingCard(
-                      icon: Icons.flash_on,
-                      title: "Intermediate",
-                      description:
-                          "Enhancing tactical awareness, physical stamina, and advanced court coverage.",
-                    ),
-                    const SizedBox(width: 10),
-                    trainingCard(
-                      icon: Icons.emoji_events,
-                      title: "Advanced",
-                      description:
-                          "Intensive match simulation, elite drills, and tournament-ready mental preparation.",
-                    ),
-                    const SizedBox(width: 10),
-                  ],
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 10),
+                      trainingCard(
+                        icon: Icons.sports,
+                        title: "Beginner",
+                        description:
+                            "Fundamental ball control, passing basics, and positioning",
+                        isSelected: true,
+                      ),
+                      const SizedBox(width: 10),
+                      trainingCard(
+                        icon: Icons.flash_on,
+                        title: "Intermediate",
+                        description:
+                            "Technical skills, individual brilliance, and team plays.",
+                      ),
+                      const SizedBox(width: 10),
+                      trainingCard(
+                        icon: Icons.emoji_events,
+                        title: "Advanced",
+                        description:
+                            "Competitive tactics, fitness, and elite-level drills.",
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 5),
-              _section("Training Schedules"),
-              SizedBox(height: 5),
-              _timeTable(),
-              SizedBox(height: 5),
-              _section("What You'll Learn"),
-              SizedBox(height: 5),
-              _learning(),
-              SizedBox(height: 5),
-              _section("Meet Your Coach"),
-              SizedBox(height: 5),
-              _coach(),
-              SizedBox(height: 5),
-              _section("Exclusive Opening Offer"),
-              SizedBox(height: 5),
-              _offer(),
-              SizedBox(height: 5),
-              _enroll(),
-              SizedBox(height: 15),
+                SizedBox(height: 5),
+                _section("Training Schedules"),
+                SizedBox(height: 5),
+                _timeTable(),
+                SizedBox(height: 5),
+                _section("What You'll Learn"),
+                SizedBox(height: 5),
+                _learning(),
+                SizedBox(height: 5),
+                _section("Meet Your Coach"),
+                SizedBox(height: 5),
+                _coach(),
+                SizedBox(height: 5),
+                _enroll(),
+                SizedBox(height: 15),
             ],
           ),
         ),
@@ -131,7 +127,7 @@ class _BadmintonClassState extends State<BadmintonClass> {
         ),
         child: 
           Image(
-            image: AssetImage("assets/classes/Badminton.png"),
+            image: AssetImage("assets/classes/Futsal.png"),
             fit: BoxFit.fill
           ),
       ),
@@ -168,7 +164,7 @@ class _BadmintonClassState extends State<BadmintonClass> {
   }) {
     return Container(
       width: 160,
-      height: 260, // 👈 VERY IMPORTANT
+      height: 280, // 👈 VERY IMPORTANT
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF0D1B2A),
@@ -219,8 +215,9 @@ class _BadmintonClassState extends State<BadmintonClass> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
-              "50,000Ks/ month",
+              "150,000Ks/ month",
               style: TextStyle(
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
@@ -241,10 +238,9 @@ class _BadmintonClassState extends State<BadmintonClass> {
       ),
       child: Table(
         columnWidths: const {
-          0: FlexColumnWidth(1.2),
+          0: FlexColumnWidth(1.5),
           1: FlexColumnWidth(1.5),
-          2: FlexColumnWidth(1.3),
-          3: FlexColumnWidth(1.3),
+          2: FlexColumnWidth(1.5),
         },
         children: [
           // Header Row
@@ -252,8 +248,7 @@ class _BadmintonClassState extends State<BadmintonClass> {
             children: [
               _tableHeader("Time Slot"),
               _tableHeader("Weekdays(M-F)"),
-              _tableHeader("Saturday"),
-              _tableHeader("Sunday"),
+              _tableHeader("Weekend"),
             ],
           ),
 
@@ -262,34 +257,22 @@ class _BadmintonClassState extends State<BadmintonClass> {
               tableCell("8:00 - 10:00 AM"),
               tableCell("Private Session"),
               tableCell("Beginner Level"),
-              tableCell("Intermediate"),
-            ],
-          ),
-
-          TableRow(
-            children: [
-              tableCell("10:00 - 12:00 PM"),
-              tableCell("Adults Training"),
-              tableCell("Junior Elite"),
-              tableCell("Advanced"),
             ],
           ),
 
           TableRow(
             children: [
               tableCell("4:00 - 6:00 PM"),
-              tableCell("All Levels"),
-              tableCell("Intermediate"),
-              tableCell("Elite Squad"),
+              tableCell("General Skills"),
+              tableCell("Advance Pro"),
             ],
           ),
 
           TableRow(
             children: [
               tableCell("6:00 - 8:00 PM"),
-              tableCell("Lady Only"),
-              tableCell("Open Play"),
-              tableCell("Match Analysis"),
+              tableCell("Lady Clubs"),
+              tableCell("Open Match"),
             ],
           ),
         ],
@@ -325,26 +308,13 @@ class _BadmintonClassState extends State<BadmintonClass> {
       ),
     );
   }
-
+  
   Widget _learning(){
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Technical Mastery: Precision in every shot.",style: TextStyle(fontFamily: "Custom",fontSize: 13),),
-                bulletText("Agility Drills: Mastering the 6-point footwork."),
-                bulletText("Game Intelligence: Reading opponent movements."),
-                bulletText("Physical Conditioning: Strength and explosive power."),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
           Expanded(
             flex: 1,
             child: Container(
@@ -362,6 +332,19 @@ class _BadmintonClassState extends State<BadmintonClass> {
                   )
                 ],
               ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bulletText("Advanced Ball Control Techniques"),
+                bulletText("Tactical Awareness & Vision"),
+                bulletText("Professional Physical Conditioning"),
+                bulletText("Match Analysis & Strategy"),
+              ],
             ),
           ),
         ],
@@ -376,6 +359,19 @@ class _BadmintonClassState extends State<BadmintonClass> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Coach U Kyaw",style: TextStyle(fontFamily: "Custom",fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1),),
+                Text("Former Pro Futsal Player",style: TextStyle(fontFamily: "Custom",fontSize: 15,fontWeight: FontWeight.w600),),
+                const SizedBox(height: 20),
+                Text('"Dedicated to grooming youth talent from basics to professional levels."',style: TextStyle(fontFamily: "Custom",fontSize: 13),)
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
             flex: 1,
             child: Container(
               height: 140,
@@ -392,53 +388,6 @@ class _BadmintonClassState extends State<BadmintonClass> {
                   )
                 ],
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Coach U Hla",style: TextStyle(fontFamily: "Custom",fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1),),
-                Text("Former International Competitor with over 15 years of coaching elite athletes. BWF Certified High Performance Coach.",style: TextStyle(fontFamily: "Custom",fontSize: 13),),
-                const SizedBox(height: 5),
-                Text('"My mission is to cultivate technical excellence and a winning mindset in every player."',style: TextStyle(fontFamily: "Custom",fontSize: 13),)
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _offer(){
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              height: 140,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text("50% off",style: TextStyle(fontFamily: "Custom", fontSize: 40, color: Colors.green, fontWeight: FontWeight.w900),),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Early Bird Special",style: TextStyle(fontFamily: "Custom",fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1),),
-                Text("Get a massive 50% discount on your first month's registration!",style: TextStyle(fontFamily: "Custom",fontSize: 13),),
-                const SizedBox(height: 5),
-                Text("Limited to the first 20 applicants this season. Don't miss out on this opportunity.",style: TextStyle(fontFamily: "Custom",fontSize: 13),)
-              ],
             ),
           ),
         ],
@@ -572,4 +521,5 @@ class _BadmintonClassState extends State<BadmintonClass> {
       ),
     );
   }
+
 }

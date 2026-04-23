@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/tennis_class.dart';
 
 class ClassesPage extends StatefulWidget {
   const ClassesPage({super.key});
@@ -105,42 +107,62 @@ class _ClassesPageState extends State<ClassesPage> {
               ),
             ),
           ),
-          Container(
-            height: 180,
-            margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 5,
-                  blurRadius: 5,
-                  offset: Offset(7, 5),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (contex) => futsalClass(),
                 ),
-              ],
-              image: DecorationImage(
-                image: AssetImage("assets/classes/Futsal.png"),
-                fit: BoxFit.fill,
-                
+              );
+            },
+            child: Container(
+              height: 180,
+              margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    spreadRadius: 5,
+                    blurRadius: 5,
+                    offset: Offset(7, 5),
+                  ),
+                ],
+                image: DecorationImage(
+                  image: AssetImage("assets/classes/Futsal.png"),
+                  fit: BoxFit.fill,
+                  
+                ),
               ),
             ),
           ),
-          Container(
-            height: 180,
-            margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 5,
-                  blurRadius: 5,
-                  offset: Offset(7, 5),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (contex) => tennisClass(),
                 ),
-              ],
-              image: DecorationImage(
-                image: AssetImage("assets/classes/Tennis.png"),
-                fit: BoxFit.fill
+              );
+            },
+            child: Container(
+              height: 180,
+              margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    spreadRadius: 5,
+                    blurRadius: 5,
+                    offset: Offset(7, 5),
+                  ),
+                ],
+                image: DecorationImage(
+                  image: AssetImage("assets/classes/Tennis.png"),
+                  fit: BoxFit.fill
+                ),
               ),
             ),
           ),
