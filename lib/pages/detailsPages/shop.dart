@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/models/Pp.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/models/product.dart';
 
@@ -19,18 +20,18 @@ class _ShopPageState extends State<ShopPage> {
     "Gucci",
   ];
 
-  final List<Product> allProducts = [
-    Product(name: "Shuttlecock", brand: "Adidas", price: 30000, catagories: '',),
-    Product(name: "Football", brand: "Puma", price: 40000, catagories: ''),
-    Product(name: "Basketball", brand: "Gucci", price: 50000, catagories: '',),
-    Product(name: "Running Shoes", brand: "Adidas", price: 35000, catagories: '',),
-    Product(name: "Tennis Racket", brand: "Puma", price: 40000, catagories: ''),
-    Product(name: "Gucci Bag", brand: "Gucci", price: 50000, catagories: '',),
-    Product(name: "Adidas Shirt", brand: "Adidas", price: 34000, catagories: '',),
-    Product(name: "Puma Shorts", brand: "Puma", price: 40000, catagories: ''),
+  final List<Pp> allProducts = [
+    Pp(name: "Shuttlecock", brand: "Adidas", price: 30000, catagories: '',),
+    Pp(name: "Football", brand: "Puma", price: 40000, catagories: ''),
+    Pp(name: "Basketball", brand: "Gucci", price: 50000, catagories: '',),
+    Pp(name: "Running Shoes", brand: "Adidas", price: 35000, catagories: '',),
+    Pp(name: "Tennis Racket", brand: "Puma", price: 40000, catagories: ''),
+    Pp(name: "Gucci Bag", brand: "Gucci", price: 50000, catagories: '',),
+    Pp(name: "Adidas Shirt", brand: "Adidas", price: 34000, catagories: '',),
+    Pp(name: "Puma Shorts", brand: "Puma", price: 40000, catagories: ''),
   ];
 
-  List<Product> filteredProducts = [];
+  List<Pp> filteredProducts = [];
 
   String selectedBrand = "All";
   String searchQuery = "";
@@ -89,7 +90,7 @@ class _ShopPageState extends State<ShopPage> {
   }
 
   void _applyFilters() {
-    List<Product> results = allProducts;
+    List<Pp> results = allProducts;
 
     if (searchQuery.trim().isNotEmpty) {
       results = results.where((product) {
@@ -232,15 +233,15 @@ class _ShopPageState extends State<ShopPage> {
       ),
       itemCount: filteredProducts.length,
       itemBuilder: (context, index) {
-        final Product product = filteredProducts[index];
+        final Pp product = filteredProducts[index];
         return GestureDetector(
           onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetails(product: product),
-                ),
-              );
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //       builder: (context) => ProductDetails(product: product),
+            //     ),
+            //   );
           },
           child: Container(
             decoration: BoxDecoration(

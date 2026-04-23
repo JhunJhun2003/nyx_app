@@ -195,7 +195,8 @@ class _ProductDetailsState extends State<ProductDetails> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.product.name,
+              // widget.product.name,
+              "Product Name",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,

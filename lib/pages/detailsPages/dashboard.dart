@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Category.dart';
-import 'package:nyxproject/models/product.dart';
 import 'package:nyxproject/util/Api.dart';
 
 class DashBoard extends StatefulWidget {
@@ -12,28 +11,25 @@ class DashBoard extends StatefulWidget {
 
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
+  List<Map<String, dynamic>> _groupedProducts = [];
+  
   bool _isLoadingCategories = true;
+  bool _isLoadingHomeData = true;
+
   String? _categoriesError;
-
-  final List<Product> allProducts = [
-    Product(name: "Shuttlecock", price: 45000, catagories: '', brand: ''),
-    Product(name: "Football", price: 35000, catagories: '', brand: ''),
-    Product(name: "Shoe", price: 95000, catagories: '', brand: ''),
-    Product(name: "Hand Glove", price: 65000, catagories: '', brand: ''),
-    Product(name: "Golf Bag", price: 125000, catagories: '', brand: ''),
-    Product(name: "Shuttlecock", price: 55000, catagories: '', brand: ''),
-    Product(name: "Gloves", price: 34000, catagories: '', brand: ''),
-    Product(name: "Basketball", price: 50000, catagories: '', brand: ''),
-  ];
-
-  List<Product> filteredProducts = [];
-  String searchQuery = "";
+  String? _homeDataError;
 
   @override
   void initState() {
     super.initState();
-    filteredProducts = allProducts;
-    _loadCategories();  // No token needed
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    await Future.wait([
+      _loadCategories(),
+      _loadHomeData(),
+    ]);
   }
 
   Future<void> _loadCategories() async {
@@ -43,18 +39,17 @@ class _DashBoardState extends State<DashBoard> {
     });
 
     try {
-      // No token required - public access
       final result = await Api.getAllCategories();
-      
-      if (result['success']) {
+
+      if (result['success'] == true) {
         setState(() {
-          _categoriesList = result['data'];
+          _categoriesList = result['data'] ?? [];
           _isLoadingCategories = false;
         });
-        print(' Loaded ${_categoriesList.length} categories');
+        print('✅ Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
-          _categoriesError = result['message'];
+          _categoriesError = result['message'] ?? 'Failed to load categories';
           _isLoadingCategories = false;
         });
       }
@@ -62,6 +57,40 @@ class _DashBoardState extends State<DashBoard> {
       setState(() {
         _categoriesError = 'Error loading categories: $e';
         _isLoadingCategories = false;
+      });
+    }
+  }
+
+  Future<void> _loadHomeData() async {
+    setState(() {
+      _isLoadingHomeData = true;
+      _homeDataError = null;
+    });
+
+    try {
+      final result = await Api.getHomeData();
+
+      if (result['success'] == true) {
+        setState(() {
+          _groupedProducts = result['data'] ?? [];
+          _isLoadingHomeData = false;
+        });
+        print('✅ Loaded ${_groupedProducts.length} product groups');
+        
+        // Debug print
+        for (var group in _groupedProducts) {
+          print('Group: ${group['tagName']} - ${(group['products'] as List).length} products');
+        }
+      } else {
+        setState(() {
+          _homeDataError = result['message'] ?? 'Failed to load home data';
+          _isLoadingHomeData = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _homeDataError = 'Error loading home data: $e';
+        _isLoadingHomeData = false;
       });
     }
   }
@@ -81,16 +110,184 @@ class _DashBoardState extends State<DashBoard> {
               _section("Categories"),
               _categoriesWidget(),
               const Divider(),
-              _section("Happy Hour Sales"),
-              const Divider(),
-              _section("Special Promotion"),
-              _section("New Arrival"),
-              _gridCards(),
-              _section("Hot Item"),
-              _gridCards(),
+              
+              // Product Sections from Home Data API
+              _buildProductSections(),
+              
               const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductSections() {
+    if (_isLoadingHomeData) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_homeDataError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            _homeDataError!,
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
+
+    if (_groupedProducts.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text('No products available'),
+        ),
+      );
+    }
+
+    return Column(
+      children: _groupedProducts.map((group) {
+        final tagName = group['tagName'];
+        final products = group['products'] as List;
+        
+        return _productSection(tagName, products);
+      }).toList(),
+    );
+  }
+
+  Widget _productSection(String tagName, List products) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        _section(tagName),
+        const SizedBox(height: 5),
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _productCard(product);
+            },
+          ),
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
+  Widget _productCard(Map<String, dynamic> product) {
+    final productName = product['product_name'] ?? 'Unknown';
+    final price = product['price'] ?? 0;
+    final imageUrl = product['image_url'] ?? '';
+    final cost = product['cost'] ?? 0;
+
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () {
+          print('Product tapped: $productName');
+          // Navigate to product detail page
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(Icons.image, size: 50, color: Colors.grey),
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: Icon(Icons.image, size: 50, color: Colors.grey),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Custom',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${price.toString()} Ks',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      color: Color.fromARGB(255, 13, 27, 42),
+                    ),
+                  ),
+                  if (cost > price)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Save ${(cost - price).toString()} Ks',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -100,18 +297,7 @@ class _DashBoardState extends State<DashBoard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-        onSubmitted: (value) {
-          setState(() {
-            searchQuery = value;
-            filteredProducts = allProducts.where((product) {
-              return product.name.toLowerCase().contains(value.toLowerCase());
-            }).toList();
-          });
-        },
-        style: const TextStyle(
-          color: Colors.white,
-          fontFamily: "Custom",
-        ),
+        style: const TextStyle(color: Colors.white, fontFamily: "Custom"),
         cursorColor: Colors.white,
         decoration: InputDecoration(
           hintText: "What are you looking for ?",
@@ -157,7 +343,7 @@ class _DashBoardState extends State<DashBoard> {
           color: Color.fromARGB(255, 13, 27, 42),
           fontWeight: FontWeight.w900,
           fontFamily: 'Custom',
-          fontSize: 16,
+          fontSize: 18,
         ),
       ),
     );
@@ -167,9 +353,7 @@ class _DashBoardState extends State<DashBoard> {
     if (_isLoadingCategories) {
       return const SizedBox(
         height: 110,
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -177,23 +361,9 @@ class _DashBoardState extends State<DashBoard> {
       return SizedBox(
         height: 110,
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _categoriesError!,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _loadCategories,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-                ),
-                child: const Text('Retry', style: TextStyle(fontSize: 12)),
-              ),
-            ],
+          child: Text(
+            _categoriesError!,
+            style: const TextStyle(color: Colors.red),
           ),
         ),
       );
@@ -202,9 +372,7 @@ class _DashBoardState extends State<DashBoard> {
     if (_categoriesList.isEmpty) {
       return const SizedBox(
         height: 110,
-        child: Center(
-          child: Text('No categories available'),
-        ),
+        child: Center(child: Text('No categories available')),
       );
     }
 
@@ -215,43 +383,35 @@ class _DashBoardState extends State<DashBoard> {
         itemCount: _categoriesList.length,
         itemBuilder: (context, index) {
           final category = _categoriesList[index];
-
           return Padding(
             padding: const EdgeInsets.only(left: 16),
             child: Column(
               children: [
-                // Circle Image
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to category products page
-                    print('Category tapped: ${category.name}');
-                  },
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromARGB(255, 13, 27, 42),
-                    ),
-                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              category.imageUrl!,
-                              width: 36,
-                              height: 36,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.sports,
-                                  size: 30,
-                                  color: Colors.white,
-                                );
-                              },
-                            ),
-                          )
-                        : const Icon(Icons.sports, size: 30, color: Colors.white),
+                Container(
+                  width: 60,
+                  height: 60,
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color.fromARGB(255, 13, 27, 42),
                   ),
+                  child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                      ? ClipOval(
+                          child: Image.network(
+                            category.imageUrl!,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.sports,
+                                size: 30,
+                                color: Colors.white,
+                              );
+                            },
+                          ),
+                        )
+                      : const Icon(Icons.sports, size: 30, color: Colors.white),
                 ),
                 const SizedBox(height: 6),
                 SizedBox(
@@ -274,73 +434,6 @@ class _DashBoardState extends State<DashBoard> {
           );
         },
       ),
-    );
-  }
-
-  Widget _gridCards() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: 4,
-      itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black, width: 2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.network(
-                    'https://via.placeholder.com/150',
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(Icons.image, size: 50),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Badminton Shuttlecock",
-                      style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "35,000 Ks",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Custom',
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

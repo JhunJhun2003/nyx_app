@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:nyxproject/models/Category.dart';
+import 'package:nyxproject/models/Tag.dart';
+import 'package:nyxproject/models/product.dart';
 import 'package:nyxproject/util/Constant.dart';
 
 class Api {
@@ -515,5 +517,211 @@ class Api {
       print("Get Categories Error: $e");
       return {'success': false, 'message': 'Network error: $e'};
     }
+  }
+
+  // Get home data with products grouped by tags
+  static Future<Map<String, dynamic>> getHomeData() async {
+    final Uri uri = Uri.parse("${Constant.API_URL}/homeshow/home");
+
+    print("📡 Home Data URL: $uri");
+
+    try {
+      final http.Response response = await http
+          .get(uri, headers: Constant.headers)
+          .timeout(const Duration(seconds: 30));
+
+      print("Home Data Response Status: ${response.statusCode}");
+      print("Home Data Response Body: ${response.body}");
+
+      if (response.body.isEmpty) {
+        return {'success': false, 'message': 'Empty response from server'};
+      }
+
+      dynamic responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          'success': false,
+          'message': 'Invalid response format from server',
+        };
+      }
+
+      if (responseData is Map<String, dynamic>) {
+        bool isSuccess = responseData['status'] == 'success';
+
+        if (isSuccess &&
+            responseData['result'] != null &&
+            responseData['result'] is List) {
+          final List resultList = responseData['result'];
+
+          // Parse the grouped data
+          List<Map<String, dynamic>> groupedProducts = [];
+          for (var group in resultList) {
+            groupedProducts.add({
+              'tagName': group['name'],
+              'products': group['data'],
+            });
+          }
+
+          return {
+            'success': true,
+            'data': groupedProducts,
+            'message': 'Home data fetched successfully',
+          };
+        }
+
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to fetch home data',
+        };
+      }
+
+      return {'success': false, 'message': 'Invalid response format'};
+    } catch (e) {
+      print("Get Home Data Error: $e");
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get all tags
+  static Future<Map<String, dynamic>> getAllTags() async {
+    // Fix: Use BASE_URL instead of undefined TAG_URL
+    final Uri uri = Uri.parse("${Constant.BASE_URL}/showtag/showtags");
+
+    print("📡 Tags URL: $uri");
+
+    try {
+      final http.Response response = await http
+          .get(uri, headers: Constant.headers)
+          .timeout(const Duration(seconds: 30));
+
+      print("Tags Response Status: ${response.statusCode}");
+      print("Tags Response Body: ${response.body}");
+
+      if (response.body.isEmpty) {
+        return {'success': false, 'message': 'Empty response from server'};
+      }
+
+      dynamic responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          'success': false,
+          'message': 'Invalid response format from server',
+        };
+      }
+
+      if (responseData is Map<String, dynamic>) {
+        bool isSuccess = responseData['status'] == 'success';
+
+        if (isSuccess &&
+            responseData['data'] != null &&
+            responseData['data'] is List) {
+          final List tagsList = responseData['data'];
+
+          List<Tag> tags = tagsList.map((tag) => Tag.fromJson(tag)).toList();
+
+          return {
+            'success': true,
+            'data': tags,
+            'message': 'Tags fetched successfully',
+          };
+        }
+
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to fetch tags',
+        };
+      }
+
+      return {'success': false, 'message': 'Invalid response format'};
+    } catch (e) {
+      print("Get Tags Error: $e");
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get all products
+  static Future<Map<String, dynamic>> getAllProducts() async {
+    final Uri uri = Uri.parse("${Constant.API_URL}/homecategory/allbrand");
+
+    print("📡 Products URL: $uri");
+
+    try {
+      final http.Response response = await http
+          .get(uri, headers: Constant.headers)
+          .timeout(const Duration(seconds: 30));
+
+      print("Products Response Status: ${response.statusCode}");
+      print("Products Response Body: ${response.body}");
+
+      if (response.body.isEmpty) {
+        return {'success': false, 'message': 'Empty response from server'};
+      }
+
+      dynamic responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          'success': false,
+          'message': 'Invalid response format from server',
+        };
+      }
+
+      if (responseData is Map<String, dynamic>) {
+        bool isSuccess = responseData['status'] == 'success';
+
+        if (isSuccess &&
+            responseData['result'] != null &&
+            responseData['result'] is List) {
+          final List productsList = responseData['result'];
+
+          List<Product> products = productsList
+              .map((product) => Product.fromJson(product))
+              .toList();
+
+          return {
+            'success': true,
+            'data': products,
+            'message': 'Products fetched successfully',
+          };
+        }
+
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to fetch products',
+        };
+      }
+
+      return {'success': false, 'message': 'Invalid response format'};
+    } catch (e) {
+      print("Get Products Error: $e");
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get products by tag name
+  static Future<Map<String, dynamic>> getProductsByTag(String tagName) async {
+    final allProductsResult = await getAllProducts();
+
+    if (!allProductsResult['success']) {
+      return allProductsResult;
+    }
+
+    List<Product> allProducts = allProductsResult['data'];
+
+    // Filter products by tag
+    List<Product> filteredProducts = allProducts.where((product) {
+      return product.tags?.toLowerCase() == tagName.toLowerCase();
+    }).toList();
+
+    return {
+      'success': true,
+      'data': filteredProducts,
+      'message': 'Products filtered by tag: $tagName',
+    };
   }
 }

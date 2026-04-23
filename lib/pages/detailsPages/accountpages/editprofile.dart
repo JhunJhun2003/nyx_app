@@ -488,7 +488,7 @@ class _EditProfileState extends State<EditProfile> {
                             ),
                           );
                         },
-                        child: const Text('Go to Login'),
+                        child: const Text('Login'),
                       ),
                     ],
                   ),
@@ -640,23 +640,76 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Widget _updateButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ElevatedButton(
-        onPressed: _isUpdating ? null : _updateProfile,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0D1B2A),
-          minimumSize: const Size(double.infinity, 50),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: ElevatedButton.icon(
+          onPressed: _isUpdating ? null : _updateProfile,
+          icon: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.save_alt, color: Colors.white),
+          label: Text(
+            _isUpdating ? "Saving..." : "Save Changes",
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'Custom',
+              fontSize: 16,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0D1B2A),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         ),
-        child: _isUpdating
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Update Profile',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
       ),
     );
   }
+
+  // Widget _updateButton() {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 20),
+  //     child: ElevatedButton(
+  //       onPressed: _isUpdating ? null : _updateProfile,
+  //       style: ElevatedButton.styleFrom(
+
+  //         backgroundColor: const Color(0xFF0D1B2A),
+  //         minimumSize: const Size(double.infinity, 50),
+  //       ),
+  //       child: _isUpdating
+  //           ? const CircularProgressIndicator(color: Colors.white)
+  //           : const Text(
+  //               'Save Changes',
+  //               style: TextStyle(fontSize: 18, color: Colors.white),
+  //             ),
+  //     ),
+  //   );
+  // }
+
+  //  Widget _saveChange(){
+  //   return Center(
+  //     // padding: EdgeInsetsDirectional.symmetric(),
+  //     child: ElevatedButton.icon(
+  //       onPressed: (){},
+  //       icon: Icon(Icons.save_alt),
+  //       label: Text("Save Change", style: TextStyle(color: Colors.white,fontFamily: 'Custom'),),
+  //       style: ElevatedButton.styleFrom(
+  //         backgroundColor: Colors.red,
+  //         iconColor: Colors.white
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget customInput({
     required String label,

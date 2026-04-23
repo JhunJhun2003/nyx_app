@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/models/Pp.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/models/product.dart';
 
@@ -24,18 +25,18 @@ class _CatagoryState extends State<Catagory> {
     "Basketball"
   ];
 
-  final List<Product> allProducts = [
-    Product(name: "Shuttlecock", catagories: "Badminton", price: 45000, brand: '',),
-    Product(name: "Football", catagories: "Football", price: 35000, brand: ''),
-    Product(name: "Shoe", catagories: "Golf", price: 95000, brand: ''),
-    Product(name: "Hand Glove", catagories: "Golf", price: 65000, brand: ''),
-    Product(name: "Golf Bag", catagories: "Golf", price: 125000, brand: ''),
-    Product(name: "Shuttlecock", catagories: "Tennis", price: 55000, brand: ''),
-    Product(name: "Gloves", catagories: "Boxing", price: 34000, brand: ''),
-    Product(name: "Basketball", catagories: "Basketball", price: 50000, brand: ''),
+  final List<Pp> allProducts = [
+    Pp(name: "Shuttlecock", catagories: "Badminton", price: 45000, brand: '',),
+    Pp(name: "Football", catagories: "Football", price: 35000, brand: ''),
+    Pp(name: "Shoe", catagories: "Golf", price: 95000, brand: ''),
+    Pp(name: "Hand Glove", catagories: "Golf", price: 65000, brand: ''),
+    Pp(name: "Golf Bag", catagories: "Golf", price: 125000, brand: ''),
+    Pp(name: "Shuttlecock", catagories: "Tennis", price: 55000, brand: ''),
+    Pp(name: "Gloves", catagories: "Boxing", price: 34000, brand: ''),
+    Pp(name: "Basketball", catagories: "Basketball", price: 50000, brand: ''),
   ];
 
-  List<Product> filteredProducts = [];
+  List<Pp> filteredProducts = [];
 
   String selectedBrand = "All";
   String searchQuery = "";
@@ -96,7 +97,7 @@ class _CatagoryState extends State<Catagory> {
   }
 
   void _applyFilters() {
-    List<Product> results = allProducts;
+    List<Pp> results = allProducts;
 
     if (searchQuery.trim().isNotEmpty) {
       results = results.where((product) {
@@ -287,12 +288,12 @@ class _CatagoryState extends State<Catagory> {
 
         return GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProductDetails(product: product),
-              ),
-            );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => ProductDetails(product: product),
+            //   ),
+            // );
           },
           child: Container(
             decoration: BoxDecoration(
