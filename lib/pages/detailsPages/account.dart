@@ -24,81 +24,104 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = widget.sessionService.isLoggedIn();
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 5),
-              if (!widget.sessionService.isLoggedIn()) ...[
+              const SizedBox(height: 5),
+              
+              // Show login/signup section only when NOT logged in
+              if (!isLoggedIn) ...[
                 _accountTab(context),
-                Divider(),
+                const Divider(),
               ],
+              
               _section("Account"),
-              _menuItem(Icons.edit, "Edit Profile", () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditProfile(sessionService: widget.sessionService)),
-                );
-              }),
+              
+              // ✅ Edit Profile - Only show when logged in
+              if (isLoggedIn) ...[
+                _menuItem(Icons.edit, "Edit Profile", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfile(sessionService: widget.sessionService),
+                    ),
+                  );
+                }),
+              ],
+              
               _menuItem(Icons.shopping_cart_outlined, "My Orders", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => myOrder()),
                 );
               }),
+              
               _menuItem(Icons.favorite, "My Wishlist", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => mywishlist()),
                 );
               }),
+              
               _menuItem(Icons.list_alt, "My Classes", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => Classes()),
                 );
               }),
-              Divider(),
+              
+              const Divider(),
               _section("Settings"),
+              
               _menuItem(Icons.settings, "Setting & Preferences", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => Setting()),
                 );
               }),
-              Divider(),
+              
+              const Divider(),
               _section("Others"),
+              
               _menuItem(Icons.info_outline, "About Us", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => aboutUs()),
                 );
               }),
+              
               _menuItem(Icons.phone, "Contact Us", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ContactUs()),
                 );
               }),
+              
               _menuItem(Icons.help_outline, "Help Center", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => helpPage()),
                 );
               }),
+              
               _menuItem(Icons.policy, "Terms & Policies", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => termsPage()),
                 );
               }),
-              Divider(),
+              
+              const Divider(),
               const SizedBox(height: 10),
-
-              _logout(),
-
+              
+              // Show logout button only when logged in
+              if (isLoggedIn) _logout(),
+              
               const SizedBox(height: 10),
             ],
           ),
@@ -135,24 +158,24 @@ class _AccountPageState extends State<AccountPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               "Login to your account.",
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: "Custom",
                 fontSize: 15,
                 color: Colors.white,
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  minimumSize: Size(100, 40),
+                  minimumSize: const Size(100, 40),
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -163,7 +186,7 @@ class _AccountPageState extends State<AccountPage> {
                     ),
                   );
                 },
-                child: Text(
+                child: const Text(
                   "Login",
                   style: TextStyle(
                     fontFamily: "Custom",
@@ -172,7 +195,7 @@ class _AccountPageState extends State<AccountPage> {
                   ),
                 ),
               ),
-              Text(
+              const Text(
                 "or",
                 style: TextStyle(
                   fontFamily: "Custom",
@@ -183,7 +206,7 @@ class _AccountPageState extends State<AccountPage> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  minimumSize: Size(100, 40),
+                  minimumSize: const Size(100, 40),
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -194,7 +217,7 @@ class _AccountPageState extends State<AccountPage> {
                     ),
                   );
                 },
-                child: Text(
+                child: const Text(
                   "Sign Up",
                   style: TextStyle(
                     fontFamily: "Custom",
@@ -221,7 +244,7 @@ class _AccountPageState extends State<AccountPage> {
         ),
         child: ListTile(
           leading: Icon(icon, color: const Color(0xFF0D1B2A)),
-          title: Text(title, style: TextStyle(fontFamily: 'Custom')),
+          title: Text(title, style: const TextStyle(fontFamily: 'Custom')),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: onTap,
         ),
@@ -231,7 +254,6 @@ class _AccountPageState extends State<AccountPage> {
 
   Widget _logout() {
     return Center(
-      // padding: EdgeInsetsDirectional.symmetric(),
       child: ElevatedButton.icon(
         onPressed: () async {
           await widget.sessionService.logout();
@@ -244,8 +266,8 @@ class _AccountPageState extends State<AccountPage> {
             (route) => false,
           );
         },
-        icon: Icon(Icons.logout),
-        label: Text(
+        icon: const Icon(Icons.logout),
+        label: const Text(
           "Logout",
           style: TextStyle(color: Colors.white, fontFamily: 'Custom'),
         ),

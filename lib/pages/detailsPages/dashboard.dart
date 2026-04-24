@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/util/Api.dart';
 
-import 'shoppages/catagory.dart';
+import 'shoppages/categoryPage.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -48,7 +48,7 @@ class _DashBoardState extends State<DashBoard> {
           _categoriesList = result['data'] ?? [];
           _isLoadingCategories = false;
         });
-        print('✅ Loaded ${_categoriesList.length} categories');
+        print(' Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
           _categoriesError = result['message'] ?? 'Failed to load categories';
@@ -77,7 +77,7 @@ class _DashBoardState extends State<DashBoard> {
           _groupedProducts = result['data'] ?? [];
           _isLoadingHomeData = false;
         });
-        print('✅ Loaded ${_groupedProducts.length} product groups');
+        print(' Loaded ${_groupedProducts.length} product groups');
         
         // Debug print
         for (var group in _groupedProducts) {
@@ -112,7 +112,7 @@ class _DashBoardState extends State<DashBoard> {
               _section("Categories",(){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+                  MaterialPageRoute(builder: (context) => CategoryPage(index: 0)),
                 );
               }),
               _categoriesWidget(),
@@ -178,7 +178,7 @@ class _DashBoardState extends State<DashBoard> {
         _section(tagName,(){
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+            MaterialPageRoute(builder: (context) => CategoryPage(index: 0)),
           );
         }),
         const SizedBox(height: 5),
