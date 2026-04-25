@@ -3,6 +3,8 @@ import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/util/Api.dart';
 
 import 'shoppages/catagory.dart';
+import 'shoppages/other.dart';
+
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -178,7 +180,7 @@ class _DashBoardState extends State<DashBoard> {
         _section(tagName,(){
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+            MaterialPageRoute(builder: (context) => dashboardPages()),
           );
         }),
         const SizedBox(height: 5),
