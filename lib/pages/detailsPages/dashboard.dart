@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/Util/GetallproductApi.dart';  // ✅ Add this import
+import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -29,6 +29,11 @@ class _DashBoardState extends State<DashBoard> {
     _loadAllData();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Future<void> _loadAllData() async {
     await Future.wait([
       _loadCategories(),
@@ -37,6 +42,8 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Future<void> _loadCategories() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingCategories = true;
       _categoriesError = null;
@@ -45,6 +52,8 @@ class _DashBoardState extends State<DashBoard> {
     try {
       final result = await Api.getAllCategories();
 
+      if (!mounted) return;  // ✅ Check before setState
+      
       if (result['success'] == true) {
         setState(() {
           _categoriesList = result['data'] ?? [];
@@ -58,6 +67,7 @@ class _DashBoardState extends State<DashBoard> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _categoriesError = 'Error loading categories: $e';
         _isLoadingCategories = false;
@@ -66,15 +76,18 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Future<void> _loadProducts() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingProducts = true;
       _productsError = null;
     });
 
     try {
-      // ✅ Now GetallproductApi is defined
       final result = await GetallproductApi.getAllProducts();
 
+      if (!mounted) return;  // ✅ Check before setState
+      
       if (result['success'] == true) {
         setState(() {
           _allProducts = result['data'] ?? [];
@@ -88,6 +101,7 @@ class _DashBoardState extends State<DashBoard> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _productsError = 'Error loading products: $e';
         _isLoadingProducts = false;
@@ -192,38 +206,39 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-Widget _productSection(String tagName, List<Product> products) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: 10),
-      _section(tagName, () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TagPage(
-              tagName: tagName,  // ✅ Change from categoryName to tagName
+  Widget _productSection(String tagName, List<Product> products) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        _section(tagName, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TagPage(
+                tagName: tagName,
+              ),
             ),
+          );
+        }),
+        const SizedBox(height: 5),
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _productCard(product);
+            },
           ),
-        );
-      }),
-      const SizedBox(height: 5),
-      SizedBox(
-        height: 220,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return _productCard(product);
-          },
         ),
-      ),
-      const Divider(),
-    ],
-  );
-}
+        const Divider(),
+      ],
+    );
+  }
+
   Widget _productCard(Product product) {
     return Container(
       width: 150,
