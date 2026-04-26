@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/OTP.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
+import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
 
 class SignupPage extends StatefulWidget {
   final SessionService sessionService;
-  const SignupPage({super.key, required this.sessionService});
+   final CartService? cartService;
+  const SignupPage({super.key, required this.sessionService, this.cartService});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -427,6 +429,7 @@ class _SignupPageState extends State<SignupPage> {
               email: email,
               tempToken: tempToken,
               sessionService: widget.sessionService,
+              cartService: widget.cartService,
             ),
           ),
         );

@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-class SessionService {
+class SessionService extends ChangeNotifier {  // ✅ Add ChangeNotifier
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyUserData = 'user_data';
   static const String _keyUserToken = 'user_token';
@@ -12,6 +13,7 @@ class SessionService {
   // Initialize SharedPreferences
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    notifyListeners();
   }
   
   // Save user session after login
@@ -19,12 +21,13 @@ class SessionService {
     await _prefs.setBool(_keyIsLoggedIn, true);
     await _prefs.setString(_keyUserToken, token);
     await _prefs.setString(_keyUserData, jsonEncode(user.toJson()));
+    notifyListeners();  // ✅ Notify listeners
   }
   
-  //  ADD THIS METHOD - Save/Update token only
+  // Save token only
   Future<void> saveToken(String token) async {
     await _prefs.setString(_keyUserToken, token);
-    print(' Token updated in session');
+    notifyListeners();  // ✅ Notify listeners
   }
   
   // Check if user is logged in
@@ -51,5 +54,6 @@ class SessionService {
     await _prefs.remove(_keyIsLoggedIn);
     await _prefs.remove(_keyUserData);
     await _prefs.remove(_keyUserToken);
+    notifyListeners();  // ✅ Notify listeners
   }
 }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
+import 'package:nyxproject/services/cart_service.dart';
 
 class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+  final CartService? cartService;
+  const ShopPage({super.key, this.cartService});
 
   @override
   State<ShopPage> createState() => _ShopPageState();

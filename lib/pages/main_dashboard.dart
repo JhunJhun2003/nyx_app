@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; 
 import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 import 'package:nyxproject/pages/detailsPages/classes.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
 import 'package:nyxproject/pages/detailsPages/shop.dart';
 import 'package:nyxproject/pages/detailsPages/account.dart';
 import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
 
 class MainDashboard extends StatefulWidget {
   final SessionService sessionService;
-  const MainDashboard({super.key , required this.sessionService});
+  final CartService? cartService;
+  
+  const MainDashboard({
+    super.key, 
+    required this.sessionService, 
+     this.cartService,
+  });
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
@@ -18,11 +26,19 @@ class _MainDashboardState extends State<MainDashboard> {
   int currentPageIndex = 0;
 
   List<Widget> get pages => [
-        DashBoard(),
-        ShopPage(),
-        ClassesPage(),
-        CartPage(),
-        AccountPage(sessionService: widget.sessionService),
+        DashBoard(
+          sessionService: widget.sessionService,
+          cartService: widget.cartService,
+        ),
+        ShopPage(
+          cartService: widget.cartService,
+        ),
+        const ClassesPage(),
+        CartPage(
+        ),
+        AccountPage(
+          sessionService: widget.sessionService,
+        ),
       ];
 
   @override
@@ -34,10 +50,7 @@ class _MainDashboardState extends State<MainDashboard> {
             _header(),
             const SizedBox(height: 0),
             Expanded(
-              child: Container(
-                color: Colors.red, // 👈 see spacing clearly
-                child: pages[currentPageIndex],
-              ),
+              child: pages[currentPageIndex],
             ),
           ],
         ),
@@ -48,12 +61,12 @@ class _MainDashboardState extends State<MainDashboard> {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         currentIndex: currentPageIndex,
-        onTap: (index){
+        onTap: (index) {
           setState(() {
             currentPageIndex = index;
           });
         },
-        items: const[
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: "Shop"),
           BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Classes"),
@@ -65,26 +78,82 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   Widget _header() {
-  return Container( // 👈 space below header
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(
             height: 30,
             child: Image.asset(
               'assets/images/logo1.png',
               fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Text(
+                  'NYX',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                );
+              },
             ),
           ),
           Row(
             children: [
-              IconButton(onPressed: (){}, icon: Icon(Icons.language, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.notifications_none, color: Colors.white,)),
-              IconButton(onPressed: (){}, icon: Icon(Icons.shopping_cart_outlined, color: Colors.white,)),
+              IconButton(
+                onPressed: () {}, 
+                icon: const Icon(Icons.language, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: () {}, 
+                icon: const Icon(Icons.notifications_none, color: Colors.white),
+              ),
+              Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      // Navigate to cart page when cart icon is pressed
+                      setState(() {
+                        currentPageIndex = 3; // Cart page index
+                      });
+                    }, 
+                    icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                  ),
+                  // Cart badge
+                  Consumer<CartService>(
+                    builder: (context, cartService, child) {
+                      if (cartService.itemCount > 0) {
+                        return Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '${cartService.itemCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/util/Api.dart';
 import 'shoppages/categoryPage.dart';
 import 'shoppages/tagPage.dart';
+import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
 
 class DashBoard extends StatefulWidget {
-  const DashBoard({super.key});
+  final SessionService? sessionService;
+  final CartService? cartService;
+  const DashBoard({super.key, this.sessionService, this.cartService});
 
   @override
   State<DashBoard> createState() => _DashBoardState();
@@ -16,7 +21,7 @@ class DashBoard extends StatefulWidget {
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
   List<Product> _allProducts = [];
-  
+
   bool _isLoadingCategories = true;
   bool _isLoadingProducts = true;
 
@@ -35,15 +40,12 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Future<void> _loadAllData() async {
-    await Future.wait([
-      _loadCategories(),
-      _loadProducts(),
-    ]);
+    await Future.wait([_loadCategories(), _loadProducts()]);
   }
 
   Future<void> _loadCategories() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoadingCategories = true;
       _categoriesError = null;
@@ -52,8 +54,8 @@ class _DashBoardState extends State<DashBoard> {
     try {
       final result = await Api.getAllCategories();
 
-      if (!mounted) return;  // ✅ Check before setState
-      
+      if (!mounted) return;
+
       if (result['success'] == true) {
         setState(() {
           _categoriesList = result['data'] ?? [];
@@ -77,7 +79,7 @@ class _DashBoardState extends State<DashBoard> {
 
   Future<void> _loadProducts() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoadingProducts = true;
       _productsError = null;
@@ -86,8 +88,8 @@ class _DashBoardState extends State<DashBoard> {
     try {
       final result = await GetallproductApi.getAllProducts();
 
-      if (!mounted) return;  // ✅ Check before setState
-      
+      if (!mounted) return;
+
       if (result['success'] == true) {
         setState(() {
           _allProducts = result['data'] ?? [];
@@ -143,9 +145,7 @@ class _DashBoardState extends State<DashBoard> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CategoryPage(
-                      categoryName: "All",
-                    ),
+                    builder: (context) => CategoryPage(categoryName: "All"),
                   ),
                 );
               }),
@@ -192,7 +192,7 @@ class _DashBoardState extends State<DashBoard> {
     }
 
     final uniqueTags = _getUniqueTags();
-    
+
     if (uniqueTags.isEmpty) {
       return _productSection("All Products", _allProducts);
     }
@@ -214,11 +214,7 @@ class _DashBoardState extends State<DashBoard> {
         _section(tagName, () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => TagPage(
-                tagName: tagName,
-              ),
-            ),
+            MaterialPageRoute(builder: (context) => TagPage(tagName: tagName)),
           );
         }),
         const SizedBox(height: 5),
@@ -258,7 +254,13 @@ class _DashBoardState extends State<DashBoard> {
       ),
       child: GestureDetector(
         onTap: () {
-          print('Product tapped: ${product.productName}');
+          // ✅ Navigate to ProductDetails
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetails(product: product),
+            ),
+          );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +279,11 @@ class _DashBoardState extends State<DashBoard> {
                           return Container(
                             color: Colors.grey[200],
                             child: const Center(
-                              child: Icon(Icons.image, size: 50, color: Colors.grey),
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
                             ),
                           );
                         },
@@ -285,7 +291,11 @@ class _DashBoardState extends State<DashBoard> {
                     : Container(
                         color: Colors.grey[200],
                         child: const Center(
-                          child: Icon(Icons.image, size: 50, color: Colors.grey),
+                          child: Icon(
+                            Icons.image,
+                            size: 50,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
               ),
@@ -308,10 +318,7 @@ class _DashBoardState extends State<DashBoard> {
                   const SizedBox(height: 4),
                   Text(
                     product.category,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -323,7 +330,10 @@ class _DashBoardState extends State<DashBoard> {
                   ),
                   if (product.cost > product.price)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(4),
@@ -402,9 +412,9 @@ class _DashBoardState extends State<DashBoard> {
             ),
           ),
           IconButton(
-            onPressed: onTap, 
+            onPressed: onTap,
             icon: Icon(
-              Icons.arrow_forward_ios_sharp, 
+              Icons.arrow_forward_ios_sharp,
               color: Color.fromARGB(255, 13, 27, 42),
               size: 18,
             ),
@@ -472,7 +482,9 @@ class _DashBoardState extends State<DashBoard> {
                       shape: BoxShape.circle,
                       color: Color.fromARGB(255, 13, 27, 42),
                     ),
-                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                    child:
+                        category.imageUrl != null &&
+                            category.imageUrl!.isNotEmpty
                         ? ClipOval(
                             child: Image.network(
                               category.imageUrl!,
@@ -488,7 +500,11 @@ class _DashBoardState extends State<DashBoard> {
                               },
                             ),
                           )
-                        : const Icon(Icons.sports, size: 30, color: Colors.white),
+                        : const Icon(
+                            Icons.sports,
+                            size: 30,
+                            color: Colors.white,
+                          ),
                   ),
                   const SizedBox(height: 6),
                   SizedBox(

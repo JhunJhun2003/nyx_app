@@ -12,10 +12,17 @@ import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
 
 class AccountPage extends StatefulWidget {
   final SessionService sessionService;
-  const AccountPage({super.key, required this.sessionService});
+  final CartService? cartService;
+  
+  const AccountPage({
+    super.key, 
+    required this.sessionService,
+    this.cartService,
+  });
 
   @override
   State<AccountPage> createState() => _AccountPageState();
@@ -181,8 +188,10 @@ class _AccountPageState extends State<AccountPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          LoginPage(sessionService: widget.sessionService),
+                      builder: (context) => LoginPage(
+                        sessionService: widget.sessionService,
+                        cartService: widget.cartService,
+                      ),
                     ),
                   );
                 },
@@ -212,8 +221,10 @@ class _AccountPageState extends State<AccountPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          SignupPage(sessionService: widget.sessionService),
+                      builder: (context) => SignupPage(
+                        sessionService: widget.sessionService,
+                        cartService: widget.cartService,
+                      ),
                     ),
                   );
                 },
@@ -261,7 +272,10 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => MainDashboard(sessionService: widget.sessionService),
+              builder: (_) => MainDashboard(
+                sessionService: widget.sessionService,
+                cartService: widget.cartService,
+              ),
             ),
             (route) => false,
           );

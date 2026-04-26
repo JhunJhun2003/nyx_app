@@ -6,6 +6,7 @@ import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
+import 'package:nyxproject/services/cart_service.dart';
 // import 'package:nyxproject/pages/main_dashboard.dart';
 // import '../../../db_helper.dart';
 // import 'package:http/http.dart' as http;
@@ -31,7 +32,8 @@ import 'package:nyxproject/util/Api.dart';
 
 class LoginPage extends StatefulWidget {
   final SessionService sessionService;
-  const LoginPage({super.key, required this.sessionService});
+  final CartService? cartService;
+  const LoginPage({super.key, required this.sessionService, this.cartService});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -81,41 +83,45 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _header() {
-    return Container(
-      color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      MainDashboard(sessionService: widget.sessionService),
+Widget _header() {
+  return Container(
+    color: const Color.fromARGB(255, 13, 27, 42),
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        IconButton(
+          onPressed: () {
+            // Navigate back to MainDashboard
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainDashboard(
+                  sessionService: widget.sessionService,
+                  cartService: widget.cartService,  // ✅ Remove the ! (nullable)
                 ),
-              );
-            },
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          ),
-          Expanded(
-            child: const Text(
-              "Login",
-              style: TextStyle(
-                fontFamily: "Custom",
-                color: Colors.white,
-                fontSize: 18,
               ),
+              (route) => false,
+            );
+          },
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+        ),
+        const Expanded(
+          child: Text(
+            "Login",
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 18,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
+        ),
+      ],
+    ),
+  );
+}
+  
   Widget _inputform() {
     return Form(
       key: _formKey,
@@ -220,13 +226,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _login() {
     return Center(
-      // padding: EdgeInsets.symmetric(horizontal: 10),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(350, 50),
           backgroundColor: Colors.red,
         ),
-
         onPressed: () async {
           if (!_formKey.currentState!.validate()) return;
 
@@ -240,6 +244,7 @@ class _LoginPageState extends State<LoginPage> {
           final bool success = loginResult['success'] == true;
 
           if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -268,11 +273,15 @@ class _LoginPageState extends State<LoginPage> {
             await widget.sessionService.saveSession(user, token);
 
             if (!mounted) return;
+
+            // ✅ Navigate to MainDashboard with both services
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    MainDashboard(sessionService: widget.sessionService),
+                builder: (_) => MainDashboard(
+                  sessionService: widget.sessionService,
+                  cartService: widget.cartService,
+                ),
               ),
             );
           }
