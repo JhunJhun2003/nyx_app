@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/models/product.dart';
+import 'package:nyxproject/models/Product.dart';
 // import 'package:nyxproject/pages/detailsPages/shoppages/catagory.dart';
 
 class ProductDetails extends StatefulWidget {

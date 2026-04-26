@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/Util/GetallproductApi.dart';  // ✅ Add this import
 import 'package:nyxproject/models/Category.dart';
+import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/util/Api.dart';
-
 import 'shoppages/categoryPage.dart';
 
 class DashBoard extends StatefulWidget {
@@ -13,13 +14,13 @@ class DashBoard extends StatefulWidget {
 
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
-  List<Map<String, dynamic>> _groupedProducts = [];
+  List<Product> _allProducts = [];
   
   bool _isLoadingCategories = true;
-  bool _isLoadingHomeData = true;
+  bool _isLoadingProducts = true;
 
   String? _categoriesError;
-  String? _homeDataError;
+  String? _productsError;
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _DashBoardState extends State<DashBoard> {
   Future<void> _loadAllData() async {
     await Future.wait([
       _loadCategories(),
-      _loadHomeData(),
+      _loadProducts(),
     ]);
   }
 
@@ -48,7 +49,7 @@ class _DashBoardState extends State<DashBoard> {
           _categoriesList = result['data'] ?? [];
           _isLoadingCategories = false;
         });
-        print(' Loaded ${_categoriesList.length} categories');
+        print('✅ Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
           _categoriesError = result['message'] ?? 'Failed to load categories';
@@ -63,38 +64,52 @@ class _DashBoardState extends State<DashBoard> {
     }
   }
 
-  Future<void> _loadHomeData() async {
+  Future<void> _loadProducts() async {
     setState(() {
-      _isLoadingHomeData = true;
-      _homeDataError = null;
+      _isLoadingProducts = true;
+      _productsError = null;
     });
 
     try {
-      final result = await Api.getHomeData();
+      // ✅ Now GetallproductApi is defined
+      final result = await GetallproductApi.getAllProducts();
 
       if (result['success'] == true) {
         setState(() {
-          _groupedProducts = result['data'] ?? [];
-          _isLoadingHomeData = false;
+          _allProducts = result['data'] ?? [];
+          _isLoadingProducts = false;
         });
-        print(' Loaded ${_groupedProducts.length} product groups');
-        
-        // Debug print
-        for (var group in _groupedProducts) {
-          print('Group: ${group['tagName']} - ${(group['products'] as List).length} products');
-        }
+        print('✅ Loaded ${_allProducts.length} products');
       } else {
         setState(() {
-          _homeDataError = result['message'] ?? 'Failed to load home data';
-          _isLoadingHomeData = false;
+          _productsError = result['message'] ?? 'Failed to load products';
+          _isLoadingProducts = false;
         });
       }
     } catch (e) {
       setState(() {
-        _homeDataError = 'Error loading home data: $e';
-        _isLoadingHomeData = false;
+        _productsError = 'Error loading products: $e';
+        _isLoadingProducts = false;
       });
     }
+  }
+
+  // Get unique tags from products
+  List<String> _getUniqueTags() {
+    Set<String> tags = {};
+    for (var product in _allProducts) {
+      if (product.tags != null && product.tags!.isNotEmpty) {
+        tags.add(product.tags!);
+      }
+    }
+    return tags.toList();
+  }
+
+  // Get products by tag
+  List<Product> _getProductsByTag(String tagName) {
+    return _allProducts.where((product) {
+      return product.tags != null && product.tags == tagName;
+    }).toList();
   }
 
   @override
@@ -109,18 +124,19 @@ class _DashBoardState extends State<DashBoard> {
               const SizedBox(height: 5),
               _searchBar(),
               _banner(),
-              _section("Categories",(){
+              _section("Categories", () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CategoryPage(index: 0)),
+                  MaterialPageRoute(
+                    builder: (context) => CategoryPage(
+                      categoryName: "All",
+                    ),
+                  ),
                 );
               }),
               _categoriesWidget(),
               const Divider(),
-              
-              // Product Sections from Home Data API
               _buildProductSections(),
-              
               const SizedBox(height: 20),
             ],
           ),
@@ -130,7 +146,7 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _buildProductSections() {
-    if (_isLoadingHomeData) {
+    if (_isLoadingProducts) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -139,19 +155,19 @@ class _DashBoardState extends State<DashBoard> {
       );
     }
 
-    if (_homeDataError != null) {
+    if (_productsError != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            _homeDataError!,
+            _productsError!,
             style: const TextStyle(color: Colors.red),
           ),
         ),
       );
     }
 
-    if (_groupedProducts.isEmpty) {
+    if (_allProducts.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -160,25 +176,34 @@ class _DashBoardState extends State<DashBoard> {
       );
     }
 
+    final uniqueTags = _getUniqueTags();
+    
+    if (uniqueTags.isEmpty) {
+      return _productSection("All Products", _allProducts);
+    }
+
     return Column(
-      children: _groupedProducts.map((group) {
-        final tagName = group['tagName'];
-        final products = group['products'] as List;
-        
+      children: uniqueTags.map((tagName) {
+        final products = _getProductsByTag(tagName);
+        if (products.isEmpty) return const SizedBox.shrink();
         return _productSection(tagName, products);
       }).toList(),
     );
   }
 
-  Widget _productSection(String tagName, List products) {
+  Widget _productSection(String tagName, List<Product> products) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        _section(tagName,(){
+        _section(tagName, () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => CategoryPage(index: 0)),
+            MaterialPageRoute(
+              builder: (context) => CategoryPage(
+                categoryName: tagName,
+              ),
+            ),
           );
         }),
         const SizedBox(height: 5),
@@ -199,12 +224,7 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _productCard(Map<String, dynamic> product) {
-    final productName = product['product_name'] ?? 'Unknown';
-    final price = product['price'] ?? 0;
-    final imageUrl = product['image_url'] ?? '';
-    final cost = product['cost'] ?? 0;
-
+  Widget _productCard(Product product) {
     return Container(
       width: 150,
       margin: const EdgeInsets.only(right: 12),
@@ -223,8 +243,7 @@ class _DashBoardState extends State<DashBoard> {
       ),
       child: GestureDetector(
         onTap: () {
-          print('Product tapped: $productName');
-          // Navigate to product detail page
+          print('Product tapped: ${product.productName}');
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,9 +253,9 @@ class _DashBoardState extends State<DashBoard> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
-                child: imageUrl.isNotEmpty
+                child: product.images.isNotEmpty
                     ? Image.network(
-                        imageUrl,
+                        product.images,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
@@ -262,7 +281,7 @@ class _DashBoardState extends State<DashBoard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    productName,
+                    product.productName,
                     style: const TextStyle(
                       fontSize: 12,
                       fontFamily: 'Custom',
@@ -273,15 +292,21 @@ class _DashBoardState extends State<DashBoard> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${price.toString()} Ks',
+                    product.category,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Custom',
-                      fontSize: 12,
-                      color: Color.fromARGB(255, 13, 27, 42),
+                      fontSize: 11,
+                      color: Colors.grey,
                     ),
                   ),
-                  if (cost > price)
+                  const SizedBox(height: 4),
+                  Text(
+                    '${product.price.toString()} Ks',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (product.cost > product.price)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
@@ -289,7 +314,7 @@ class _DashBoardState extends State<DashBoard> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Save ${(cost - price).toString()} Ks',
+                        'Save ${(product.cost - product.price).toString()} Ks',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 8,
@@ -408,53 +433,66 @@ class _DashBoardState extends State<DashBoard> {
         itemCount: _categoriesList.length,
         itemBuilder: (context, index) {
           final category = _categoriesList[index];
-          return Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color.fromARGB(255, 13, 27, 42),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoryPage(
+                    categoryName: category.name,
+                    categoryId: category.id,
                   ),
-                  child: category.imageUrl != null && category.imageUrl!.isNotEmpty
-                      ? ClipOval(
-                          child: Image.network(
-                            category.imageUrl!,
-                            width: 36,
-                            height: 36,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.sports,
-                                size: 30,
-                                color: Colors.white,
-                              );
-                            },
-                          ),
-                        )
-                      : const Icon(Icons.sports, size: 30, color: Colors.white),
                 ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: 70,
-                  child: Text(
-                    category.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
                       color: Color.fromARGB(255, 13, 27, 42),
-                      fontFamily: 'Custom',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
+                    ),
+                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              category.imageUrl!,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.sports,
+                                  size: 30,
+                                  color: Colors.white,
+                                );
+                              },
+                            ),
+                          )
+                        : const Icon(Icons.sports, size: 30, color: Colors.white),
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: 70,
+                    child: Text(
+                      category.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 13, 27, 42),
+                        fontFamily: 'Custom',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Pp.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
-import 'package:nyxproject/models/product.dart';
+import 'package:nyxproject/models/Product.dart';
 
 
 class ShopPage extends StatefulWidget {

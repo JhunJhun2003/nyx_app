@@ -6,15 +6,23 @@ import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/util/Api.dart';
 
 class CategoryPage extends StatefulWidget {
-  final int index;
+  final String? categoryName;
+  final int? categoryId;
+  final int? index;  // Make this optional
 
-  const CategoryPage({super.key, required this.index});
+  const CategoryPage({
+    super.key, 
+    this.categoryName,
+    this.categoryId,
+    this.index,
+  });
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
 }
 
 class _CategoryPageState extends State<CategoryPage> {
+  
   List<Category> _categoriesList = [];
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
@@ -35,6 +43,11 @@ class _CategoryPageState extends State<CategoryPage> {
   void initState() {
     super.initState();
     _loadData();
+    
+    // If categoryName is passed, set it as selected
+    if (widget.categoryName != null) {
+      _selectedCategory = widget.categoryName!;
+    }
   }
 
   @override
@@ -217,6 +230,9 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Widget _header() {
+    // Use the category name if provided, otherwise use "Categories"
+    final title = widget.categoryName ?? "Categories";
+    
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
@@ -234,9 +250,9 @@ class _CategoryPageState extends State<CategoryPage> {
             ),
           ),
           Expanded(
-            child: const Text(
-              "Categories",
-              style: TextStyle(
+            child: Text(
+              title,
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
                 fontSize: 20,
@@ -397,12 +413,12 @@ class _CategoryPageState extends State<CategoryPage> {
 
         return GestureDetector(
           onTap: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => ProductDetails(product: product),
-            //   ),
-            // );
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetails(product: product),
+              ),
+            );
           },
           child: Container(
             decoration: BoxDecoration(
