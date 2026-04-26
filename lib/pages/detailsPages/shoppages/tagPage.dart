@@ -4,7 +4,7 @@ import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 
 class TagPage extends StatefulWidget {
-  final String? tagName;  // Change from categoryName to tagName
+  final String? tagName;
   final String? categoryName;
   final int? categoryId;
   final int? index;
@@ -46,6 +46,8 @@ class _TagPageState extends State<TagPage> {
   }
 
   Future<void> _loadProducts() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingProducts = true;
       _productsError = null;
@@ -54,6 +56,8 @@ class _TagPageState extends State<TagPage> {
     try {
       final result = await GetallproductApi.getAllProducts();
 
+      if (!mounted) return;
+      
       if (result['success'] == true) {
         setState(() {
           _allProducts = result['data'] ?? [];
@@ -68,6 +72,7 @@ class _TagPageState extends State<TagPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _productsError = 'Error loading products: $e';
         _isLoadingProducts = false;
@@ -77,7 +82,9 @@ class _TagPageState extends State<TagPage> {
 
   void _clearSearch() {
     _controller.clear();
-    _searchQuery = "";
+    setState(() {
+      _searchQuery = "";
+    });
     _applyFilters();
   }
 
@@ -125,6 +132,8 @@ class _TagPageState extends State<TagPage> {
   }
 
   void _applyFilters() {
+    if (_allProducts.isEmpty) return;
+    
     List<Product> results = List.from(_allProducts);
 
     // Filter by tag (if a specific tag is passed)
@@ -179,12 +188,12 @@ class _TagPageState extends State<TagPage> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE0E0E0),
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 5),
             _header(title),
-            const SizedBox(height: 5),
             _searchBar(),
             _filterInfo(),
             Expanded(child: _gridCards())
@@ -197,7 +206,7 @@ class _TagPageState extends State<TagPage> {
   Widget _header(String title) {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -222,11 +231,13 @@ class _TagPageState extends State<TagPage> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: (){}, 
-            icon: const Icon(
-              Icons.search, 
-              color: Colors.white,
+          SizedBox(
+            child: IconButton(
+              onPressed: (){}, 
+              icon: const Icon(
+                Icons.message, 
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -236,29 +247,39 @@ class _TagPageState extends State<TagPage> {
 
   Widget _searchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: TextField(
         controller: _controller,
         onChanged: (value) {
-          _searchQuery = value;
+          setState(() {
+            _searchQuery = value;
+          });
           _applyFilters();
         },
-        style: const TextStyle(color: Colors.black),
+        style: const TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
         decoration: InputDecoration(
-          hintText: "Search products...",
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey),
-                  onPressed: _clearSearch,
-                )
-              : null,
+          hintText: "What are you looking for?",
+          filled: true,
+          fillColor: const Color(0xFF0D1B2A),
+          prefixIcon: const Icon(Icons.search, color: Colors.white),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.tune, color: Colors.white),
+                onPressed: _showSortBottomSheet,
+              ),
+              IconButton(
+                icon: const Icon(Icons.clear, color: Colors.white),
+                onPressed: _clearSearch,
+              ),
+            ],
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
           ),
-          filled: true,
-          fillColor: Colors.grey[200],
         ),
       ),
     );
@@ -386,6 +407,17 @@ class _TagPageState extends State<TagPage> {
                             product.images,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 color: Colors.grey[200],
