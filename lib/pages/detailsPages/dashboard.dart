@@ -4,6 +4,7 @@ import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/util/Api.dart';
 import 'shoppages/categoryPage.dart';
+import 'shoppages/tagPage.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -191,39 +192,38 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _productSection(String tagName, List<Product> products) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        _section(tagName, () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CategoryPage(
-                categoryName: tagName,
-              ),
+Widget _productSection(String tagName, List<Product> products) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 10),
+      _section(tagName, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TagPage(
+              tagName: tagName,  // ✅ Change from categoryName to tagName
             ),
-          );
-        }),
-        const SizedBox(height: 5),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return _productCard(product);
-            },
           ),
+        );
+      }),
+      const SizedBox(height: 5),
+      SizedBox(
+        height: 220,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return _productCard(product);
+          },
         ),
-        const Divider(),
-      ],
-    );
-  }
-
+      ),
+      const Divider(),
+    ],
+  );
+}
   Widget _productCard(Product product) {
     return Container(
       width: 150,
