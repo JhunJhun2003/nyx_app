@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
-import 'pages/main_dashboard.dart';
-import 'pages/detailsPages/accountpages/login.dart';
+import 'pages/splash_screen.dart';  // ✅ Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +10,6 @@ void main() async {
   final sessionService = SessionService();
   await sessionService.init();
   
-  // Create CartService instance
   final cartService = CartService();
 
   runApp(MyApp(
@@ -34,9 +32,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Provide SessionService
         ChangeNotifierProvider<SessionService>.value(value: sessionService),
-        // Provide CartService
         ChangeNotifierProvider<CartService>.value(value: cartService),
       ],
       child: MaterialApp(
@@ -45,10 +41,10 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        // home: sessionService.isLoggedIn()
-        //     ? MainDashboard(sessionService: sessionService, cartService: cartService)
-        //     : MainDashboard(sessionService: sessionService , cartService: cartService,),
-        home:MainDashboard(sessionService: sessionService, cartService: cartService),
+        home: SplashScreen(  // ✅ Show splash screen first
+          sessionService: sessionService,
+          cartService: cartService,
+        ),
       ),
     );
   }
