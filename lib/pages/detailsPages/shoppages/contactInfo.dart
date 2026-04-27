@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/payment.dart';
 
 class contactInfo extends StatefulWidget {
   const contactInfo({super.key});
@@ -141,7 +142,10 @@ class _contactInfoState extends State<contactInfo> {
     return Center(
       child: ElevatedButton.icon(
         onPressed: (){
-          
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Payment()),
+          );
         }, 
         label: Text(
           "Continue",
