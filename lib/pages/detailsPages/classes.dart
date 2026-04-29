@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
