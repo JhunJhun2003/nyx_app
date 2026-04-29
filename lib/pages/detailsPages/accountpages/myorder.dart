@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
 
 class myOrder extends StatefulWidget {
   const myOrder({super.key});
@@ -75,7 +76,10 @@ class _myOrderState extends State<myOrder> {
           ),
           IconButton(
             onPressed: (){
-              
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => orderHistory()),
+              );
             }, 
             icon: Icon(Icons.calendar_month_rounded,color: Colors.white,)
           )
