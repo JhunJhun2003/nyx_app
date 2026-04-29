@@ -555,149 +555,221 @@ class _PaymentState extends State<Payment> {
     );
   }
 
-Future<void> _processOrder() async {
-  // ... existing validation code
+  Future<void> _processOrder() async {
+    // For non-cash payments, require image upload
+    if (_showTransactionInput()) {
+      if (_transactionImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please upload transaction slip'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
 
-  setState(() {
-    _isProcessing = true;
-  });
+    setState(() {
+      _isProcessing = true;
+    });
 
-  try {
-    final cartService = Provider.of<CartService>(context, listen: false);
-    final sessionService = Provider.of<SessionService>(context, listen: false);
-    
-    final user = sessionService.getStoredUser();
-    final userId = user?.id ?? 0;
-    final token = sessionService.getToken();
-    
-    if (userId == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User not found. Please login again.'),
-          backgroundColor: Colors.red,
-        ),
+    try {
+      final cartService = Provider.of<CartService>(context, listen: false);
+      final sessionService = Provider.of<SessionService>(
+        context,
+        listen: false,
       );
+
+      final user = sessionService.getStoredUser();
+      final userId = user?.id ?? 0;
+      final token = sessionService.getToken();
+
+      if (userId == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not found. Please login again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      // Prepare order items
+      final itemsList = cartService.items.map((item) {
+        return {'product_id': item.product.id, 'quantity': item.quantity};
+      }).toList();
+
+      // Convert items to JSON string
+      final itemsJsonString = jsonEncode(itemsList);
+
+      print("========== ORDER DETAILS ==========");
+      print("User ID: $userId");
+      print("Items List: $itemsList");
+      print("Items JSON String: $itemsJsonString");
+      print("===================================");
+
+      final tax = cartService.totalPrice * 0.05;
+      final deliveryFee = 5000.0;
+      final contactInfo = widget.contactInfo ?? {};
+
+      // Create multipart request
+      final Uri uri = Uri.parse("${Constant.API_URL}/cart/order");
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add headers
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Accept'] = 'application/json';
+
+      // Add fields - matching Postman exactly
+      request.fields['user_id'] = userId.toString();
+      request.fields['customer_name'] = contactInfo['name'] ?? '';
+      request.fields['phone'] = contactInfo['phone'] ?? '';
+      request.fields['email'] = contactInfo['email'] ?? '';
+      request.fields['delivery_address'] = contactInfo['address'] ?? '';
+      request.fields['remark'] = contactInfo['remark'] ?? '';
+      request.fields['payment_method'] = currentOption.toLowerCase();
+      request.fields['items'] = itemsJsonString;
+      request.fields['tax'] = tax.toString();
+      request.fields['delivery_fee'] = deliveryFee.toString();
+
+      if (input.text.trim().isNotEmpty) {
+        request.fields['transaction_number'] = input.text.trim();
+      }
+
+      // Add image if uploaded
+      if (_transactionImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', _transactionImage!.path),
+        );
+      }
+
+      print("📤 Request Fields:");
+      request.fields.forEach((key, value) {
+        print("  $key: $value");
+      });
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print("📥 Response Status: ${response.statusCode}");
+      print("📥 Response Body: ${response.body}");
+
       setState(() {
         _isProcessing = false;
       });
-      return;
-    }
-    
-    // ✅ Prepare order items in the correct format
-    final itemsList = cartService.items.map((item) {
-      return {
-        'product_id': item.product.id,
-        'quantity': item.quantity,
-      };
-    }).toList();
-    
-    // ✅ Convert items to JSON string (matching Postman format)
-    final itemsJsonString = jsonEncode(itemsList);
-    
-    print("========== ORDER DETAILS ==========");
-    print("User ID: $userId");
-    print("Items List: $itemsList");
-    print("Items JSON String: $itemsJsonString");
-    print("===================================");
-    
-    final tax = cartService.totalPrice * 0.05;
-    final deliveryFee = 5000.0;
-    final contactInfo = widget.contactInfo ?? {};
-    
-    // Create multipart request
-    final Uri uri = Uri.parse("${Constant.API_URL}/cart/order");
-    final request = http.MultipartRequest('POST', uri);
-    
-    // Add headers
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    request.headers['Accept'] = 'application/json';
-    
-    // Add fields - matching Postman exactly
-    request.fields['user_id'] = userId.toString();
-    request.fields['customer_name'] = contactInfo['name'] ?? '';
-    request.fields['phone'] = contactInfo['phone'] ?? '';
-    request.fields['email'] = contactInfo['email'] ?? '';
-    request.fields['delivery_address'] = contactInfo['address'] ?? '';
-    request.fields['remark'] = contactInfo['remark'] ?? '';
-    request.fields['payment_method'] = currentOption.toLowerCase();
-    request.fields['items'] = itemsJsonString;  // ✅ Use JSON string
-    request.fields['tax'] = tax.toString();
-    request.fields['delivery_fee'] = deliveryFee.toString();
-    
-    if (input.text.trim().isNotEmpty) {
-      request.fields['transaction_number'] = input.text.trim();
-    }
-    
-    // Add image if uploaded
-    if (_transactionImage != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _transactionImage!.path),
-      );
-    }
-    
-    print("📤 Request Fields:");
-    request.fields.forEach((key, value) {
-      print("  $key: $value");
-    });
-    
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    
-    print("📥 Response Status: ${response.statusCode}");
-    print("📥 Response Body: ${response.body}");
-    
-    setState(() {
-      _isProcessing = false;
-    });
-    
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-      
-      // Clear cart after successful order
-      cartService.clearCart();
-      
-      // Navigate to slip page
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => slipPage(
-              paymentMethod: currentOption,
-              transactionNumber: input.text.trim(),
-              totalAmount: widget.totalAmount,
-              contactInfo: widget.contactInfo,
-              orderResponse: responseData,
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+
+        // Clear cart after successful order
+        cartService.clearCart();
+
+        // Navigate to slip page
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => slipPage(
+                paymentMethod: currentOption,
+                transactionNumber: input.text.trim(),
+                totalAmount: widget.totalAmount,
+                contactInfo: widget.contactInfo,
+                orderResponse: responseData,
+              ),
             ),
+          );
+        }
+      } else {
+        String errorMessage = 'Failed to place order';
+        String errorTitle = 'Order Failed';
+
+        try {
+          final responseBody = response.body;
+
+          // Check for stock error
+          if (responseBody.contains('Not enough stock')) {
+            // Extract product ID from error message
+            final productIdMatch = RegExp(
+              r'product ID: (\d+)',
+            ).firstMatch(responseBody);
+            final productId = productIdMatch?.group(1) ?? 'unknown';
+
+            // Find product name
+            final outOfStockProduct = cartService.items.firstWhere(
+              (item) => item.product.id.toString() == productId,
+              orElse: () => cartService.items.first,
+            );
+
+            errorTitle = 'Out of Stock';
+            errorMessage =
+                '${outOfStockProduct.product.productName} is out of stock. Please remove it from your cart.';
+          }
+          // Check for validation errors
+          else if (responseBody.contains('validation') ||
+              responseBody.contains('required')) {
+            errorTitle = 'Validation Error';
+            errorMessage = 'Please check all information and try again.';
+          }
+          // Try to parse JSON error
+          else {
+            final errorData = jsonDecode(responseBody);
+            errorMessage =
+                errorData['message'] ?? errorData['error'] ?? errorMessage;
+          }
+        } catch (e) {
+          // If response is HTML error page
+          if (response.body.contains('Not enough stock')) {
+            errorTitle = 'Out of Stock';
+            errorMessage =
+                'Some items in your cart are out of stock. Please remove them and try again.';
+          }
+        }
+
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(errorTitle),
+              ],
+            ),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Optionally navigate to cart page
+                  if (errorMessage.contains('out of stock')) {
+                    Navigator.pop(context); // Go back to cart
+                  }
+                },
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }
-    } else {
-      String errorMessage = 'Failed to place order';
-      try {
-        final errorData = jsonDecode(response.body);
-        errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
-      } catch (e) {}
-      
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+      print("Order Error: $e");
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage),
+          content: Text('Network Error: Please check your connection'),
           backgroundColor: Colors.red,
         ),
       );
     }
-  } catch (e) {
-    setState(() {
-      _isProcessing = false;
-    });
-    print("Order Error: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
 }

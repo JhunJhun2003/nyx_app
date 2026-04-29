@@ -9,7 +9,7 @@ class slipPage extends StatefulWidget {
   final double? totalAmount;
   final List<CartItem>? cartItems;
   final Map<String, String>? contactInfo;
-  final Map<String, dynamic>? orderResponse;  // ✅ Add this
+  final Map<String, dynamic>? orderResponse; // ✅ Add this
 
   const slipPage({
     super.key,
@@ -18,7 +18,7 @@ class slipPage extends StatefulWidget {
     this.totalAmount,
     this.cartItems,
     this.contactInfo,
-    this.orderResponse,  // ✅ Add this
+    this.orderResponse, // ✅ Add this
   });
 
   @override
@@ -26,13 +26,19 @@ class slipPage extends StatefulWidget {
 }
 
 class _slipPageState extends State<slipPage> {
-  String orderNo = "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
-  String date = DateTime.now().day.toString().padLeft(2, '0') + "/" + 
-                DateTime.now().month.toString().padLeft(2, '0') + "/" + 
-                DateTime.now().year.toString();
-  String time = DateTime.now().hour.toString().padLeft(2, '0') + ":" + 
-                DateTime.now().minute.toString().padLeft(2, '0');
-  
+  String orderNo =
+      "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
+  String date =
+      DateTime.now().day.toString().padLeft(2, '0') +
+      "/" +
+      DateTime.now().month.toString().padLeft(2, '0') +
+      "/" +
+      DateTime.now().year.toString();
+  String time =
+      DateTime.now().hour.toString().padLeft(2, '0') +
+      ":" +
+      DateTime.now().minute.toString().padLeft(2, '0');
+
   double subTotal = 0;
   double tax = 0;
   double deliveryFee = 1500;
@@ -46,13 +52,16 @@ class _slipPageState extends State<slipPage> {
 
   void _calculateTotals() {
     if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
-      subTotal = widget.cartItems!.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+      subTotal = widget.cartItems!.fold(
+        0,
+        (sum, item) => sum + (item.product.price * item.quantity),
+      );
     } else if (widget.totalAmount != null) {
       subTotal = widget.totalAmount!;
     } else {
       subTotal = 100000;
     }
-    
+
     tax = subTotal * 0.05;
     total = subTotal + tax + deliveryFee;
   }
@@ -63,7 +72,7 @@ class _slipPageState extends State<slipPage> {
     final orderNumber = widget.orderResponse?['order_number'] ?? orderNo;
     final orderDate = widget.orderResponse?['order_date'] ?? date;
     final orderTime = widget.orderResponse?['order_time'] ?? time;
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -77,7 +86,7 @@ class _slipPageState extends State<slipPage> {
               _buttons(),
             ],
           ),
-        )
+        ),
       ),
     );
   }
@@ -91,11 +100,11 @@ class _slipPageState extends State<slipPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
-            }, 
+            },
             icon: const Icon(
-              Icons.arrow_back_ios_new_rounded, 
+              Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
             ),
           ),
@@ -106,7 +115,7 @@ class _slipPageState extends State<slipPage> {
                 fontFamily: "Custom",
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.w600
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -121,7 +130,7 @@ class _slipPageState extends State<slipPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(10)
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
@@ -133,7 +142,7 @@ class _slipPageState extends State<slipPage> {
                 fontFamily: "Custom",
                 color: Color.fromARGB(255, 51, 252, 57),
                 fontSize: 20,
-                fontWeight: FontWeight.w600
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -169,7 +178,8 @@ class _slipPageState extends State<slipPage> {
           _infoRow("Time :", orderTime),
           const SizedBox(height: 8),
           _infoRow("Payment :", widget.paymentMethod ?? "Cash on Delivery"),
-          if (widget.transactionNumber != null && widget.transactionNumber!.isNotEmpty)
+          if (widget.transactionNumber != null &&
+              widget.transactionNumber!.isNotEmpty)
             _infoRow("Transaction No :", widget.transactionNumber!),
           const SizedBox(height: 15),
           const Divider(color: Colors.white54),
@@ -231,47 +241,53 @@ class _slipPageState extends State<slipPage> {
   }
 
   Widget _productHeader() {
-    return const Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            "Product",
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          // Product - takes most space
+          Expanded(
+            flex: 3,
+            child: Text(
+              "Product",
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        Flexible(
-          flex: 1,
-          child: Text(
-            "Qty",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          // Qty - fixed width
+          SizedBox(
+            width: 45,
+            child: Text(
+              "Qty",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        Flexible(
-          flex: 1,
-          child: Text(
-            "Price",
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          // Price - fixed width
+          SizedBox(
+            width: 80,
+            child: Text(
+              "Price",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -287,7 +303,7 @@ class _slipPageState extends State<slipPage> {
         }).toList(),
       );
     }
-    
+
     return Column(
       children: [
         _productRow("Badminton Shuttlecock", "2", "9,000"),
@@ -302,40 +318,44 @@ class _slipPageState extends State<slipPage> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
+          // Product Name - takes 60% of space
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Text(
               name,
               style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Flexible(
-            flex: 1,
+          // Quantity - centered
+          SizedBox(
+            width: 40,
             child: Text(
               qty,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          Flexible(
-            flex: 1,
+          // Price - aligned right
+          SizedBox(
+            width: 80,
             child: Text(
               "$price Ks",
-              textAlign: TextAlign.end,
+              textAlign: TextAlign.right,
               style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           ),
@@ -363,7 +383,9 @@ class _slipPageState extends State<slipPage> {
             amount,
             style: TextStyle(
               fontFamily: "Custom",
-              color: isBold ? const Color.fromARGB(255, 51, 252, 57) : Colors.white,
+              color: isBold
+                  ? const Color.fromARGB(255, 51, 252, 57)
+                  : Colors.white,
               fontSize: isBold ? 18 : 15,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
@@ -373,7 +395,7 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-  Widget _buttons(){
+  Widget _buttons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
@@ -401,10 +423,14 @@ class _slipPageState extends State<slipPage> {
                   ),
                   (route) => false,
                 );
-              }, 
+              },
               label: const Text(
                 "Home",
-                style: TextStyle(color: Colors.white, fontFamily: 'Custom', fontSize: 16),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Custom',
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -422,10 +448,14 @@ class _slipPageState extends State<slipPage> {
               icon: const Icon(Icons.file_download_outlined, size: 22),
               onPressed: () {
                 _showDownloadDialog();
-              }, 
+              },
               label: const Text(
                 "Download",
-                style: TextStyle(color: Colors.white, fontFamily: 'Custom', fontSize: 16),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Custom',
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
