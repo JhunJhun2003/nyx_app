@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
@@ -173,10 +175,266 @@ class _ClassesPageState extends State<ClassesPage> {
   }
 
   Widget _rentals() {
-    return Center(
-      child: Text(
-        "This is Rental.",
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 10),
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              "Court Rentals",
+              style: TextStyle(
+                fontSize: 19,
+                fontFamily: "Custom",
+                fontWeight: FontWeight.w700,
+                color: Colors.black
+              ),
+            ),
+          ),
+          SizedBox(height: 3),
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              "Book your own private court.",
+              style: TextStyle(
+                fontSize: 15,
+                fontFamily: "Custom",
+                color: Colors.black
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          _badmintonCourt(),
+          SizedBox(height: 10),
+          _tennisCourt(),
+          SizedBox(height: 10),
+          _futsals(),
+          SizedBox(height: 10),
+        ],
         key: ValueKey("rentals"),
+      ),
+    );
+  }
+
+  Widget _badmintonCourt(){
+    return Container(
+      height: 350,
+      margin: EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(15)
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset("assets/images/badminton_court.jpg",
+              fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 10,
+            bottom: 50,
+            child: Text(
+              "Badminton Courts",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+             right: 10,
+             bottom: 50,
+             child: Text(
+              "25,000 Ks",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 2,
+            child: GestureDetector(
+              onTap: (){},
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                width: 400,
+                height: 35,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    "See Details",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: "Custom",
+                      color: Colors.white
+                    ),
+                    textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tennisCourt(){
+    return Container(
+      height: 350,
+      margin: EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(15)
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset("assets/images/tennis_court.jpg",
+              fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 10,
+            bottom: 50,
+            child: Text(
+              "Tennis Courts",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+             right: 10,
+             bottom: 50,
+             child: Text(
+              "25,000 Ks",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 2,
+            child: GestureDetector(
+              onTap: (){},
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                width: 400,
+                height: 35,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    "See Details",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: "Custom",
+                      color: Colors.white
+                    ),
+                    textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _futsals(){
+    return Container(
+      height: 350,
+      margin: EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(15)
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset("assets/images/futsal_court.jpg",
+              fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 10,
+            bottom: 50,
+            child: Text(
+              "Futsal Courts",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+             right: 10,
+             bottom: 50,
+             child: Text(
+              "25,000 Ks",
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: "Custom",
+                color: Colors.white
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 2,
+            child: GestureDetector(
+              onTap: (){},
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                width: 400,
+                height: 35,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    "See Details",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: "Custom",
+                      color: Colors.white
+                    ),
+                    textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          ),
+        ],
       ),
     );
   }
