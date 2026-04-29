@@ -162,8 +162,8 @@ class _PaymentState extends State<Payment> {
               _paymentInfo(),
               const SizedBox(height: 10),
               if (_showTransactionInput()) ...[
-                _input("Enter transaction number (optional)"),
-                const SizedBox(height: 10),
+                // _input("Enter transaction number (optional)"),
+                // const SizedBox(height: 10),
                 _imageUploadSection(),
               ],
               const SizedBox(height: 20),

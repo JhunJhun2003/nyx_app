@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
@@ -29,7 +30,15 @@ class _DashBoardState extends State<DashBoard> {
 
   String? _categoriesError;
   String? _productsError;
+  List<String> images = [
+    "assets/classes/Badminton.png",
+    "assets/classes/Futsal.png",
+    "assets/classes/Tennis.png",
+  ];
 
+  int currentIndex = 0;
+
+  String searchQuery = "";
   @override
   void initState() {
     super.initState();
@@ -447,16 +456,46 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _banner() {
-    return Container(
-      height: 180,
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        image: const DecorationImage(
-          image: AssetImage("assets/images/Group1208.png"),
-          fit: BoxFit.cover,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CarouselSlider(
+          items: images.map((item) => Container(
+            margin: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(image: AssetImage(item),fit: BoxFit.cover)
+            ),
+          )).toList(), 
+          options: CarouselOptions(
+            height: 180,
+            autoPlay: true,
+            autoPlayInterval: Duration(seconds: 5),
+            autoPlayAnimationDuration: Duration(milliseconds: 900),
+            enlargeCenterPage: true,
+            aspectRatio: 16/9,
+            viewportFraction: 1,
+            onPageChanged: (index,reason){
+              setState(() {
+                currentIndex = index;
+              });
+            }
+          )
         ),
-      ),
+        SizedBox(height: 5),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: images.asMap().entries.map((item) => Container(
+            height: 7,
+            width: 7,
+            margin: EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: currentIndex == item.key ? Colors.black : Colors.grey,
+            ),
+          )).toList(),
+        ),
+      ],
     );
   }
 
