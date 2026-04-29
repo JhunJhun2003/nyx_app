@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/services/session_service.dart';
+import 'package:provider/provider.dart';
+
 
 class slipPage extends StatefulWidget {
   final String? paymentMethod;
@@ -395,75 +397,79 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-  Widget _buttons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-                iconColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              icon: const Icon(Icons.home, size: 22),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MainDashboard(
-                      sessionService: SessionService(),
-                      cartService: CartService(),
-                    ),
-                  ),
-                  (route) => false,
-                );
-              },
-              label: const Text(
-                "Home",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Custom',
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                iconColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              icon: const Icon(Icons.file_download_outlined, size: 22),
-              onPressed: () {
-                _showDownloadDialog();
-              },
-              label: const Text(
-                "Download",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Custom',
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
+Widget _buttons() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+              iconColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            icon: const Icon(Icons.home, size: 22),
+            onPressed: () {
+              // ✅ Get existing services from Provider
+              final sessionService = Provider.of<SessionService>(context, listen: false);
+              final cartService = Provider.of<CartService>(context, listen: false);
+              
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MainDashboard(
+                    sessionService: sessionService,
+                    cartService: cartService,
+                  ),
+                ),
+                (route) => false,
+              );
+            },
+            label: const Text(
+              "Home",
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Custom',
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              iconColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            icon: const Icon(Icons.file_download_outlined, size: 22),
+            onPressed: () {
+              _showDownloadDialog();
+            },
+            label: const Text(
+              "Download",
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Custom',
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
   void _showDownloadDialog() {
     showDialog(
       context: context,
