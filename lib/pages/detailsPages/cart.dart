@@ -11,16 +11,17 @@ class CartPage extends StatelessWidget {
     final cart = Provider.of<CartService>(context);
     
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            _buildHeader(),
+            _header(context),
             // Cart items (scrollable)
             Expanded(
               child: cart.items.isEmpty
                   ? _emptyCart(context)
                   : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       itemCount: cart.items.length,
                       itemBuilder: (context, index) {
                         return _cartItem(context, cart.items[index], cart);
@@ -35,30 +36,45 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: const Row(
-        children: [
-          BackButton(color: Colors.white),
-          Expanded(
-            child: Text(
-              "My Cart",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(width: 48), // Placeholder for balance
-        ],
-      ),
-    );
-  }
+Widget _header(BuildContext context) {
+  // Check if we can actually go back
+  bool canPop = Navigator.canPop(context);
 
+  return Container(
+    color: const Color.fromARGB(255, 13, 27, 42),
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Show IconButton only if canPop is true
+        canPop 
+          ? IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+              ),
+            )
+          : const SizedBox(width: 48), // Keep spacing consistent when hidden
+
+        const Expanded(
+          child: Text(
+            "My Cart",
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(width: 48), 
+      ],
+    ),
+  );
+}
   Widget _emptyCart(BuildContext context) {
     return Center(
       child: Column(
@@ -75,16 +91,7 @@ class CartPage extends StatelessWidget {
             'Add items to get started',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Continue Shopping'),
-          ),
+          
         ],
       ),
     );
@@ -216,6 +223,10 @@ class CartPage extends StatelessWidget {
   }
 
   Widget _confirm(BuildContext context, CartService cart) {
+    final subtotal = cart.totalPrice;
+    final deliveryFee = 5000.0;
+    final total = subtotal + deliveryFee;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -241,7 +252,7 @@ class CartPage extends StatelessWidget {
                 style: TextStyle(fontSize: 14),
               ),
               Text(
-                "${cart.totalPrice.toStringAsFixed(0)} Ks",
+                "${subtotal.toStringAsFixed(0)} Ks",
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -277,7 +288,7 @@ class CartPage extends StatelessWidget {
                 ),
               ),
               Text(
-                "${(cart.totalPrice + 5000).toStringAsFixed(0)} Ks",
+                "${total.toStringAsFixed(0)} Ks",
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -292,8 +303,11 @@ class CartPage extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.add_shopping_cart),
-            label: const Text("Add more items"),
+            icon: const Icon(Icons.add_shopping_cart, color: Colors.red),
+            label: const Text(
+              "Add more items",
+              style: TextStyle(color: Colors.red),
+            ),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
@@ -307,7 +321,7 @@ class CartPage extends StatelessWidget {
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
               onPressed: cart.items.isNotEmpty

@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // Loading Indicator
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                Color.fromARGB(255, 13, 27, 42),
+                Color.fromARGB(255, 223, 238, 254),
               ),
               strokeWidth: 3,
             ),

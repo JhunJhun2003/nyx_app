@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/cart.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/services/cart_service.dart';
@@ -64,85 +65,96 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
-  Widget _header(CartService cartService) {
-    return Container(
-      color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
+ Widget _header(CartService cartService) {
+  return Container(
+    color: const Color.fromARGB(255, 13, 27, 42),
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        IconButton(
+          onPressed: (){
+            Navigator.pop(context);
+          }, 
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded, 
+            color: Colors.white,
+          ),
+        ),
+        const Expanded(
+          child: Text(
+            "Product Details",
+            style: TextStyle(
+              fontFamily: "Custom",
               color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600
             ),
+            textAlign: TextAlign.center,
           ),
-          Expanded(
-            child: Text(
-              "Product Details",
-              style: const TextStyle(
-                fontFamily: "Custom",
+        ),
+        // ✅ Cart Icon with navigation
+        Stack(
+          children: [
+            IconButton(
+              onPressed: () {
+                // Navigate to Cart Page
+                // Since you're in MainDashboard, you need to update the current page index
+                // Option 1: If you have access to MainDashboard state
+                // Option 2: Use Navigator to push CartPage
+                
+                // Simple navigation - push CartPage as new page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartPage(),
+                  ),
+                );
+              }, 
+              icon: const Icon(
+                Icons.shopping_cart_sharp, 
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () {
-                  // Navigate to cart page (you can create this later)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cart page coming soon')),
-                  );
-                },
-                icon: const Icon(
-                  Icons.shopping_cart_sharp,
-                  color: Colors.white,
-                ),
-              ),
-              if (cartService.itemCount > 0)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
+            if (cartService.itemCount > 0)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '${cartService.itemCount}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
                     ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${cartService.itemCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-            ],
+              ),
+          ],
+        ),
+        IconButton(
+          onPressed: (){}, 
+          icon: const Icon(
+            Icons.compare_rounded, 
+            color: Colors.white,
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.compare_rounded, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-
+        ),
+      ],
+    ),
+  );
+}
   Widget _quantitySelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),

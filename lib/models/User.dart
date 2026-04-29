@@ -1,41 +1,54 @@
+// lib/models/User.dart
 class User {
   final int? id;
   final String? name;
   final String? email;
   final String? phone;
-  final String? dateOfBirth; // Added field
   final String? imageUrl;
+  final String? dateOfBirth;
+  final String? address;
+  final String? createdAt;
+  final String? updatedAt;
 
-  const User({
+  User({
     this.id,
     this.name,
     this.email,
     this.phone,
-    this.dateOfBirth, // Added parameter
     this.imageUrl,
+    this.dateOfBirth,
+    this.address,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    final dynamic rawId = json['id'];
-
     return User(
-      id: rawId is int ? rawId : int.tryParse(rawId?.toString() ?? ''),
+      id: json['id'] is int 
+          ? json['id'] 
+          : (json['id'] != null ? int.tryParse(json['id'].toString()) : null),
       name: json['name']?.toString(),
       email: json['email']?.toString(),
       phone: json['phone']?.toString(),
-      dateOfBirth: json['dateOfBirth']?.toString() ?? json['date_of_birth']?.toString(), // Handle both
-      imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString(), // Handle both
+      imageUrl: json['image_url']?.toString(),
+      dateOfBirth: json['dateOfBirth']?.toString(),
+      address: json['address']?.toString(),
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+    return {
       'id': id,
       'name': name,
       'email': email,
       'phone': phone,
-      'dateOfBirth': dateOfBirth, // Include in JSON
       'image_url': imageUrl,
+      'dateOfBirth': dateOfBirth,
+      'address': address,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 }

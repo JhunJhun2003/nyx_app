@@ -83,45 +83,49 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-Widget _header() {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: () {
-            // Navigate back to MainDashboard
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MainDashboard(
-                  sessionService: widget.sessionService,
-                  cartService: widget.cartService,  // ✅ Remove the ! (nullable)
+  Widget _header() {
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () {
+              // Navigate back to MainDashboard
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MainDashboard(
+                    sessionService: widget.sessionService,
+                    cartService:
+                        widget.cartService, // ✅ Remove the ! (nullable)
+                  ),
                 ),
-              ),
-              (route) => false,
-            );
-          },
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-        ),
-        const Expanded(
-          child: Text(
-            "Login",
-            style: TextStyle(
-              fontFamily: "Custom",
+                (route) => false,
+              );
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
-              fontSize: 18,
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-  
+          const Expanded(
+            child: Text(
+              "Login",
+              style: TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _inputform() {
     return Form(
       key: _formKey,
@@ -262,19 +266,70 @@ Widget _header() {
               responseMap = rawData;
             }
 
-            final dynamic rawUser = responseMap['user'];
-            final Map<String, dynamic> userJson =
-                rawUser is Map<String, dynamic>
-                ? rawUser
-                : <String, dynamic>{'email': email};
-            final User user = User.fromJson(userJson);
+            // Get token first
             final String token = responseMap['token']?.toString() ?? '';
+
+            // ✅ Fetch full user profile using the token
+            final profileResult = await Api.getMyProfile(token: token);
+
+            User user;
+
+            if (profileResult['success'] == true) {
+              // Use profile data which should have full user info
+              final userData = profileResult['data'] as Map<String, dynamic>;
+              print("📦 Profile data: $userData");
+
+              user = User(
+                id: userData['id'] != null
+                    ? int.tryParse(userData['id'].toString())
+                    : null,
+                name: userData['name']?.toString(),
+                email: userData['email']?.toString() ?? email,
+                phone: userData['phone']?.toString(),
+                imageUrl: userData['image_url']?.toString(),
+                dateOfBirth: userData['dateOfBirth']?.toString(),
+                address: userData['address']?.toString(),
+              );
+            } else {
+              // Fallback to login response data
+              final dynamic rawUser = responseMap['user'];
+              Map<String, dynamic> userJson = {};
+
+              if (rawUser is Map<String, dynamic>) {
+                userJson = rawUser;
+              } else {
+                userJson = responseMap;
+              }
+
+              print("📦 Login response user data: $userJson");
+
+              user = User(
+                id: userJson['id'] != null
+                    ? int.tryParse(userJson['id'].toString())
+                    : null,
+                name: userJson['name']?.toString(),
+                email: userJson['email']?.toString() ?? email,
+                phone: userJson['phone']?.toString(),
+                imageUrl: userJson['image_url']?.toString(),
+                dateOfBirth: userJson['dateOfBirth']?.toString(),
+                address: userJson['address']?.toString(),
+              );
+            }
+
+            print(
+              "✅ User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}",
+            );
 
             await widget.sessionService.saveSession(user, token);
 
+            // Verify save
+            final savedUser = widget.sessionService.getStoredUser();
+            print(
+              "✅ Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}",
+            );
+
             if (!mounted) return;
 
-            // ✅ Navigate to MainDashboard with both services
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(

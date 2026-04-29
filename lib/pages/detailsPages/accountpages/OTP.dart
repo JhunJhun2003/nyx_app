@@ -365,7 +365,7 @@ class _OTPState extends State<OTP> {
             MaterialPageRoute(
               builder: (_) => MainDashboard(
                 sessionService: widget.sessionService,
-                cartService: widget.cartService!,  // ✅ Add this line
+                cartService: widget.cartService,  // ✅ Add this line
               ),
             ),
             (route) => false,

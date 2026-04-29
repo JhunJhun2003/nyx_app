@@ -1,15 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/main_dashboard.dart';
+import 'package:nyxproject/services/cart_service.dart';
+import 'package:nyxproject/services/session_service.dart';
 
 class slipPage extends StatefulWidget {
-  const slipPage({super.key});
+  final String? paymentMethod;
+  final String? transactionNumber;
+  final double? totalAmount;
+  final List<CartItem>? cartItems;
+  final Map<String, String>? contactInfo;
+  final Map<String, dynamic>? orderResponse;  // ✅ Add this
+
+  const slipPage({
+    super.key,
+    this.paymentMethod,
+    this.transactionNumber,
+    this.totalAmount,
+    this.cartItems,
+    this.contactInfo,
+    this.orderResponse,  // ✅ Add this
+  });
 
   @override
   State<slipPage> createState() => _slipPageState();
 }
 
 class _slipPageState extends State<slipPage> {
+  String orderNo = "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
+  String date = DateTime.now().day.toString().padLeft(2, '0') + "/" + 
+                DateTime.now().month.toString().padLeft(2, '0') + "/" + 
+                DateTime.now().year.toString();
+  String time = DateTime.now().hour.toString().padLeft(2, '0') + ":" + 
+                DateTime.now().minute.toString().padLeft(2, '0');
+  
+  double subTotal = 0;
+  double tax = 0;
+  double deliveryFee = 1500;
+  double total = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTotals();
+  }
+
+  void _calculateTotals() {
+    if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
+      subTotal = widget.cartItems!.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+    } else if (widget.totalAmount != null) {
+      subTotal = widget.totalAmount!;
+    } else {
+      subTotal = 100000;
+    }
+    
+    tax = subTotal * 0.05;
+    total = subTotal + tax + deliveryFee;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Use orderResponse if available, otherwise use local data
+    final orderNumber = widget.orderResponse?['order_number'] ?? orderNo;
+    final orderDate = widget.orderResponse?['order_date'] ?? date;
+    final orderTime = widget.orderResponse?['order_time'] ?? time;
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -17,10 +71,10 @@ class _slipPageState extends State<slipPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
-              SizedBox(height: 15),
-              _voucher(),
-              SizedBox(height: 15),
-              _buttoms(),
+              const SizedBox(height: 15),
+              _voucher(orderNumber, orderDate, orderTime),
+              const SizedBox(height: 15),
+              _buttons(),
             ],
           ),
         )
@@ -40,15 +94,14 @@ class _slipPageState extends State<slipPage> {
             onPressed: (){
               Navigator.pop(context);
             }, 
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back_ios_new_rounded, 
               color: Colors.white,
             ),
           ),
-
-          Expanded(
+          const Expanded(
             child: Text(
-              "Slip",
+              "Order Confirmation",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -62,139 +115,228 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-  Widget _voucher(){
+  Widget _voucher(String orderNumber, String orderDate, String orderTime) {
     return Container(
-      height: 500,
-      margin: EdgeInsets.symmetric(horizontal: 10),
-      padding: EdgeInsetsGeometry.symmetric(horizontal: 10, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 13, 27, 42),
+        color: const Color.fromARGB(255, 13, 27, 42),
         borderRadius: BorderRadius.circular(10)
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          SizedBox(height: 10),
-          Center(
+          const SizedBox(height: 10),
+          const Center(
             child: Text(
-              "Order Placed Successfully",
+              "Order Placed Successfully!",
               style: TextStyle(
                 fontFamily: "Custom",
-                color: const Color.fromARGB(255, 51, 252, 57),
-                fontSize: 21,
+                color: Color.fromARGB(255, 51, 252, 57),
+                fontSize: 20,
                 fontWeight: FontWeight.w600
               ),
             ),
           ),
-          SizedBox(height: 3),
-          Center(
+          const SizedBox(height: 5),
+          const Center(
             child: Text(
               "Thank you for shopping with us.",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 17,
+                fontSize: 15,
               ),
             ),
           ),
-          SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _rowWidget1("Order No :", "#1101"),
-              _rowWidget1("Date :", "04/03/26"),
-            ],
+          const SizedBox(height: 20),
+          // Delivery Information
+          if (widget.contactInfo != null) ...[
+            _infoRow("Name:", widget.contactInfo!['name'] ?? 'N/A'),
+            const SizedBox(height: 8),
+            _infoRow("Phone:", widget.contactInfo!['phone'] ?? 'N/A'),
+            const SizedBox(height: 8),
+            _infoRow("Email:", widget.contactInfo!['email'] ?? 'N/A'),
+            const SizedBox(height: 8),
+            _infoRow("Address:", widget.contactInfo!['address'] ?? 'N/A'),
+            const SizedBox(height: 15),
+            const Divider(color: Colors.white54),
+            const SizedBox(height: 10),
+          ],
+          _infoRow("Order No :", orderNumber),
+          const SizedBox(height: 8),
+          _infoRow("Date :", orderDate),
+          const SizedBox(height: 8),
+          _infoRow("Time :", orderTime),
+          const SizedBox(height: 8),
+          _infoRow("Payment :", widget.paymentMethod ?? "Cash on Delivery"),
+          if (widget.transactionNumber != null && widget.transactionNumber!.isNotEmpty)
+            _infoRow("Transaction No :", widget.transactionNumber!),
+          const SizedBox(height: 15),
+          const Divider(color: Colors.white54),
+          const SizedBox(height: 10),
+          const Text(
+            "Order Items",
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          SizedBox(height: 7),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _rowWidget1("Payment :", "Kpay"),
-              _rowWidget1("Time :", "12:25 AM"),
-            ],
-          ),
-          SizedBox(height: 7),
-          Divider(),
-          SizedBox(height: 7),
-          _rowWidget2("Burger", "2", "9,000 Ks"),
-          SizedBox(height: 5),
-          _rowWidget2("Fires", "2", "5,000 Ks"),
-          SizedBox(height: 7),
-          Divider(),
-          SizedBox(height: 7),
-          _rowWidget3("Total Items :","4"),
-          _rowWidget3("Sub Total : ","14,000 Ks"),
-          _rowWidget3("Tax 5% :","70 Ks"),
-          _rowWidget3("Delivery Fee :","1,500 Ks"),
-          SizedBox(height: 7),
-          Divider(),
-          SizedBox(height: 7),
-          _rowWidget3("Total :","15,570 Ks"),
+          const SizedBox(height: 10),
+          _productHeader(),
+          const SizedBox(height: 5),
+          _productList(),
+          const SizedBox(height: 10),
+          const Divider(color: Colors.white54),
+          const SizedBox(height: 10),
+          _priceRow("Sub Total :", "${subTotal.toStringAsFixed(0)} Ks"),
+          _priceRow("Tax (5%) :", "${tax.toStringAsFixed(0)} Ks"),
+          _priceRow("Delivery Fee :", "${deliveryFee.toStringAsFixed(0)} Ks"),
+          const SizedBox(height: 8),
+          const Divider(color: Colors.white54),
+          _priceRow("Total :", "${total.toStringAsFixed(0)} Ks", isBold: true),
+          const SizedBox(height: 15),
         ],
       ),
     );
   }
 
-  Widget _rowWidget1(String title1, String title2){
-    return Container(
-      width: 140,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title1,
-            style: TextStyle(
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: "Custom",
+            color: Colors.white70,
+            fontSize: 15,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
               fontFamily: "Custom",
               color: Colors.white,
-              fontSize: 17,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          Text(
-            title2,
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 17,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _rowWidget2(String title1, String title2, String title3){
-    return Container(
+  Widget _productHeader() {
+    return const Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            "Product",
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Flexible(
+          flex: 1,
+          child: Text(
+            "Qty",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Flexible(
+          flex: 1,
+          child: Text(
+            "Price",
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _productList() {
+    if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
+      return Column(
+        children: widget.cartItems!.map((item) {
+          return _productRow(
+            item.product.productName,
+            item.quantity.toString(),
+            (item.product.price * item.quantity).toStringAsFixed(0),
+          );
+        }).toList(),
+      );
+    }
+    
+    return Column(
+      children: [
+        _productRow("Badminton Shuttlecock", "2", "9,000"),
+        _productRow("Football", "1", "35,000"),
+        _productRow("Tennis Racket", "1", "45,000"),
+      ],
+    );
+  }
+
+  Widget _productRow(String name, String qty, String price) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             flex: 2,
             child: Text(
-              title1,
-              style: TextStyle(
+              name,
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 17,
+                fontSize: 14,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Flexible(
+            flex: 1,
+            child: Text(
+              qty,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: "Custom",
+                color: Colors.white,
+                fontSize: 14,
               ),
             ),
           ),
           Flexible(
             flex: 1,
             child: Text(
-              title2,
-              style: TextStyle(
+              "$price Ks",
+              textAlign: TextAlign.end,
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 17,
+                fontSize: 14,
               ),
-            ),
-          ),
-          Text(
-            title3,
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 17,
             ),
           ),
         ],
@@ -202,25 +344,28 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-  Widget _rowWidget3(String title1, String title2){
-    return Container(
+  Widget _priceRow(String label, String amount, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            title1,
+            label,
             style: TextStyle(
               fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 17,
+              color: isBold ? Colors.white : Colors.white70,
+              fontSize: isBold ? 16 : 15,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           Text(
-            title2,
+            amount,
             style: TextStyle(
               fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 17,
+              color: isBold ? const Color.fromARGB(255, 51, 252, 57) : Colors.white,
+              fontSize: isBold ? 18 : 15,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ],
@@ -228,40 +373,92 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-  Widget _buttoms(){
-    return Container(
+  Widget _buttons(){
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 13, 27, 42),
-              iconColor: Colors.white,
-              fixedSize: Size(150, 40)
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+                iconColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              icon: const Icon(Icons.home, size: 22),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MainDashboard(
+                      sessionService: SessionService(),
+                      cartService: CartService(),
+                    ),
+                  ),
+                  (route) => false,
+                );
+              }, 
+              label: const Text(
+                "Home",
+                style: TextStyle(color: Colors.white, fontFamily: 'Custom', fontSize: 16),
+              ),
             ),
-            icon: Icon(Icons.home,size: 25,),
-            onPressed: (){}, 
-            label: Text(
-              "Home",
-              style: TextStyle(color: Colors.white,fontFamily: 'Custom',fontSize: 17),
-            )
           ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              iconColor: Colors.white,
-              fixedSize: Size(150, 40)
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                iconColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              icon: const Icon(Icons.file_download_outlined, size: 22),
+              onPressed: () {
+                _showDownloadDialog();
+              }, 
+              label: const Text(
+                "Download",
+                style: TextStyle(color: Colors.white, fontFamily: 'Custom', fontSize: 16),
+              ),
             ),
-            icon: Icon(Icons.file_download_outlined,size: 25,),
-            onPressed: (){}, 
-            label: Text(
-              "Download",
-              style: TextStyle(color: Colors.white,fontFamily: 'Custom',fontSize: 17),
-            )
           ),
         ],
       ),
     );
   }
 
+  void _showDownloadDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Download Receipt"),
+        content: const Text("Would you like to download your order receipt?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Receipt downloaded successfully!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text("Download"),
+          ),
+        ],
+      ),
+    );
+  }
 }

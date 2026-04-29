@@ -1,59 +1,80 @@
+// lib/services/session_service.dart
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-class SessionService extends ChangeNotifier {  // ✅ Add ChangeNotifier
+class SessionService extends ChangeNotifier {
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyUserData = 'user_data';
   static const String _keyUserToken = 'user_token';
   
-  late SharedPreferences _prefs;
-  
-  // Initialize SharedPreferences
+  SharedPreferences? _prefs;
+  bool _isLoggedIn = false;
+  User? _currentUser;
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    _isLoggedIn = _prefs!.getBool(_keyIsLoggedIn) ?? false;
+    _currentUser = getStoredUser();
     notifyListeners();
   }
   
-  // Save user session after login
   Future<void> saveSession(User user, String token) async {
-    await _prefs.setBool(_keyIsLoggedIn, true);
-    await _prefs.setString(_keyUserToken, token);
-    await _prefs.setString(_keyUserData, jsonEncode(user.toJson()));
-    notifyListeners();  // ✅ Notify listeners
+    print("📝 Saving session - User: ${user.name}, ID: ${user.id}");
+    
+    final userJson = user.toJson();
+    print("📝 User JSON: $userJson");
+    
+    await _prefs!.setBool(_keyIsLoggedIn, true);
+    await _prefs!.setString(_keyUserToken, token);
+    await _prefs!.setString(_keyUserData, jsonEncode(userJson));
+    
+    _isLoggedIn = true;
+    _currentUser = user;
+    
+    print("✅ Session saved");
+    notifyListeners();
   }
   
-  // Save token only
   Future<void> saveToken(String token) async {
-    await _prefs.setString(_keyUserToken, token);
-    notifyListeners();  // ✅ Notify listeners
+    await _prefs!.setString(_keyUserToken, token);
+    notifyListeners();
   }
   
-  // Check if user is logged in
   bool isLoggedIn() {
-    return _prefs.getBool(_keyIsLoggedIn) ?? false;
+    final token = _prefs?.getString(_keyUserToken);
+    final isLoggedIn = _prefs?.getBool(_keyIsLoggedIn) ?? false;
+    final hasToken = token != null && token.isNotEmpty;
+    return isLoggedIn && hasToken;
   }
   
-  // Get stored user
   User? getStoredUser() {
-    final userData = _prefs.getString(_keyUserData);
-    if (userData != null) {
-      return User.fromJson(jsonDecode(userData));
+    final userData = _prefs?.getString(_keyUserData);
+    print("📖 Retrieving user data: $userData");
+    
+    if (userData != null && userData.isNotEmpty) {
+      try {
+        final jsonData = jsonDecode(userData);
+        return User.fromJson(jsonData);
+      } catch (e) {
+        print("❌ Error parsing user data: $e");
+        return null;
+      }
     }
     return null;
   }
   
-  // Get token
   String? getToken() {
-    return _prefs.getString(_keyUserToken);
+    return _prefs?.getString(_keyUserToken);
   }
   
-  // Clear session on logout
   Future<void> logout() async {
-    await _prefs.remove(_keyIsLoggedIn);
-    await _prefs.remove(_keyUserData);
-    await _prefs.remove(_keyUserToken);
-    notifyListeners();  // ✅ Notify listeners
+    await _prefs?.remove(_keyIsLoggedIn);
+    await _prefs?.remove(_keyUserData);
+    await _prefs?.remove(_keyUserToken);
+    _isLoggedIn = false;
+    _currentUser = null;
+    notifyListeners();
   }
 }
