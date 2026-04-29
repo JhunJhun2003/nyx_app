@@ -16,6 +16,38 @@ class ProductDetails extends StatefulWidget {
 class _ProductDetailsState extends State<ProductDetails> {
   int selectedIndex = 0;
   int _quantity = 1;
+  bool _isAddingToCart = false;
+
+  // ✅ Check if product is in stock
+  bool get _isInStock {
+    // Check total_stock field
+    if (widget.product.totalStock != null && widget.product.totalStock != "0") {
+      final stock = int.tryParse(widget.product.totalStock);
+      if (stock != null) {
+        return stock > 0;
+      }
+    }
+    // Check status field
+    if (widget.product.status != null) {
+      return widget.product.status!.toLowerCase() != "out of stock";
+    }
+    // Default to true if no stock info
+    return true;
+  }
+
+  String get _stockStatusText {
+    if (!_isInStock) {
+      return "Out of Stock";
+    }
+    return "In Stock";
+  }
+
+  Color get _stockStatusColor {
+    if (!_isInStock) {
+      return Colors.red;
+    }
+    return Colors.green;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,96 +97,90 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
- Widget _header(CartService cartService) {
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: (){
-            Navigator.pop(context);
-          }, 
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded, 
-            color: Colors.white,
-          ),
-        ),
-        const Expanded(
-          child: Text(
-            "Product Details",
-            style: TextStyle(
-              fontFamily: "Custom",
+  Widget _header(CartService cartService) {
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
-        // ✅ Cart Icon with navigation
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () {
-                // Navigate to Cart Page
-                // Since you're in MainDashboard, you need to update the current page index
-                // Option 1: If you have access to MainDashboard state
-                // Option 2: Use Navigator to push CartPage
-                
-                // Simple navigation - push CartPage as new page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CartPage(),
-                  ),
-                );
-              }, 
-              icon: const Icon(
-                Icons.shopping_cart_sharp, 
+          const Expanded(
+            child: Text(
+              "Product Details",
+              style: TextStyle(
+                fontFamily: "Custom",
                 color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
             ),
-            if (cartService.itemCount > 0)
-              Positioned(
-                right: 4,
-                top: 4,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '${cartService.itemCount}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+          ),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CartPage(),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                  );
+                },
+                icon: const Icon(
+                  Icons.shopping_cart_sharp,
+                  color: Colors.white,
                 ),
               ),
-          ],
-        ),
-        IconButton(
-          onPressed: (){}, 
-          icon: const Icon(
-            Icons.compare_rounded, 
-            color: Colors.white,
+              if (cartService.itemCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${cartService.itemCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
-      ],
-    ),
-  );
-}
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              Icons.compare_rounded,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _quantitySelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -166,19 +192,19 @@ class _ProductDetailsState extends State<ProductDetails> {
           ),
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
+              border: Border.all(color: _isInStock ? Colors.grey : Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () {
-                    if (_quantity > 1) {
-                      setState(() {
-                        _quantity--;
-                      });
-                    }
-                  },
+                  onPressed: _isInStock && _quantity > 1
+                      ? () {
+                          setState(() {
+                            _quantity--;
+                          });
+                        }
+                      : null,
                   icon: const Icon(Icons.remove, size: 20),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -188,15 +214,20 @@ class _ProductDetailsState extends State<ProductDetails> {
                   child: Text(
                     '$_quantity',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _isInStock ? Colors.black : Colors.grey,
+                    ),
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _quantity++;
-                    });
-                  },
+                  onPressed: _isInStock
+                      ? () {
+                          setState(() {
+                            _quantity++;
+                          });
+                        }
+                      : null,
                   icon: const Icon(Icons.add, size: 20),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -301,12 +332,6 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _priceTag() {
-    String stockStatus = widget.product.totalStock == "0"
-        ? "Out of stock"
-        : "In Stock";
-    Color stockColor = widget.product.totalStock == "0"
-        ? Colors.red
-        : Colors.green;
     bool hasDiscount = widget.product.cost > widget.product.price;
 
     return Container(
@@ -348,8 +373,12 @@ class _ProductDetailsState extends State<ProductDetails> {
                 style: TextStyle(fontFamily: "Custom", color: Colors.white),
               ),
               Text(
-                stockStatus,
-                style: TextStyle(fontFamily: "Custom", color: stockColor),
+                _stockStatusText,
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: _stockStatusColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -678,7 +707,7 @@ class _ProductDetailsState extends State<ProductDetails> {
           Row(
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: _isInStock ? () {} : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -690,17 +719,29 @@ class _ProductDetailsState extends State<ProductDetails> {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: () {
-                  _addToCart(cartService); // ✅ Extract to separate method
-                },
+                onPressed: _isInStock && !_isAddingToCart
+                    ? () => _addToCart(cartService)
+                    : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: _isInStock ? Colors.red : Colors.grey,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
-                child: const Text(
-                  "Add to Cart",
-                  style: TextStyle(fontFamily: "Custom", color: Colors.white),
-                ),
+                child: _isAddingToCart
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _isInStock ? "Add to Cart" : "Out of Stock",
+                        style: const TextStyle(
+                          fontFamily: "Custom",
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -709,20 +750,56 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
-  // ✅ Add this method to handle adding to cart
   void _addToCart(CartService cartService) {
+    // Check stock again before adding
+    if (!_isInStock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This product is out of stock!'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isAddingToCart = true;
+    });
+
     // Add to cart with selected quantity
     cartService.addToCart(widget.product, quantity: _quantity);
 
-    // Show confirmation with longer duration
-    ScaffoldMessenger.of(
-      context,
-    ).clearSnackBars(); // Clear any existing snackbars
-   
+    // Clear any existing snackbars
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added ${_quantity} ${_quantity == 1 ? 'item' : 'items'} to cart'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.green,
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () {
+            cartService.removeFromCart(widget.product);
+          },
+        ),
+      ),
+    );
 
     // Reset quantity to 1
     setState(() {
       _quantity = 1;
+    });
+
+    // Reset button state after delay
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+      }
     });
   }
 }
