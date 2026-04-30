@@ -774,19 +774,19 @@ class _ProductDetailsState extends State<ProductDetails> {
     ScaffoldMessenger.of(context).clearSnackBars();
 
     // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Added ${_quantity} ${_quantity == 1 ? 'item' : 'items'} to cart'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Colors.green,
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () {
-            cartService.removeFromCart(widget.product);
-          },
-        ),
-      ),
-    );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text('Added ${_quantity} ${_quantity == 1 ? 'item' : 'items'} to cart'),
+    //     duration: const Duration(seconds: 2),
+    //     backgroundColor: Colors.green,
+    //     action: SnackBarAction(
+    //       label: 'UNDO',
+    //       onPressed: () {
+    //         cartService.removeFromCart(widget.product);
+    //       },
+    //     ),
+    //   ),
+    // );
 
     // Reset quantity to 1
     setState(() {
