@@ -5,8 +5,9 @@ import 'package:nyxproject/pages/detailsPages/accountpages/editprofile.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/help.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/myorder.dart';
+// import 'package:nyxproject/pages/detailsPages/accountpages/myorder.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/mywishlist.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
@@ -64,7 +65,7 @@ class _AccountPageState extends State<AccountPage> {
               _menuItem(Icons.shopping_cart_outlined, "My Orders", () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => myOrder()),
+                  MaterialPageRoute(builder: (context) => orderHistory()),
                 );
               }),
               
