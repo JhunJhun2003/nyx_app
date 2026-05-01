@@ -22,61 +22,6 @@ class _contactInfoState extends State<contactInfo> {
   final _formKey = GlobalKey<FormState>();
 
   @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  void _checkLoginStatus() {
-    final sessionService = Provider.of<SessionService>(context, listen: false);
-    
-    if (!sessionService.isLoggedIn()) {
-      // Show dialog and redirect to login
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showLoginRequiredDialog();
-      });
-    }
-  }
-
-  void _showLoginRequiredDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Login Required"),
-        content: const Text("Please login to continue with your order."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous page
-            },
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(
-                    sessionService: Provider.of<SessionService>(context, listen: false),
-                    cartService: Provider.of<CartService>(context, listen: false),
-                  ),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text("Login Now"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
@@ -90,20 +35,23 @@ class _contactInfoState extends State<contactInfo> {
   Widget build(BuildContext context) {
     final sessionService = Provider.of<SessionService>(context);
     
-    // If not logged in, show loading or redirect message
+    // If not logged in, show redirect message
     if (!sessionService.isLoggedIn()) {
       return Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CircularProgressIndicator(),
+              const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
               const SizedBox(height: 20),
-              const Text("Checking login status..."),
+              const Text(
+                "Please login to continue",
+                style: TextStyle(fontSize: 16),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) => LoginPage(
@@ -115,6 +63,10 @@ class _contactInfoState extends State<contactInfo> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
                 child: const Text("Go to Login"),
               ),
@@ -138,26 +90,46 @@ class _contactInfoState extends State<contactInfo> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    _section1("Full Name *"),
-                    const SizedBox(height: 5),
-                    _input(nameController, "Enter your full name", TextInputType.name),
-                    const SizedBox(height: 15),
-                    _section1("Phone Number *"),
-                    const SizedBox(height: 5),
-                    _input(phoneController, "09 xxx xxx xxx", TextInputType.phone),
-                    const SizedBox(height: 15),
-                    _section1("Email Address *"),
-                    const SizedBox(height: 5),
-                    _input(emailController, "example@gmail.com", TextInputType.emailAddress),
-                    const SizedBox(height: 15),
-                    _section1("Delivery Address *"),
-                    const SizedBox(height: 5),
-                    _input(addressController, "Enter your address", TextInputType.streetAddress),
-                    const SizedBox(height: 15),
-                    _section1("Remark (Optional)"),
-                    const SizedBox(height: 5),
-                    _input(remarkController, "Any special instructions?", TextInputType.text),
-                    const SizedBox(height: 15),
+                    _buildTextField(
+                      label: "Full Name",
+                      controller: nameController,
+                      keyboardType: TextInputType.name,
+                      hintText: "Enter your full name",
+                      isRequired: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      label: "Phone Number",
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      hintText: "09 xxx xxx xxx",
+                      isRequired: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      label: "Email Address",
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      hintText: "example@gmail.com",
+                      isRequired: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      label: "Delivery Address",
+                      controller: addressController,
+                      keyboardType: TextInputType.streetAddress,
+                      hintText: "Enter your address",
+                      isRequired: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      label: "Remark",
+                      controller: remarkController,
+                      keyboardType: TextInputType.text,
+                      hintText: "Any special instructions?",
+                      isRequired: false,
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -166,6 +138,96 @@ class _contactInfoState extends State<contactInfo> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required TextInputType keyboardType,
+    required String hintText,
+    required bool isRequired,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label with required indicator
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: label,
+                  style: const TextStyle(
+                    fontFamily: 'Custom',
+                    color: Color.fromARGB(255, 13, 27, 42),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                if (isRequired)
+                  const TextSpan(
+                    text: " *",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Text Field
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(
+              fontFamily: "Custom",
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              hintText: hintText,
+              hintStyle: const TextStyle(
+                fontFamily: 'Custom',
+                color: Colors.grey,
+                fontSize: 13,
+              ),
+              filled: true,
+              fillColor: const Color.fromARGB(255, 13, 27, 42),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            validator: (value) {
+              if (isRequired) {
+                if (value == null || value.isEmpty) {
+                  return "$label is required";
+                }
+              }
+              if (label == "Email Address" && value != null && value.isNotEmpty) {
+                if (!value.contains('@') || !value.contains('.')) {
+                  return "Enter a valid email address";
+                }
+              }
+              if (label == "Phone Number" && value != null && value.isNotEmpty) {
+                if (value.length < 9 || value.length > 11) {
+                  return "Enter a valid phone number";
+                }
+              }
+              return null;
+            },
+          ),
+        ],
       ),
     );
   }
@@ -179,13 +241,10 @@ class _contactInfoState extends State<contactInfo> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
-            }, 
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded, 
-              color: Colors.white,
-            ),
+            },
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           const Expanded(
             child: Text(
@@ -194,10 +253,12 @@ class _contactInfoState extends State<contactInfo> {
                 fontFamily: "Custom",
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.w600
+                fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -207,78 +268,20 @@ class _contactInfoState extends State<contactInfo> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Text(title,
-         style: const TextStyle(
-          color: Color.fromARGB(255, 13, 27, 42), 
-          fontWeight: FontWeight.w900,
-          fontFamily: 'Custom',
-          fontSize: 22
-          )
-        ),
-      ),
-    );
-  }
-
-  Widget _section1(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Text(title,
-       style: const TextStyle(
-        color: Color.fromARGB(255, 13, 27, 42), 
-        fontWeight: FontWeight.w600,
-        fontFamily: 'Custom',
-        fontSize: 15,
-        )
-      ),
-    );
-  }
-
-  Widget _input(TextEditingController controller, String hintText, TextInputType keyboardType) {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          fontFamily: "Custom",
-          color: Color.fromARGB(255, 255, 255, 255),
-        ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.grey),
-          filled: true,
-          fillColor: const Color.fromARGB(255, 13, 27, 42),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15)
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Color.fromARGB(255, 13, 27, 42),
+            fontWeight: FontWeight.w900,
+            fontFamily: 'Custom',
+            fontSize: 22,
           ),
         ),
-        validator: (value) {
-          if (controller == nameController || 
-              controller == phoneController || 
-              controller == emailController || 
-              controller == addressController) {
-            if (value == null || value.isEmpty) {
-              return "This field is required";
-            }
-          }
-          if (controller == emailController && value != null && value.isNotEmpty) {
-            if (!value.contains('@') || !value.contains('.')) {
-              return "Enter a valid email address";
-            }
-          }
-          if (controller == phoneController && value != null && value.isNotEmpty) {
-            if (value.length < 9 || value.length > 11) {
-              return "Enter a valid phone number";
-            }
-          }
-          return null;
-        },
       ),
     );
   }
 
-  Widget _continue(){
+  Widget _continue() {
     return Center(
       child: ElevatedButton.icon(
         onPressed: _validateAndContinue,
@@ -303,7 +306,6 @@ class _contactInfoState extends State<contactInfo> {
   }
 
   void _validateAndContinue() {
-    // Double check login before proceeding
     final sessionService = Provider.of<SessionService>(context, listen: false);
     
     if (!sessionService.isLoggedIn()) {
@@ -311,12 +313,13 @@ class _contactInfoState extends State<contactInfo> {
       return;
     }
 
-    // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // Collect contact information
+    final cartService = Provider.of<CartService>(context, listen: false);
+    final totalAmount = cartService.totalPrice;
+
     Map<String, String> contactInfo = {
       'name': nameController.text.trim(),
       'phone': phoneController.text.trim(),
@@ -325,11 +328,6 @@ class _contactInfoState extends State<contactInfo> {
       'remark': remarkController.text.trim(),
     };
 
-    // Get cart service for total amount
-    final cartService = Provider.of<CartService>(context, listen: false);
-    final totalAmount = cartService.totalPrice;
-
-    // Navigate to Payment page with contact info
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -337,6 +335,44 @@ class _contactInfoState extends State<contactInfo> {
           totalAmount: totalAmount,
           contactInfo: contactInfo,
         ),
+      ),
+    );
+  }
+
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Login Required"),
+        content: const Text("Please login to continue with your order."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(
+                    sessionService: Provider.of<SessionService>(context, listen: false),
+                    cartService: Provider.of<CartService>(context, listen: false),
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text("Login Now"),
+          ),
+        ],
       ),
     );
   }

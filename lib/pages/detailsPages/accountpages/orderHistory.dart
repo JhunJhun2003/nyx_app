@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/Util/OrderApi.dart';
@@ -21,7 +20,8 @@ class _orderHistoryState extends State<orderHistory> {
   ];
 
   String _selectedStatus = "All";
-  List<dynamic> _orders = [];
+  List<dynamic> _allOrders = [];
+  List<dynamic> _filteredOrders = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -38,10 +38,7 @@ class _orderHistoryState extends State<orderHistory> {
     });
 
     try {
-      final sessionService = Provider.of<SessionService>(
-        context,
-        listen: false,
-      );
+      final sessionService = Provider.of<SessionService>(context, listen: false);
       final user = sessionService.getStoredUser();
       final userId = user?.id ?? 0;
       final token = sessionService.getToken();
@@ -58,7 +55,8 @@ class _orderHistoryState extends State<orderHistory> {
 
       if (result['success']) {
         setState(() {
-          _orders = result['data'] ?? [];
+          _allOrders = result['data'] ?? [];
+          _applyFilter();
           _isLoading = false;
         });
       } else {
@@ -75,6 +73,25 @@ class _orderHistoryState extends State<orderHistory> {
     }
   }
 
+  void _applyFilter() {
+    if (_selectedStatus == "All") {
+      _filteredOrders = List.from(_allOrders);
+    } else {
+      _filteredOrders = _allOrders.where((order) {
+        final orderStatus = order['order_status']?.toString().toLowerCase() ?? '';
+        return orderStatus == _selectedStatus.toLowerCase();
+      }).toList();
+    }
+    setState(() {});
+  }
+
+  void _changeFilter(String status) {
+    setState(() {
+      _selectedStatus = status;
+    });
+    _applyFilter();
+  }
+
   String _formatDate(String? dateTimeString) {
     if (dateTimeString == null) return 'N/A';
     try {
@@ -85,19 +102,25 @@ class _orderHistoryState extends State<orderHistory> {
     }
   }
 
-  void _navigateToSlipPage(Map<String, dynamic> order) {
-    // Extract order details
-    final orderId = order['order_id']?.toString() ?? 'N/A';
-    final orderDate = order['create_at']?.toString() ?? '';
-    final orderItems = order['items'] ?? [];
-    final subTotal = order['Sub_total'] ?? 0;
-    final tax = order['tax'] ?? 0;
-    final deliveryFee = order['delivery_fee'] ?? 0;
-    final total = order['Total'] ?? 0;
-    final paymentMethod =
-        order['payment_method']?.toString() ?? 'Cash on Delivery';
+  String _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+      case 'completed':
+        return 'green';
+      case 'pending':
+        return 'orange';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'grey';
+    }
+  }
 
-    // ✅ Convert to Map<String, String> explicitly
+  void _navigateToSlipPage(Map<String, dynamic> order) {
+    final paymentMethod = order['payment_method']?.toString() ?? 'Cash on Delivery';
+    final total = order['Total'] ?? 0;
+
+    // ✅ Now using actual contact info from API response
     final contactInfo = <String, String>{
       'name': order['customer_name']?.toString() ?? 'N/A',
       'phone': order['phone']?.toString() ?? 'N/A',
@@ -106,17 +129,14 @@ class _orderHistoryState extends State<orderHistory> {
       'remark': order['remark']?.toString() ?? '',
     };
 
-    // Navigate to slip page
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => slipPage(
           paymentMethod: paymentMethod,
           transactionNumber: order['transaction_number']?.toString(),
-          totalAmount: total is int
-              ? total.toDouble()
-              : (total as double? ?? 0.0),
-          contactInfo: contactInfo, // ✅ Now it's Map<String, String>
+          totalAmount: total is int ? total.toDouble() : (total as double? ?? 0.0),
+          contactInfo: contactInfo,
           orderResponse: order,
         ),
       ),
@@ -126,6 +146,7 @@ class _orderHistoryState extends State<orderHistory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -173,16 +194,18 @@ class _orderHistoryState extends State<orderHistory> {
       );
     }
 
-    if (_orders.isEmpty) {
-      return const Center(
+    if (_filteredOrders.isEmpty) {
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No orders found'),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 16),
+            Text(_selectedStatus == "All" 
+                ? 'No orders found' 
+                : 'No $_selectedStatus orders found'),
+            const SizedBox(height: 8),
+            const Text(
               'Your order history will appear here',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
@@ -192,22 +215,24 @@ class _orderHistoryState extends State<orderHistory> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      itemCount: _orders.length,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: _filteredOrders.length,
       itemBuilder: (context, index) {
-        final order = _orders[index];
-
+        final order = _filteredOrders[index];
         final orderId = order['order_id']?.toString() ?? '#${index + 1}';
         final date = _formatDate(order['create_at']);
         final total = order['Total']?.toString() ?? '0';
         final itemCount = order['items']?.length ?? 0;
-
+        final orderStatus = order['order_status']?.toString() ?? 'pending';
+        final statusColor = _getStatusColor(orderStatus);
+        
         return _orderCard(
-          order: order,
           orderId: orderId,
           date: date,
           total: total,
           itemCount: itemCount,
+          status: orderStatus,
+          statusColor: statusColor,
           onTap: () => _navigateToSlipPage(order),
         );
       },
@@ -226,10 +251,7 @@ class _orderHistoryState extends State<orderHistory> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           const Expanded(
             child: Text(
@@ -260,12 +282,7 @@ class _orderHistoryState extends State<orderHistory> {
           final isSelected = status == _selectedStatus;
 
           return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedStatus = status;
-              });
-              _fetchOrders();
-            },
+            onTap: () => _changeFilter(status),
             child: Container(
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -292,39 +309,33 @@ class _orderHistoryState extends State<orderHistory> {
   }
 
   Widget _orderCard({
-    required Map<String, dynamic> order,
     required String orderId,
     required String date,
     required String total,
     required int itemCount,
+    required String status,
+    required String statusColor,
     required VoidCallback onTap,
   }) {
-    // Determine status color (you can add status field to your API)
-    Color statusColor = Colors.orange; // Default pending
-    String statusText = "Pending";
-
-    // If your API has status field, use it
-    if (order['status'] != null) {
-      switch (order['status'].toString().toLowerCase()) {
-        case 'delivered':
-        case 'completed':
-          statusColor = Colors.green;
-          statusText = "Delivered";
-          break;
-        case 'cancelled':
-          statusColor = Colors.red;
-          statusText = "Cancelled";
-          break;
-        default:
-          statusColor = Colors.orange;
-          statusText = "Pending";
-      }
+    Color color;
+    switch (statusColor) {
+      case 'green':
+        color = Colors.green;
+        break;
+      case 'orange':
+        color = Colors.orange;
+        break;
+      case 'red':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.grey;
     }
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -341,7 +352,6 @@ class _orderHistoryState extends State<orderHistory> {
         ),
         child: Row(
           children: [
-            // Order Icon
             Container(
               width: 50,
               height: 50,
@@ -349,14 +359,9 @@ class _orderHistoryState extends State<orderHistory> {
                 color: const Color(0xFF0D1B2A),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.receipt_long,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: const Icon(Icons.receipt_long, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 12),
-            // Order Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,19 +378,16 @@ class _orderHistoryState extends State<orderHistory> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.2),
+                          color: color.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          statusText,
+                          status[0].toUpperCase() + status.substring(1),
                           style: TextStyle(
                             fontFamily: "Custom",
-                            color: statusColor,
+                            color: color,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -396,11 +398,7 @@ class _orderHistoryState extends State<orderHistory> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        size: 12,
-                        color: Colors.grey,
-                      ),
+                      const Icon(Icons.calendar_today, size: 12, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         date,
@@ -411,11 +409,7 @@ class _orderHistoryState extends State<orderHistory> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(
-                        Icons.shopping_bag,
-                        size: 12,
-                        color: Colors.grey,
-                      ),
+                      const Icon(Icons.shopping_bag, size: 12, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         '$itemCount items',

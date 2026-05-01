@@ -4,11 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nyxproject/Util/Constant.dart';
+import 'package:nyxproject/Util/PaymentApi.dart';
+import 'package:nyxproject/models/Payment.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/slip.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/services/session_service.dart';
-import 'package:nyxproject/Util/OrderApi.dart';
 
 class Payment extends StatefulWidget {
   final double? totalAmount;
@@ -20,21 +21,51 @@ class Payment extends StatefulWidget {
   State<Payment> createState() => _PaymentState();
 }
 
-List<String> options = [
-  "Cash on Delivery",
-  "CB Pay",
-  "Kpay",
-  "WavePay",
-  "Credit",
-  "Other",
-];
-
 class _PaymentState extends State<Payment> {
-  String currentOption = options[0];
+  String currentOption = "Cash on Delivery";
   final TextEditingController input = TextEditingController();
   File? _transactionImage;
   bool _isProcessing = false;
+  bool _isLoadingPayments = true;
   final ImagePicker _picker = ImagePicker();
+  
+  List<PaymentMethod> _paymentMethods = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPaymentMethods();
+  }
+
+  Future<void> _fetchPaymentMethods() async {
+    setState(() {
+      _isLoadingPayments = true;
+    });
+    
+    try {
+      final sessionService = Provider.of<SessionService>(context, listen: false);
+      final token = sessionService.getToken();
+      
+      final result = await PaymentApi.getPaymentMethods(token: token);
+      
+      if (result['success']) {
+        setState(() {
+          _paymentMethods = result['data'];
+          _isLoadingPayments = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingPayments = false;
+        });
+        print("Error fetching payment methods: ${result['message']}");
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingPayments = false;
+      });
+      print("Error: $e");
+    }
+  }
 
   Future<void> _pickImage() async {
     showModalBottomSheet(
@@ -119,15 +150,13 @@ class _PaymentState extends State<Payment> {
   Widget build(BuildContext context) {
     final totalAmount = widget.totalAmount ?? 100000.0;
 
-    final contactInfo =
-        widget.contactInfo ??
-        {
-          'name': 'N/A',
-          'phone': 'N/A',
-          'email': 'N/A',
-          'address': 'N/A',
-          'remark': 'N/A',
-        };
+    final contactInfo = widget.contactInfo ?? {
+      'name': 'N/A',
+      'phone': 'N/A',
+      'email': 'N/A',
+      'address': 'N/A',
+      'remark': 'N/A',
+    };
 
     return Scaffold(
       body: SafeArea(
@@ -150,10 +179,7 @@ class _PaymentState extends State<Payment> {
               _information("Remark", contactInfo['remark'] ?? 'N/A'),
               const SizedBox(height: 10),
               const Divider(),
-              _information1(
-                "Total Amount",
-                "${totalAmount.toStringAsFixed(0)} Ks",
-              ),
+              _information1("Total Amount", "${totalAmount.toStringAsFixed(0)} Ks"),
               const Divider(),
               _section("Select Payment Method"),
               const SizedBox(height: 5),
@@ -162,8 +188,6 @@ class _PaymentState extends State<Payment> {
               _paymentInfo(),
               const SizedBox(height: 10),
               if (_showTransactionInput()) ...[
-                // _input("Enter transaction number (optional)"),
-                // const SizedBox(height: 10),
                 _imageUploadSection(),
               ],
               const SizedBox(height: 20),
@@ -204,10 +228,7 @@ class _PaymentState extends State<Payment> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 13, 27, 42),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -275,10 +296,7 @@ class _PaymentState extends State<Payment> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           const Expanded(
             child: Text(
@@ -376,6 +394,25 @@ class _PaymentState extends State<Payment> {
   }
 
   Widget _paymentMethod() {
+    if (_isLoadingPayments) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Always include Cash on Delivery
+    List<String> displayOptions = ["Cash on Delivery"];
+    
+    // Add payment methods from API
+    for (var method in _paymentMethods) {
+      if (!displayOptions.contains(method.paymentMethod)) {
+        displayOptions.add(method.paymentMethod);
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
@@ -384,7 +421,7 @@ class _PaymentState extends State<Payment> {
         border: Border.all(color: Colors.black12),
       ),
       child: Column(
-        children: options.map((option) {
+        children: displayOptions.map((option) {
           return ListTile(
             title: Text(
               option,
@@ -414,32 +451,17 @@ class _PaymentState extends State<Payment> {
       return const SizedBox.shrink();
     }
 
-    Map<String, String> paymentDetails = {};
+    // Find the selected payment method from the list
+    PaymentMethod? selectedMethod;
+    for (var method in _paymentMethods) {
+      if (method.paymentMethod.toLowerCase() == currentOption.toLowerCase()) {
+        selectedMethod = method;
+        break;
+      }
+    }
 
-    switch (currentOption) {
-      case "Kpay":
-        paymentDetails = {
-          'name': 'Nyx Sports Shop',
-          'number': '09 123 456 789',
-        };
-        break;
-      case "CB Pay":
-        paymentDetails = {
-          'name': 'Nyx Sports Shop',
-          'number': '09 987 654 321',
-        };
-        break;
-      case "WavePay":
-        paymentDetails = {
-          'name': 'Nyx Sports Shop',
-          'number': '09 456 789 123',
-        };
-        break;
-      default:
-        paymentDetails = {
-          'name': 'Nyx Sports Shop',
-          'number': '09 123 456 789',
-        };
+    if (selectedMethod == null) {
+      return const SizedBox.shrink();
     }
 
     return Container(
@@ -451,6 +473,17 @@ class _PaymentState extends State<Payment> {
       ),
       child: Column(
         children: [
+          if (selectedMethod.paymentImageUrl.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Image.network(
+                selectedMethod.paymentImageUrl,
+                height: 60,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.account_balance, size: 40, color: Colors.white);
+                },
+              ),
+            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -463,7 +496,7 @@ class _PaymentState extends State<Payment> {
                 ),
               ),
               Text(
-                paymentDetails['name'] ?? 'N/A',
+                selectedMethod.paymentName,
                 style: const TextStyle(
                   fontFamily: 'Custom',
                   color: Colors.white,
@@ -485,7 +518,7 @@ class _PaymentState extends State<Payment> {
                 ),
               ),
               Text(
-                paymentDetails['number'] ?? 'N/A',
+                selectedMethod.paymentNumber,
                 style: const TextStyle(
                   fontFamily: 'Custom',
                   color: Colors.white,
@@ -495,30 +528,6 @@ class _PaymentState extends State<Payment> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _input(String text) {
-    return Center(
-      child: Container(
-        height: 50,
-        width: 300,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        child: TextFormField(
-          controller: input,
-          style: const TextStyle(
-            fontFamily: "Custom",
-            color: Color.fromARGB(255, 255, 255, 255),
-          ),
-          decoration: InputDecoration(
-            hintText: text,
-            hintStyle: const TextStyle(color: Colors.grey),
-            filled: true,
-            fillColor: const Color.fromARGB(255, 13, 27, 42),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-          ),
-        ),
       ),
     );
   }
@@ -556,7 +565,6 @@ class _PaymentState extends State<Payment> {
   }
 
   Future<void> _processOrder() async {
-    // For non-cash payments, require image upload
     if (_showTransactionInput()) {
       if (_transactionImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -576,10 +584,7 @@ class _PaymentState extends State<Payment> {
 
     try {
       final cartService = Provider.of<CartService>(context, listen: false);
-      final sessionService = Provider.of<SessionService>(
-        context,
-        listen: false,
-      );
+      final sessionService = Provider.of<SessionService>(context, listen: false);
 
       final user = sessionService.getStoredUser();
       final userId = user?.id ?? 0;
@@ -598,35 +603,23 @@ class _PaymentState extends State<Payment> {
         return;
       }
 
-      // Prepare order items
       final itemsList = cartService.items.map((item) {
         return {'product_id': item.product.id, 'quantity': item.quantity};
       }).toList();
 
-      // Convert items to JSON string
       final itemsJsonString = jsonEncode(itemsList);
-
-      print("========== ORDER DETAILS ==========");
-      print("User ID: $userId");
-      print("Items List: $itemsList");
-      print("Items JSON String: $itemsJsonString");
-      print("===================================");
-
       final tax = cartService.totalPrice * 0.05;
       final deliveryFee = 5000.0;
       final contactInfo = widget.contactInfo ?? {};
 
-      // Create multipart request
       final Uri uri = Uri.parse("${Constant.API_URL}/cart/order");
       final request = http.MultipartRequest('POST', uri);
 
-      // Add headers
       if (token != null && token.isNotEmpty) {
         request.headers['Authorization'] = 'Bearer $token';
       }
       request.headers['Accept'] = 'application/json';
 
-      // Add fields - matching Postman exactly
       request.fields['user_id'] = userId.toString();
       request.fields['customer_name'] = contactInfo['name'] ?? '';
       request.fields['phone'] = contactInfo['phone'] ?? '';
@@ -642,23 +635,14 @@ class _PaymentState extends State<Payment> {
         request.fields['transaction_number'] = input.text.trim();
       }
 
-      // Add image if uploaded
       if (_transactionImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath('image', _transactionImage!.path),
         );
       }
 
-      print("📤 Request Fields:");
-      request.fields.forEach((key, value) {
-        print("  $key: $value");
-      });
-
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-
-      print("📥 Response Status: ${response.statusCode}");
-      print("📥 Response Body: ${response.body}");
 
       setState(() {
         _isProcessing = false;
@@ -666,11 +650,8 @@ class _PaymentState extends State<Payment> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-
-        // Clear cart after successful order
         cartService.clearCart();
 
-        // Navigate to slip page
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -687,74 +668,15 @@ class _PaymentState extends State<Payment> {
         }
       } else {
         String errorMessage = 'Failed to place order';
-        String errorTitle = 'Order Failed';
-
         try {
-          final responseBody = response.body;
-
-          // Check for stock error
-          if (responseBody.contains('Not enough stock')) {
-            // Extract product ID from error message
-            final productIdMatch = RegExp(
-              r'product ID: (\d+)',
-            ).firstMatch(responseBody);
-            final productId = productIdMatch?.group(1) ?? 'unknown';
-
-            // Find product name
-            final outOfStockProduct = cartService.items.firstWhere(
-              (item) => item.product.id.toString() == productId,
-              orElse: () => cartService.items.first,
-            );
-
-            errorTitle = 'Out of Stock';
-            errorMessage =
-                '${outOfStockProduct.product.productName} is out of stock. Please remove it from your cart.';
-          }
-          // Check for validation errors
-          else if (responseBody.contains('validation') ||
-              responseBody.contains('required')) {
-            errorTitle = 'Validation Error';
-            errorMessage = 'Please check all information and try again.';
-          }
-          // Try to parse JSON error
-          else {
-            final errorData = jsonDecode(responseBody);
-            errorMessage =
-                errorData['message'] ?? errorData['error'] ?? errorMessage;
-          }
-        } catch (e) {
-          // If response is HTML error page
-          if (response.body.contains('Not enough stock')) {
-            errorTitle = 'Out of Stock';
-            errorMessage =
-                'Some items in your cart are out of stock. Please remove them and try again.';
-          }
-        }
-
-        // Show error dialog
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red),
-                const SizedBox(width: 8),
-                Text(errorTitle),
-              ],
-            ),
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
+        } catch (e) {}
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(errorMessage),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Optionally navigate to cart page
-                  if (errorMessage.contains('out of stock')) {
-                    Navigator.pop(context); // Go back to cart
-                  }
-                },
-                child: const Text('OK'),
-              ),
-            ],
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -762,8 +684,6 @@ class _PaymentState extends State<Payment> {
       setState(() {
         _isProcessing = false;
       });
-      print("Order Error: $e");
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Network Error: Please check your connection'),

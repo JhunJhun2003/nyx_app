@@ -1,9 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:provider/provider.dart';
-
 
 class slipPage extends StatefulWidget {
   final String? paymentMethod;
@@ -11,7 +16,7 @@ class slipPage extends StatefulWidget {
   final double? totalAmount;
   final List<CartItem>? cartItems;
   final Map<String, String>? contactInfo;
-  final Map<String, dynamic>? orderResponse; // ✅ Add this
+  final Map<String, dynamic>? orderResponse;
 
   const slipPage({
     super.key,
@@ -20,7 +25,7 @@ class slipPage extends StatefulWidget {
     this.totalAmount,
     this.cartItems,
     this.contactInfo,
-    this.orderResponse, // ✅ Add this
+    this.orderResponse,
   });
 
   @override
@@ -28,17 +33,14 @@ class slipPage extends StatefulWidget {
 }
 
 class _slipPageState extends State<slipPage> {
-  String orderNo =
-      "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
-  String date =
-      DateTime.now().day.toString().padLeft(2, '0') +
-      "/" +
-      DateTime.now().month.toString().padLeft(2, '0') +
-      "/" +
+  final GlobalKey _repaintKey = GlobalKey();
+  bool _isSharing = false;
+  
+  String orderNo = "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
+  String date = DateTime.now().day.toString().padLeft(2, '0') + "/" +
+      DateTime.now().month.toString().padLeft(2, '0') + "/" +
       DateTime.now().year.toString();
-  String time =
-      DateTime.now().hour.toString().padLeft(2, '0') +
-      ":" +
+  String time = DateTime.now().hour.toString().padLeft(2, '0') + ":" +
       DateTime.now().minute.toString().padLeft(2, '0');
 
   double subTotal = 0;
@@ -60,19 +62,83 @@ class _slipPageState extends State<slipPage> {
       );
     } else if (widget.totalAmount != null) {
       subTotal = widget.totalAmount!;
+    } else if (widget.orderResponse != null) {
+      final orderData = widget.orderResponse!['data'];
+      if (orderData is List && orderData.isNotEmpty) {
+        subTotal = (orderData[0]['Sub_total'] ?? 0).toDouble();
+        tax = (orderData[0]['tax'] ?? 0).toDouble();
+        deliveryFee = (orderData[0]['delivery_fee'] ?? 0).toDouble();
+        total = (orderData[0]['Total'] ?? 0).toDouble();
+        return;
+      } else if (orderData is Map<String, dynamic>) {
+        subTotal = (orderData['Sub_total'] ?? 0).toDouble();
+        tax = (orderData['tax'] ?? 0).toDouble();
+        deliveryFee = (orderData['delivery_fee'] ?? 0).toDouble();
+        total = (orderData['Total'] ?? 0).toDouble();
+        return;
+      }
     } else {
       subTotal = 100000;
     }
-
+    
     tax = subTotal * 0.05;
     total = subTotal + tax + deliveryFee;
   }
 
+  Future<void> _shareReceipt() async {
+    setState(() {
+      _isSharing = true;
+    });
+    
+    try {
+      // Capture screenshot
+      RenderRepaintBoundary boundary = _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      var image = await boundary.toImage(pixelRatio: 2.0);
+      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      
+      // Save to temporary file
+      final directory = await getTemporaryDirectory();
+      final imagePath = await File('${directory.path}/receipt_${DateTime.now().millisecondsSinceEpoch}.png').create();
+      await imagePath.writeAsBytes(pngBytes);
+      
+      // Share the image
+      await Share.shareXFiles(
+        [XFile(imagePath.path)],
+        text: "Order Receipt #$orderNo\nTotal: ${total.toStringAsFixed(0)} Ks",
+        subject: "Order Receipt",
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Receipt shared successfully!"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSharing = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Use orderResponse if available, otherwise use local data
-    final orderNumber = widget.orderResponse?['order_number'] ?? orderNo;
-    final orderDate = widget.orderResponse?['order_date'] ?? date;
+    final orderNumber = widget.orderResponse?['order_number'] ?? 
+                       widget.orderResponse?['data']?[0]?['order_id']?.toString() ??
+                       orderNo;
+    final orderDate = widget.orderResponse?['order_date'] ?? 
+                      widget.orderResponse?['data']?[0]?['create_at'] != null
+                          ? _formatDate(widget.orderResponse!['data'][0]['create_at'])
+                          : date;
     final orderTime = widget.orderResponse?['order_time'] ?? time;
 
     return Scaffold(
@@ -83,7 +149,10 @@ class _slipPageState extends State<slipPage> {
             children: [
               _header(),
               const SizedBox(height: 15),
-              _voucher(orderNumber, orderDate, orderTime),
+              RepaintBoundary(
+                key: _repaintKey,
+                child: _voucher(orderNumber, orderDate, orderTime),
+              ),
               const SizedBox(height: 15),
               _buttons(),
             ],
@@ -105,10 +174,7 @@ class _slipPageState extends State<slipPage> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           const Expanded(
             child: Text(
@@ -124,6 +190,16 @@ class _slipPageState extends State<slipPage> {
         ],
       ),
     );
+  }
+
+  String _formatDate(String? dateTimeString) {
+    if (dateTimeString == null) return date;
+    try {
+      final dateObj = DateTime.parse(dateTimeString);
+      return '${dateObj.day}/${dateObj.month}/${dateObj.year}';
+    } catch (e) {
+      return date;
+    }
   }
 
   Widget _voucher(String orderNumber, String orderDate, String orderTime) {
@@ -160,7 +236,6 @@ class _slipPageState extends State<slipPage> {
             ),
           ),
           const SizedBox(height: 20),
-          // Delivery Information
           if (widget.contactInfo != null) ...[
             _infoRow("Name:", widget.contactInfo!['name'] ?? 'N/A'),
             const SizedBox(height: 8),
@@ -180,8 +255,7 @@ class _slipPageState extends State<slipPage> {
           _infoRow("Time :", orderTime),
           const SizedBox(height: 8),
           _infoRow("Payment :", widget.paymentMethod ?? "Cash on Delivery"),
-          if (widget.transactionNumber != null &&
-              widget.transactionNumber!.isNotEmpty)
+          if (widget.transactionNumber != null && widget.transactionNumber!.isNotEmpty)
             _infoRow("Transaction No :", widget.transactionNumber!),
           const SizedBox(height: 15),
           const Divider(color: Colors.white54),
@@ -247,7 +321,6 @@ class _slipPageState extends State<slipPage> {
       padding: EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          // Product - takes most space
           Expanded(
             flex: 3,
             child: Text(
@@ -260,7 +333,6 @@ class _slipPageState extends State<slipPage> {
               ),
             ),
           ),
-          // Qty - fixed width
           SizedBox(
             width: 45,
             child: Text(
@@ -274,7 +346,6 @@ class _slipPageState extends State<slipPage> {
               ),
             ),
           ),
-          // Price - fixed width
           SizedBox(
             width: 80,
             child: Text(
@@ -305,13 +376,48 @@ class _slipPageState extends State<slipPage> {
         }).toList(),
       );
     }
-
-    return Column(
-      children: [
-        _productRow("Badminton Shuttlecock", "2", "9,000"),
-        _productRow("Football", "1", "35,000"),
-        _productRow("Tennis Racket", "1", "45,000"),
-      ],
+    
+    if (widget.orderResponse != null) {
+      List<dynamic> itemsList = [];
+      
+      if (widget.orderResponse!.containsKey('data')) {
+        final data = widget.orderResponse!['data'];
+        if (data is List && data.isNotEmpty) {
+          itemsList = data[0]['items'] ?? [];
+        } else if (data is Map<String, dynamic>) {
+          itemsList = data['items'] ?? [];
+        }
+      } else if (widget.orderResponse!.containsKey('items')) {
+        itemsList = widget.orderResponse!['items'] ?? [];
+      }
+      
+      if (itemsList.isNotEmpty) {
+        return Column(
+          children: itemsList.map((item) {
+            final productName = item['product_name']?.toString() ?? 'Unknown';
+            final quantity = item['quantity']?.toString() ?? '0';
+            final price = item['total']?.toString() ?? 
+                          (item['price'] != null 
+                              ? (int.parse(item['price'].toString()) * int.parse(quantity)).toString()
+                              : '0');
+            return _productRow(productName, quantity, price);
+          }).toList(),
+        );
+      }
+    }
+    
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Center(
+        child: Text(
+          "No items found",
+          style: TextStyle(
+            fontFamily: "Custom",
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+      ),
     );
   }
 
@@ -320,7 +426,6 @@ class _slipPageState extends State<slipPage> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          // Product Name - takes 60% of space
           Expanded(
             flex: 3,
             child: Text(
@@ -334,9 +439,8 @@ class _slipPageState extends State<slipPage> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          // Quantity - centered
           SizedBox(
-            width: 40,
+            width: 45,
             child: Text(
               qty,
               textAlign: TextAlign.center,
@@ -348,7 +452,6 @@ class _slipPageState extends State<slipPage> {
               ),
             ),
           ),
-          // Price - aligned right
           SizedBox(
             width: 80,
             child: Text(
@@ -385,9 +488,7 @@ class _slipPageState extends State<slipPage> {
             amount,
             style: TextStyle(
               fontFamily: "Custom",
-              color: isBold
-                  ? const Color.fromARGB(255, 51, 252, 57)
-                  : Colors.white,
+              color: isBold ? const Color.fromARGB(255, 51, 252, 57) : Colors.white,
               fontSize: isBold ? 18 : 15,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
@@ -397,104 +498,82 @@ class _slipPageState extends State<slipPage> {
     );
   }
 
-
-Widget _buttons() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-              iconColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+  Widget _buttons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+                iconColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.home, size: 22),
-            onPressed: () {
-              // ✅ Get existing services from Provider
-              final sessionService = Provider.of<SessionService>(context, listen: false);
-              final cartService = Provider.of<CartService>(context, listen: false);
-              
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MainDashboard(
-                    sessionService: sessionService,
-                    cartService: cartService,
+              icon: const Icon(Icons.home, size: 22),
+              onPressed: () {
+                final sessionService = Provider.of<SessionService>(context, listen: false);
+                final cartService = Provider.of<CartService>(context, listen: false);
+                
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MainDashboard(
+                      sessionService: sessionService,
+                      cartService: cartService,
+                    ),
                   ),
+                  (route) => false,
+                );
+              },
+              label: const Text(
+                "Home",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Custom',
+                  fontSize: 16,
                 ),
-                (route) => false,
-              );
-            },
-            label: const Text(
-              "Home",
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Custom',
-                fontSize: 16,
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              iconColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            icon: const Icon(Icons.file_download_outlined, size: 22),
-            onPressed: () {
-              _showDownloadDialog();
-            },
-            label: const Text(
-              "Download",
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Custom',
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-  void _showDownloadDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Download Receipt"),
-        content: const Text("Would you like to download your order receipt?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Receipt downloaded successfully!"),
-                  backgroundColor: Colors.green,
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                iconColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
-              );
-            },
-            child: const Text("Download"),
+              ),
+              icon: _isSharing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.share, size: 22),
+              onPressed: _isSharing ? null : _shareReceipt,
+              label: Text(
+                _isSharing ? "Sharing..." : "Share Receipt",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Custom',
+                  fontSize: 16,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-}
+} 
