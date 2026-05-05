@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/payment.dart';
 
-class contactInfo extends StatefulWidget {
-  const contactInfo({super.key});
+class contactInfoSnack extends StatefulWidget {
+  const contactInfoSnack({super.key});
 
   @override
-  State<contactInfo> createState() => _contactInfoState();
+  State<contactInfoSnack> createState() => _contactInfoSnackState();
 }
 
-class _contactInfoState extends State<contactInfo> {
+class _contactInfoSnackState extends State<contactInfoSnack> {
 
   final TextEditingController input = TextEditingController();
 
@@ -32,13 +32,9 @@ class _contactInfoState extends State<contactInfo> {
               SizedBox(height: 5),
               _input("09 xxx xxx xxx"),
               SizedBox(height: 15),
-              _section1("Email Address"),
+              _section1("Court Number"),
               SizedBox(height: 5),
-              _input("example@gmail.com"),
-              SizedBox(height: 15),
-              _section1("Delievery Address"),
-              SizedBox(height: 5),
-              _input("Enter your address"),
+              _input("Court - *"),
               SizedBox(height: 15),
               _section1("Remark"),
               SizedBox(height: 5),
