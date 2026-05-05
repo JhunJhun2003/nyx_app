@@ -52,7 +52,7 @@ class Api {
 
         return {
           'success': isSuccess,
-          'data': responseData, // Return full response data
+          'data': responseData,
           'message':
               responseData['message'] ??
               (isSuccess ? 'Login successful' : 'Login failed'),
@@ -106,7 +106,6 @@ class Api {
       try {
         responseData = jsonDecode(response.body);
       } catch (e) {
-        // If response is not JSON (e.g., HTML error page from backend)
         return {
           'success': false,
           'message':
@@ -118,13 +117,11 @@ class Api {
       }
 
       if (responseData is Map<String, dynamic>) {
-        // Check for 'status' field (API returns "status": "success")
         final bool isSuccess =
             (responseData['status'] == 'success') ||
             (responseData['success'] == true) ||
             (response.statusCode >= 200 && response.statusCode < 300);
 
-        // Extract tempToken from nested token object
         String tempToken = '';
         if (responseData['token'] != null &&
             responseData['token'] is Map<String, dynamic>) {
@@ -134,7 +131,7 @@ class Api {
         return {
           'success': isSuccess,
           'data': responseData,
-          'tempToken': tempToken, // Add this
+          'tempToken': tempToken,
           'message':
               responseData['token']?['message']?.toString() ??
               responseData['message']?.toString() ??
@@ -270,73 +267,114 @@ class Api {
     }
   }
 
-  // Get user profile using token
   static Future<Map<String, dynamic>> getMyProfile({
-    required String token,
-  }) async {
-    final Uri uri = Uri.parse("${Constant.API_URL}/myprofile/showprofile");
+  required String token,
+}) async {
+  final Uri uri = Uri.parse("${Constant.API_URL}/myprofile/showprofile");
 
-    try {
-      final Map<String, String> authHeaders = {
-        ...Constant.headers,
-        'Authorization': 'Bearer $token',
+  try {
+    final Map<String, String> authHeaders = {
+      ...Constant.headers,
+      'Authorization': 'Bearer $token',
+    };
+
+    final http.Response response = await http
+        .get(uri, headers: authHeaders)
+        .timeout(const Duration(seconds: 30));
+
+    print("Profile Response Status: ${response.statusCode}");
+    print("Profile Response Body: ${response.body}");
+
+    // ✅ Check for 401 Unauthorized
+    if (response.statusCode == 401) {
+      return {
+        'success': false,
+        'unauthorized': true,
+        'message': 'Session expired. Please login again.',
       };
-
-      final http.Response response = await http
-          .get(uri, headers: authHeaders)
-          .timeout(const Duration(seconds: 30));
-
-      print("Profile Response Status: ${response.statusCode}");
-      print("Profile Response Body: ${response.body}");
-
-      if (response.body.isEmpty) {
-        return {'success': false, 'message': 'Empty response from server'};
-      }
-
-      dynamic responseData;
-      try {
-        responseData = jsonDecode(response.body);
-      } catch (e) {
-        return {
-          'success': false,
-          'message': 'Invalid response format from server',
-        };
-      }
-
-      if (responseData is Map<String, dynamic>) {
-        bool isSuccess = responseData['status'] == 'success';
-
-        if (isSuccess &&
-            responseData['result'] != null &&
-            responseData['result'] is List) {
-          final List resultList = responseData['result'];
-          if (resultList.isNotEmpty) {
-            final userData = resultList[0];
-
-            return {
-              'success': true,
-              'data': userData,
-              'message': 'Profile fetched successfully',
-            };
-          } else {
-            return {'success': false, 'message': 'No user data found'};
-          }
-        }
-
-        return {
-          'success': false,
-          'message': responseData['message'] ?? 'Failed to fetch profile',
-        };
-      }
-
-      return {'success': false, 'message': 'Invalid response format'};
-    } catch (e) {
-      print("Get Profile Error: $e");
-      return {'success': false, 'message': 'Network error: $e'};
     }
-  }
 
-  // Add this method to your Api class
+    // ✅ Check for 500 error with token expired message
+    if (response.statusCode == 500 && response.body.contains('TokenExpiredError')) {
+      return {
+        'success': false,
+        'unauthorized': true,
+        'message': 'Session expired. Please login again.',
+      };
+    }
+
+    // ✅ Check if response is HTML instead of JSON
+    if (response.body.trim().startsWith('<!DOCTYPE') || 
+        response.body.trim().startsWith('<html')) {
+      // Check if it's a token expired error
+      if (response.body.contains('TokenExpiredError')) {
+        return {
+          'success': false,
+          'unauthorized': true,
+          'message': 'Session expired. Please login again.',
+        };
+      }
+      return {
+        'success': false,
+        'message': 'Server error: Invalid response format',
+      };
+    }
+
+    if (response.body.isEmpty) {
+      return {'success': false, 'message': 'Empty response from server'};
+    }
+
+    dynamic responseData;
+    try {
+      responseData = jsonDecode(response.body);
+    } catch (e) {
+      // If JSON parsing fails, check if it's an HTML error page
+      if (response.body.contains('TokenExpiredError')) {
+        return {
+          'success': false,
+          'unauthorized': true,
+          'message': 'Session expired. Please login again.',
+        };
+      }
+      return {
+        'success': false,
+        'message': 'Invalid response format from server',
+      };
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      bool isSuccess = responseData['status'] == 'success';
+
+      if (isSuccess &&
+          responseData['result'] != null &&
+          responseData['result'] is List) {
+        final List resultList = responseData['result'];
+        if (resultList.isNotEmpty) {
+          final userData = resultList[0];
+
+          return {
+            'success': true,
+            'data': userData,
+            'message': 'Profile fetched successfully',
+          };
+        } else {
+          return {'success': false, 'message': 'No user data found'};
+        }
+      }
+
+      return {
+        'success': false,
+        'message': responseData['message'] ?? 'Failed to fetch profile',
+      };
+    }
+
+    return {'success': false, 'message': 'Invalid response format'};
+  } catch (e) {
+    print("Get Profile Error: $e");
+    return {'success': false, 'message': 'Network error: $e'};
+  }
+}
+  // Update profile
   static Future<Map<String, dynamic>> updateProfile({
     required String token,
     required Map<String, dynamic> userData,
@@ -366,11 +404,10 @@ class Api {
         try {
           final responseData = jsonDecode(response.body);
 
-          // Your API returns: { "status": "Edit Profile", "result": "TOKEN_HERE" }
           return {
             'status': 'success',
             'message': responseData['status'] ?? 'Profile updated',
-            'new_token': responseData['result'], // Token is in 'result' field
+            'new_token': responseData['result'],
             'data': responseData,
           };
         } catch (e) {
@@ -382,6 +419,7 @@ class Api {
       } else if (response.statusCode == 401) {
         return {
           'status': 'error',
+          'unauthorized': true,
           'message': 'Session expired. Please login again.',
         };
       } else {
@@ -409,24 +447,17 @@ class Api {
     print("📡 Upload URL: $uri");
 
     try {
-      // Create multipart request
       final request = http.MultipartRequest('POST', uri);
 
-      // Add headers
       request.headers.addAll({
         'Authorization': 'Bearer $token',
         'Accept': 'application/json',
       });
 
-      // Add image file
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'image', // Field name expected by your API
-          imageFile.path,
-        ),
+        await http.MultipartFile.fromPath('image', imageFile.path),
       );
 
-      // Send request
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -435,8 +466,6 @@ class Api {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-
-        // Extract token if returned
         final String? newToken = responseData['result'];
 
         return {
@@ -444,6 +473,12 @@ class Api {
           'message': 'Image uploaded successfully',
           'new_token': newToken,
           'data': responseData,
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'status': 'error',
+          'unauthorized': true,
+          'message': 'Session expired. Please login again.',
         };
       } else {
         return {
@@ -458,7 +493,8 @@ class Api {
   }
 
   static List<Category> categories = [];
-  // Get all categories - No authentication required
+  
+  // Get all categories
   static Future<Map<String, dynamic>> getAllCategories() async {
     final Uri uri = Uri.parse("${Constant.API_URL}/homecategory/category");
 
@@ -494,7 +530,6 @@ class Api {
             responseData['result'] is List) {
           final List categoriesList = responseData['result'];
 
-          // Convert to List<Category>
           List<Category> categories = categoriesList
               .map((category) => Category.fromJson(category))
               .toList();
@@ -555,7 +590,6 @@ class Api {
             responseData['result'] is List) {
           final List resultList = responseData['result'];
 
-          // Parse the grouped data
           List<Map<String, dynamic>> groupedProducts = [];
           for (var group in resultList) {
             groupedProducts.add({
@@ -586,7 +620,6 @@ class Api {
 
   // Get all tags
   static Future<Map<String, dynamic>> getAllTags() async {
-    // Fix: Use BASE_URL instead of undefined TAG_URL
     final Uri uri = Uri.parse("${Constant.BASE_URL}/showtag/showtags");
 
     print("📡 Tags URL: $uri");
@@ -642,7 +675,4 @@ class Api {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
-
- 
-
 }

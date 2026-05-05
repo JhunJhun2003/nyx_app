@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/Util/OrderApi.dart';
 import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/slip.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 
 class orderHistory extends StatefulWidget {
   const orderHistory({super.key});
@@ -15,8 +17,8 @@ class _orderHistoryState extends State<orderHistory> {
   final List<String> statusFilter = [
     "All",
     "Pending",
-    "Delivered",
-    "Cancelled",
+    "Completed",
+    "Cancel",
   ];
 
   String _selectedStatus = "All";
@@ -29,6 +31,25 @@ class _orderHistoryState extends State<orderHistory> {
   void initState() {
     super.initState();
     _fetchOrders();
+  }
+
+  // ✅ Redirect to login page
+  void _redirectToLogin() async {
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    final cartService = Provider.of<CartService>(context, listen: false);
+    await sessionService.logout();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LoginPage(
+            sessionService: sessionService,
+            cartService: cartService,
+          ),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   Future<void> _fetchOrders() async {
@@ -44,14 +65,17 @@ class _orderHistoryState extends State<orderHistory> {
       final token = sessionService.getToken();
 
       if (userId == 0) {
-        setState(() {
-          _errorMessage = 'Please login to view orders';
-          _isLoading = false;
-        });
+        _redirectToLogin();
         return;
       }
 
       final result = await OrderApi.fetchOrders(userId: userId, token: token);
+
+      // ✅ Check for unauthorized - redirect to login
+      if (result['unauthorized'] == true) {
+        _redirectToLogin();
+        return;
+      }
 
       if (result['success']) {
         setState(() {
@@ -120,7 +144,6 @@ class _orderHistoryState extends State<orderHistory> {
     final paymentMethod = order['payment_method']?.toString() ?? 'Cash on Delivery';
     final total = order['Total'] ?? 0;
 
-    // ✅ Now using actual contact info from API response
     final contactInfo = <String, String>{
       'name': order['customer_name']?.toString() ?? 'N/A',
       'phone': order['phone']?.toString() ?? 'N/A',
@@ -332,6 +355,8 @@ class _orderHistoryState extends State<orderHistory> {
         color = Colors.grey;
     }
 
+    final displayTotal = total != '0' ? total : '';
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -421,16 +446,7 @@ class _orderHistoryState extends State<orderHistory> {
                       ),
                     ],
                   ),
-                  // const SizedBox(height: 4),
-                  // Text(
-                  //   "$total Ks",
-                  //   style: const TextStyle(
-                  //     fontFamily: "Custom",
-                  //     fontWeight: FontWeight.bold,
-                  //     fontSize: 14,
-                  //     color: Colors.red,
-                  //   ),
-                  // ),
+                  
                 ],
               ),
             ),

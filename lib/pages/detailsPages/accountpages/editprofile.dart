@@ -55,8 +55,60 @@ class _EditProfileState extends State<EditProfile> {
     super.dispose();
   }
 
+  // ✅ Show session expired dialog
+  void _showSessionExpiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Session Expired'),
+        content: const Text('Your session has expired. Please login again to continue.'),
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              await widget.sessionService.logout();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      sessionService: widget.sessionService,
+                      cartService: widget.cartService,
+                    ),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Login Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ Check token validity
+  bool _isTokenValid() {
+    if (widget.sessionService.isTokenExpired()) {
+      _showSessionExpiredDialog();
+      return false;
+    }
+    final token = widget.sessionService.getToken();
+    if (token == null || token.isEmpty) {
+      _showSessionExpiredDialog();
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _loadUserProfile() async {
     if (!mounted) return;
+    
+    // ✅ Check token first
+    if (!_isTokenValid()) return;
     
     setState(() {
       _isLoading = true;
@@ -72,11 +124,19 @@ class _EditProfileState extends State<EditProfile> {
             _errorMessage = 'No authentication token found.\nPlease login again.';
             _isLoading = false;
           });
+          _showSessionExpiredDialog();
         }
         return;
       }
 
       final result = await Api.getMyProfile(token: token);
+
+      // ✅ Check for unauthorized/token expired
+      if (result['unauthorized'] == true || result['success'] == false && result['message']?.contains('expired') == true) {
+        await widget.sessionService.logout();
+        _showSessionExpiredDialog();
+        return;
+      }
 
       if (mounted) {
         setState(() {
@@ -138,7 +198,103 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image selected. Click Save Changes to upload.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo taken. Click Save Changes to upload.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error taking picture: $e');
+    }
+  }
+
+  void _showImagePickerDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Change Profile Picture',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.photo_library, size: 28),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, size: 28),
+              title: const Text('Take a Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera();
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _updateProfile() async {
+    // ✅ Check token before updating
+    if (!_isTokenValid()) return;
+    
     setState(() {
       _isUpdating = true;
       _errorMessage = null;
@@ -153,11 +309,19 @@ class _EditProfileState extends State<EditProfile> {
             _errorMessage = 'Session expired. Please login again.';
             _isUpdating = false;
           });
+          _showSessionExpiredDialog();
         }
         return;
       }
 
-      final response = await _callUpdateProfileAPI(token);
+      final response = await _updateProfileWithImage(token);
+
+      // ✅ Check for unauthorized
+      if (response['unauthorized'] == true) {
+        await widget.sessionService.logout();
+        _showSessionExpiredDialog();
+        return;
+      }
 
       final bool isSuccess = response['status'] == 'success' || 
                              response['status'] == 'Edit Profile';
@@ -178,6 +342,10 @@ class _EditProfileState extends State<EditProfile> {
             ),
           );
         }
+
+        setState(() {
+          _selectedImage = null;
+        });
 
         await _loadUserProfile();
         
@@ -204,28 +372,42 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-  Future<Map<String, dynamic>> _callUpdateProfileAPI(String token) async {
+  Future<Map<String, dynamic>> _updateProfileWithImage(String token) async {
     final Uri uri = Uri.parse("${Constant.API_URL}/editProfiled/update");
-
-    final Map<String, dynamic> updateData = {
-      'name': _nameController.text.trim(),
-      'email': _emailController.text.trim(),
-      'phone': _phoneController.text.trim(),
-      'dateOfbirth': _dobController.text.trim(),
-      'address': _addressController.text.trim(),
-    };
-
+    
+    final request = http.MultipartRequest('PUT', uri);
+    
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    });
+    
+    request.fields['name'] = _nameController.text.trim();
+    request.fields['email'] = _emailController.text.trim();
+    request.fields['phone'] = _phoneController.text.trim();
+    request.fields['dateOfbirth'] = _dobController.text.trim();
+    request.fields['address'] = _addressController.text.trim();
+    
+    if (_selectedImage != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', _selectedImage!.path),
+      );
+    }
+    
+    print("📡 Update URL: $uri");
+    print("📦 Fields: ${request.fields}");
+    
     try {
-      final http.Response response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(updateData),
-      ).timeout(const Duration(seconds: 30));
-
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      print("Update Response Status: ${response.statusCode}");
+      print("Update Response Body: ${response.body}");
+      
+      if (response.statusCode == 401) {
+        return {'status': 'error', 'unauthorized': true, 'message': 'Session expired'};
+      }
+      
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.body.isEmpty) {
           return {'status': 'success', 'message': 'Profile updated successfully'};
@@ -244,6 +426,7 @@ class _EditProfileState extends State<EditProfile> {
         return {'status': 'error', 'message': 'Update failed'};
       }
     } catch (e) {
+      print("Update Profile Error: $e");
       return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
@@ -270,7 +453,7 @@ class _EditProfileState extends State<EditProfile> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0D1B2A),
                         ),
-                        child: const Text('Retry'),
+                        child: const Text('Login Again'),
                       ),
                     ],
                   ),
@@ -336,19 +519,32 @@ class _EditProfileState extends State<EditProfile> {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.black, width: 2),
         ),
-        child: _imageUrl != null && _imageUrl!.isNotEmpty
+        child: _selectedImage != null
             ? ClipOval(
-                child: Image.network(
-                  _imageUrl!,
+                child: Image.file(
+                  _selectedImage!,
                   width: 120,
                   height: 120,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.person, size: 60);
-                  },
                 ),
               )
-            : const Icon(Icons.person, size: 60),
+            : _imageUrl != null && _imageUrl!.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      _imageUrl!,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.person, size: 60);
+                      },
+                    ),
+                  )
+                : const Icon(Icons.person, size: 60),
       ),
     );
   }
@@ -356,7 +552,7 @@ class _EditProfileState extends State<EditProfile> {
   Widget _edit() {
     return Center(
       child: TextButton.icon(
-        onPressed: () {},
+        onPressed: _showImagePickerDialog,
         icon: const Icon(Icons.camera_alt),
         label: const Text("Change Photo"),
       ),
