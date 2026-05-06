@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/enrollForm.dart';
 
 class BadmintonClass extends StatefulWidget {
   const BadmintonClass({super.key});
@@ -471,7 +472,14 @@ class _BadmintonClassState extends State<BadmintonClass> {
     return Container(
       margin: EdgeInsets.only(left: 260),
       child: ElevatedButton.icon(
-        onPressed: (){}, 
+        onPressed: (){
+          Navigator.push(
+            context, 
+            MaterialPageRoute(
+              builder: (contex) => enrollForm(),
+            ),
+          );
+        }, 
         icon: Icon(Icons.event),
         label: Text("Enroll Now", style: TextStyle(color: Colors.white,fontFamily: 'Custom'),),
         style: ElevatedButton.styleFrom(
