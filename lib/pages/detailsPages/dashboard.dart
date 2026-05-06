@@ -163,8 +163,8 @@ class _DashBoardState extends State<DashBoard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 5),
-              _searchBar(),
+              const SizedBox(height: 10),
+              // _searchBar(),
               _banner(),
               _section("Categories", () {
                 Navigator.push(
@@ -231,7 +231,7 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // ✅ New: Each tag section is its own Card widget
+  //  New: Each tag section is its own Card widget
   Widget _productCardSection(List<Product> products, String sectionTitle) {
     final displayProducts = products.length > 4
         ? products.sublist(0, 4)
@@ -328,7 +328,7 @@ class _DashBoardState extends State<DashBoard> {
           color: Colors.white, // White background for the entire card
           elevation: 2, // Optional: adds shadow
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            // borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
             padding: const EdgeInsets.all(2.0),
@@ -461,9 +461,9 @@ class _DashBoardState extends State<DashBoard> {
       children: [
         CarouselSlider(
           items: images.map((item) => Container(
-            margin: EdgeInsets.all(5),
+            margin: EdgeInsets.all(0),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              // borderRadius: BorderRadius.circular(10),
               image: DecorationImage(image: AssetImage(item),fit: BoxFit.cover)
             ),
           )).toList(), 
@@ -559,7 +559,7 @@ class _DashBoardState extends State<DashBoard> {
     }
 
     return SizedBox(
-      height: 100,
+      height: 130,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -583,8 +583,8 @@ class _DashBoardState extends State<DashBoard> {
               child: Column(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color.fromARGB(255, 13, 27, 42),
