@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
+import 'package:nyxproject/services/session_service.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/contactInfo.dart';
 import 'package:nyxproject/services/cart_service.dart';
@@ -9,6 +11,7 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartService>(context);
+    final session = Provider.of<SessionService>(context);
     
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -16,7 +19,6 @@ class CartPage extends StatelessWidget {
         child: Column(
           children: [
             _header(context),
-            // Cart items (scrollable)
             Expanded(
               child: cart.items.isEmpty
                   ? _emptyCart(context)
@@ -28,53 +30,50 @@ class CartPage extends StatelessWidget {
                       },
                     ),
             ),
-            // Footer (fixed at bottom)
-            if (cart.items.isNotEmpty) _confirm(context, cart),
+            if (cart.items.isNotEmpty) _confirm(context, cart, session),
           ],
         ),
       ),
     );
   }
 
-Widget _header(BuildContext context) {
-  // Check if we can actually go back
-  bool canPop = Navigator.canPop(context);
+  Widget _header(BuildContext context) {
+    bool canPop = Navigator.canPop(context);
 
-  return Container(
-    color: const Color.fromARGB(255, 13, 27, 42),
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Show IconButton only if canPop is true
-        canPop 
-          ? IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
+    return Container(
+      color: const Color.fromARGB(255, 13, 27, 42),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          canPop 
+            ? IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                ),
+              )
+            : const SizedBox(width: 48),
+          const Expanded(
+            child: Text(
+              "My Cart",
+              style: TextStyle(
+                fontFamily: "Custom",
                 color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
-            )
-          : const SizedBox(width: 48), // Keep spacing consistent when hidden
-
-        const Expanded(
-          child: Text(
-            "My Cart",
-            style: TextStyle(
-              fontFamily: "Custom",
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(width: 48), 
-      ],
-    ),
-  );
-}
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
   Widget _emptyCart(BuildContext context) {
     return Center(
       child: Column(
@@ -91,7 +90,6 @@ Widget _header(BuildContext context) {
             'Add items to get started',
             style: TextStyle(color: Colors.grey),
           ),
-          
         ],
       ),
     );
@@ -108,7 +106,6 @@ Widget _header(BuildContext context) {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image
           Container(
             width: 80,
             height: 80,
@@ -132,7 +129,6 @@ Widget _header(BuildContext context) {
                 : const Icon(Icons.image, size: 40, color: Colors.white),
           ),
           const SizedBox(width: 12),
-          // Product Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +163,6 @@ Widget _header(BuildContext context) {
               ],
             ),
           ),
-          // Quantity Controls and Delete
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -222,7 +217,7 @@ Widget _header(BuildContext context) {
     );
   }
 
-  Widget _confirm(BuildContext context, CartService cart) {
+  Widget _confirm(BuildContext context, CartService cart, SessionService session) {
     final subtotal = cart.totalPrice;
     final deliveryFee = 5000.0;
     final total = subtotal + deliveryFee;
@@ -243,77 +238,37 @@ Widget _header(BuildContext context) {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Subtotal
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Subtotal:",
-                style: TextStyle(fontSize: 14),
-              ),
-              Text(
-                "${subtotal.toStringAsFixed(0)} Ks",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text("Subtotal:", style: TextStyle(fontSize: 14)),
+              Text("${subtotal.toStringAsFixed(0)} Ks", style: const TextStyle(fontSize: 14)),
             ],
           ),
           const SizedBox(height: 8),
-          // Delivery Fee
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Delivery Fee:",
-                style: TextStyle(fontSize: 14),
-              ),
-              const Text(
-                "5,000 Ks",
-                style: TextStyle(fontSize: 14),
-              ),
+              const Text("Delivery Fee:", style: TextStyle(fontSize: 14)),
+              const Text("5,000 Ks", style: TextStyle(fontSize: 14)),
             ],
           ),
           const Divider(height: 16),
-          // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Total:",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "${total.toStringAsFixed(0)} Ks",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
+              const Text("Total:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text("${total.toStringAsFixed(0)} Ks", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red)),
             ],
           ),
           const SizedBox(height: 12),
-          // Add more items button
-          TextButton.icon(
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.add_shopping_cart, color: Colors.red),
-            label: const Text(
-              "Add more items",
-              style: TextStyle(color: Colors.red),
-            ),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            child: const Text("Add more items", style: TextStyle(color: Colors.red)),
           ),
           const SizedBox(height: 8),
-          // Order Confirm Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -326,12 +281,7 @@ Widget _header(BuildContext context) {
               ),
               onPressed: cart.items.isNotEmpty
                   ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const contactInfo(),
-                        ),
-                      );
+                      _checkLoginAndNavigate(context, session);
                     }
                   : null,
               child: const Text(
@@ -343,6 +293,61 @@ Widget _header(BuildContext context) {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _checkLoginAndNavigate(BuildContext context, SessionService session) {
+    // Check if user is logged in and token is valid
+    if (session.isLoggedIn() && !session.isTokenExpired() && session.getToken() != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const contactInfo(),
+        ),
+      );
+    } else {
+      _showLoginRequiredDialog(context, session);
+    }
+  }
+
+  void _showLoginRequiredDialog(BuildContext context, SessionService session) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Required'),
+        content: const Text('Please login to place your order.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final cartService = Provider.of<CartService>(context, listen: false);
+              await session.logout();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      sessionService: session,
+                      cartService: cartService,
+                    ),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Login Now'),
           ),
         ],
       ),

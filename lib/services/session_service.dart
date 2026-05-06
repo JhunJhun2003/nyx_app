@@ -26,7 +26,7 @@ class SessionService extends ChangeNotifier {
     
     final userJson = user.toJson();
     
-    // Calculate token expiry (e.g., 7 days from now)
+    // ✅ Calculate token expiry (e.g., 7 days from now)
     final expiryTime = DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch;
     
     await _prefs!.setBool(_keyIsLoggedIn, true);
@@ -37,13 +37,13 @@ class SessionService extends ChangeNotifier {
     _isLoggedIn = true;
     _currentUser = user;
     
-    print("✅ Session saved");
+    print("✅ Session saved, token expires at: ${DateTime.fromMillisecondsSinceEpoch(expiryTime)}");
     notifyListeners();
   }
   
   Future<void> saveToken(String token) async {
     await _prefs!.setString(_keyUserToken, token);
-    // Update expiry when token refreshes
+    // ✅ Update expiry when token refreshes
     final expiryTime = DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch;
     await _prefs!.setInt(_keyTokenExpiry, expiryTime);
     notifyListeners();
@@ -54,7 +54,7 @@ class SessionService extends ChangeNotifier {
     final isLoggedIn = _prefs?.getBool(_keyIsLoggedIn) ?? false;
     final hasToken = token != null && token.isNotEmpty;
     
-    // Check if token is expired
+    // ✅ Check if token is expired
     if (isTokenExpired()) {
       return false;
     }
@@ -62,12 +62,26 @@ class SessionService extends ChangeNotifier {
     return isLoggedIn && hasToken;
   }
   
+  // ✅ Check if token is expired
   bool isTokenExpired() {
     final expiryTime = _prefs?.getInt(_keyTokenExpiry);
     if (expiryTime == null) return false;
     
     final expiryDate = DateTime.fromMillisecondsSinceEpoch(expiryTime);
-    return DateTime.now().isAfter(expiryDate);
+    final isExpired = DateTime.now().isAfter(expiryDate);
+    
+    if (isExpired) {
+      print("⚠️ Token expired at: $expiryDate");
+    }
+    
+    return isExpired;
+  }
+  
+  // ✅ Get token expiry date
+  DateTime? getTokenExpiry() {
+    final expiryTime = _prefs?.getInt(_keyTokenExpiry);
+    if (expiryTime == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(expiryTime);
   }
   
   User? getStoredUser() {
@@ -87,9 +101,9 @@ class SessionService extends ChangeNotifier {
   }
   
   String? getToken() {
-    // Check if token is expired before returning
+    // ✅ Check if token is expired before returning
     if (isTokenExpired()) {
-      print("⚠️ Token has expired");
+      print("⚠️ Token is expired, returning null");
       return null;
     }
     return _prefs?.getString(_keyUserToken);

@@ -4,6 +4,7 @@ import 'package:nyxproject/pages/detailsPages/shoppages/payment.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
+import 'package:nyxproject/util/Api.dart';
 
 class contactInfo extends StatefulWidget {
   const contactInfo({super.key});
@@ -20,6 +21,15 @@ class _contactInfoState extends State<contactInfo> {
   final TextEditingController remarkController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+  
+  bool _isLoading = true;
+  bool _isSessionValid = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTokenValidity();
+  }
 
   @override
   void dispose() {
@@ -31,35 +41,154 @@ class _contactInfoState extends State<contactInfo> {
     super.dispose();
   }
 
+  // ✅ Fetch profile to check token validity (without showing data)
+  Future<void> _checkTokenValidity() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final sessionService = Provider.of<SessionService>(context, listen: false);
+      final String? token = sessionService.getToken();
+
+      if (token == null || token.isEmpty) {
+        setState(() {
+          _isSessionValid = false;
+          _isLoading = false;
+        });
+        _showSessionExpiredDialog();
+        return;
+      }
+
+      // ✅ Make API call to check token validity
+      final result = await Api.getMyProfile(token: token);
+
+      // Check if token is expired (unauthorized)
+      if (result['unauthorized'] == true || result['success'] == false) {
+        await sessionService.logout();
+        setState(() {
+          _isSessionValid = false;
+          _isLoading = false;
+        });
+        _showSessionExpiredDialog();
+        return;
+      }
+
+      // Token is valid
+      setState(() {
+        _isSessionValid = true;
+        _isLoading = false;
+      });
+      
+    } catch (e) {
+      print("Error checking token: $e");
+      setState(() {
+        _isSessionValid = false;
+        _isLoading = false;
+      });
+      _showSessionExpiredDialog();
+    }
+  }
+
+  void _showSessionExpiredDialog() {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Session Expired'),
+        content: const Text('Your session has expired. Please login again to continue.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final sessionService = Provider.of<SessionService>(context, listen: false);
+              final cartService = Provider.of<CartService>(context, listen: false);
+              await sessionService.logout();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      sessionService: sessionService,
+                      cartService: cartService,
+                    ),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Login Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final sessionService = Provider.of<SessionService>(context);
+    // Show loading while checking token
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Verifying session...'),
+            ],
+          ),
+        ),
+      );
+    }
     
-    // If not logged in, show redirect message
-    if (!sessionService.isLoggedIn()) {
+    // If session expired, show error screen
+    if (!_isSessionValid) {
       return Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
+              const Icon(Icons.timer_off_outlined, size: 64, color: Colors.red),
               const SizedBox(height: 20),
               const Text(
-                "Please login to continue",
-                style: TextStyle(fontSize: 16),
+                "Session Expired",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              const Text(
+                "Your session has expired. Please login again.",
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LoginPage(
-                        sessionService: sessionService,
-                        cartService: Provider.of<CartService>(context, listen: false),
+                onPressed: () async {
+                  final sessionService = Provider.of<SessionService>(context, listen: false);
+                  final cartService = Provider.of<CartService>(context, listen: false);
+                  await sessionService.logout();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoginPage(
+                          sessionService: sessionService,
+                          cartService: cartService,
+                        ),
                       ),
-                    ),
-                  );
+                      (route) => false,
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -76,6 +205,7 @@ class _contactInfoState extends State<contactInfo> {
       );
     }
 
+    // Session is valid - show the form
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -154,7 +284,6 @@ class _contactInfoState extends State<contactInfo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label with required indicator
           RichText(
             text: TextSpan(
               children: [
@@ -180,7 +309,6 @@ class _contactInfoState extends State<contactInfo> {
             ),
           ),
           const SizedBox(height: 6),
-          // Text Field
           TextFormField(
             controller: controller,
             keyboardType: keyboardType,
@@ -306,13 +434,6 @@ class _contactInfoState extends State<contactInfo> {
   }
 
   void _validateAndContinue() {
-    final sessionService = Provider.of<SessionService>(context, listen: false);
-    
-    if (!sessionService.isLoggedIn()) {
-      _showLoginRequiredDialog();
-      return;
-    }
-
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -335,44 +456,6 @@ class _contactInfoState extends State<contactInfo> {
           totalAmount: totalAmount,
           contactInfo: contactInfo,
         ),
-      ),
-    );
-  }
-
-  void _showLoginRequiredDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Login Required"),
-        content: const Text("Please login to continue with your order."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(
-                    sessionService: Provider.of<SessionService>(context, listen: false),
-                    cartService: Provider.of<CartService>(context, listen: false),
-                  ),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text("Login Now"),
-          ),
-        ],
       ),
     );
   }
