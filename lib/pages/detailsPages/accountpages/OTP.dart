@@ -354,18 +354,18 @@ class _OTPState extends State<OTP> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Email verified successfully!"),
-              backgroundColor: Colors.green,
+              content: Text("Sign Up successfully!"),
+              backgroundColor: Colors.white,
             ),
           );
 
-          // ✅ Fix: Pass cartService to MainDashboard
+          //  Fix: Pass cartService to MainDashboard
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
               builder: (_) => MainDashboard(
                 sessionService: widget.sessionService,
-                cartService: widget.cartService,  // ✅ Add this line
+                cartService: widget.cartService,  //  Add this line
               ),
             ),
             (route) => false,
