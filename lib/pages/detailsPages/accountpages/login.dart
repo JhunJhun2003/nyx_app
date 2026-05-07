@@ -1,6 +1,7 @@
 // import 'package:flutter/foundation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 // import 'package:nyxproject/pages/main_dashboard.dart';
 import '../../../db_helper.dart';
@@ -69,6 +70,8 @@ class _LoginPageState extends State<LoginPage> {
               _continuewith("--- or Continue With ---"),
               SizedBox(height: 15),
               _choice(),
+              SizedBox(height: 15),
+              _toSignUp(),
               Divider()
             ],
           ),
@@ -302,6 +305,41 @@ class _LoginPageState extends State<LoginPage> {
   Widget _MainIcon(){
     return Center(
       child: Icon(FontAwesomeIcons.user, size: 200,),
+    );
+  }
+
+  Widget _toSignUp(){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Don't have an account",
+          style: TextStyle(
+            fontFamily: "Custom",
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(width: 10),
+        GestureDetector(
+          onTap: (){
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                SignupPage(),
+              )
+            );
+          },
+          child: Text(
+            "Sign Up",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 15,
+              color: Colors.red
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
