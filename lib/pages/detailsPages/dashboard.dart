@@ -1,20 +1,13 @@
-import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
-import 'package:nyxproject/models/Product.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
-import 'package:nyxproject/services/session_service.dart';
-import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
 
 import 'shoppages/catagory.dart';
+import 'shoppages/other.dart';
 
 class DashBoard extends StatefulWidget {
-  final SessionService? sessionService;
-  final CartService? cartService;
-
-  const DashBoard({super.key, this.sessionService, this.cartService});
+  const DashBoard({super.key});
 
   @override
   State<DashBoard> createState() => _DashBoardState();
@@ -22,53 +15,86 @@ class DashBoard extends StatefulWidget {
 
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
-  List<Product> _allProducts = [];
+  List<Map<String, dynamic>> _groupedProducts = [];
 
   bool _isLoadingCategories = true;
-  bool _isLoadingProducts = true;
-  bool _isRefreshing = false;
+  bool _isLoadingHomeData = true;
 
   String? _categoriesError;
-  String? _productsError;
-  List<String> images = [
-    "assets/classes/Badminton.png",
-    "assets/classes/Futsal.png",
-    "assets/classes/Tennis.png",
-  ];
+  String? _homeDataError;
 
-  int currentIndex = 0;
+  // =========================
+  // ADDED FOR TYPEWRITER
+  // =========================
+  final TextEditingController _searchController =
+      TextEditingController();
 
-  String searchQuery = "";
+  final FocusNode _focusNode = FocusNode();
+
+  String fullText = "What are you looking for ?";
+  String animatedText = "";
+
+  Timer? timer;
+  int textIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _loadAllData();
+
+    // =========================
+    // ADDED FOCUS LISTENER
+    // =========================
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _startTypingAnimation();
+      }
+    });
   }
 
+  // =========================
+  // ADDED TYPEWRITER FUNCTION
+  // =========================
+  void _startTypingAnimation() {
+    timer?.cancel();
+
+    animatedText = "";
+    textIndex = 0;
+
+    timer = Timer.periodic(
+      const Duration(milliseconds: 70),
+      (timer) {
+        if (textIndex < fullText.length) {
+          setState(() {
+            animatedText += fullText[textIndex];
+            textIndex++;
+          });
+        } else {
+          timer.cancel();
+        }
+      },
+    );
+  }
+
+  // =========================
+  // ADDED DISPOSE
+  // =========================
   @override
   void dispose() {
+    timer?.cancel();
+    _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _refreshData() async {
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    await _loadAllData();
-
-    setState(() {
-      _isRefreshing = false;
-    });
-  }
-
   Future<void> _loadAllData() async {
-    await Future.wait([_loadCategories(), _loadProducts()]);
+    await Future.wait([
+      _loadCategories(),
+      _loadHomeData(),
+    ]);
   }
 
   Future<void> _loadCategories() async {
-    if (!mounted) return;
-
     setState(() {
       _isLoadingCategories = true;
       _categoriesError = null;
@@ -76,8 +102,6 @@ class _DashBoardState extends State<DashBoard> {
 
     try {
       final result = await Api.getAllCategories();
-
-      if (!mounted) return;
 
       if (result['success'] == true) {
         setState(() {
@@ -87,12 +111,12 @@ class _DashBoardState extends State<DashBoard> {
         print('✅ Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
-          _categoriesError = result['message'] ?? 'Failed to load categories';
+          _categoriesError =
+              result['message'] ?? 'Failed to load categories';
           _isLoadingCategories = false;
         });
       }
     } catch (e) {
-      if (!mounted) return;
       setState(() {
         _categoriesError = 'Error loading categories: $e';
         _isLoadingCategories = false;
@@ -100,84 +124,74 @@ class _DashBoardState extends State<DashBoard> {
     }
   }
 
-  Future<void> _loadProducts() async {
-    if (!mounted) return;
-
+  Future<void> _loadHomeData() async {
     setState(() {
-      _isLoadingProducts = true;
-      _productsError = null;
+      _isLoadingHomeData = true;
+      _homeDataError = null;
     });
 
     try {
-      final result = await GetallproductApi.getAllProducts();
-
-      if (!mounted) return;
+      final result = await Api.getHomeData();
 
       if (result['success'] == true) {
         setState(() {
-          _allProducts = result['data'] ?? [];
-          _isLoadingProducts = false;
+          _groupedProducts = result['data'] ?? [];
+          _isLoadingHomeData = false;
         });
-        print('✅ Loaded ${_allProducts.length} products');
+
+        print(
+            '✅ Loaded ${_groupedProducts.length} product groups');
+
+        for (var group in _groupedProducts) {
+          print(
+              'Group: ${group['tagName']} - ${(group['products'] as List).length} products');
+        }
       } else {
         setState(() {
-          _productsError = result['message'] ?? 'Failed to load products';
-          _isLoadingProducts = false;
+          _homeDataError =
+              result['message'] ?? 'Failed to load home data';
+          _isLoadingHomeData = false;
         });
       }
     } catch (e) {
-      if (!mounted) return;
       setState(() {
-        _productsError = 'Error loading products: $e';
-        _isLoadingProducts = false;
+        _homeDataError = 'Error loading home data: $e';
+        _isLoadingHomeData = false;
       });
     }
-  }
-
-  List<String> _getUniqueTags() {
-    Set<String> tags = {};
-    for (var product in _allProducts) {
-      if (product.tags != null && product.tags!.isNotEmpty) {
-        tags.add(product.tags!);
-      }
-    }
-    return tags.toList();
-  }
-
-  List<Product> _getProductsByTag(String tagName) {
-    return _allProducts.where((product) {
-      return product.tags != null && product.tags == tagName;
-    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: Colors.red,
-        backgroundColor: Colors.white,
+      backgroundColor:
+          const Color.fromARGB(255, 255, 255, 255),
+      body: SafeArea(
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
-              // _searchBar(),
+              const SizedBox(height: 5),
+              _searchBar(),
               _banner(),
+
               _section("Categories", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CategoryPage(categoryName: "All"),
+                    builder: (context) =>
+                        Catagory(index: 0),
                   ),
                 );
               }),
+
               _categoriesWidget(),
-              const SizedBox(height: 10),
+              const Divider(),
+
               _buildProductSections(),
-              const SizedBox(height: 10),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -186,7 +200,7 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _buildProductSections() {
-    if (_isLoadingProducts && !_isRefreshing) {
+    if (_isLoadingHomeData) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -195,19 +209,19 @@ class _DashBoardState extends State<DashBoard> {
       );
     }
 
-    if (_productsError != null) {
+    if (_homeDataError != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            _productsError!,
+            _homeDataError!,
             style: const TextStyle(color: Colors.red),
           ),
         ),
       );
     }
 
-    if (_allProducts.isEmpty) {
+    if (_groupedProducts.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -216,38 +230,42 @@ class _DashBoardState extends State<DashBoard> {
       );
     }
 
-    final uniqueTags = _getUniqueTags();
-
-    if (uniqueTags.isEmpty) {
-      return _productCardSection(_allProducts, "All Products");
-    }
-
     return Column(
-      children: uniqueTags.map((tagName) {
-        final products = _getProductsByTag(tagName);
-        if (products.isEmpty) return const SizedBox.shrink();
-        return _productCardSection(products, tagName);
+      children: _groupedProducts.map((group) {
+        final tagName = group['tagName'];
+        final products = group['products'] as List;
+
+        return _productSection(tagName, products);
       }).toList(),
     );
   }
 
-  Widget _productSection(String tagName, List products) {
+  Widget _productSection(
+      String tagName, List products) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        _section(tagName,(){
+
+        _section(tagName, () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Catagory(index: 0)),
+            MaterialPageRoute(
+              builder: (context) =>
+                  dashboardPages(),
+            ),
           );
         }),
+
         const SizedBox(height: 5),
+
         SizedBox(
           height: 220,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10),
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
@@ -255,152 +273,176 @@ class _DashBoardState extends State<DashBoard> {
             },
           ),
         ),
+
         const Divider(),
       ],
     );
   }
 
-  Widget _productCard(Product product) {
-    final hasDiscount = product.cost > product.price;
+  Widget _productCard(
+      Map<String, dynamic> product) {
+    final productName =
+        product['product_name'] ?? 'Unknown';
+
+    final price = product['price'] ?? 0;
+    final imageUrl = product['image_url'] ?? '';
+    final cost = product['cost'] ?? 0;
 
     return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 6),
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        border:
+            Border.all(color: Colors.black, width: 1),
+      ),
       child: GestureDetector(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductDetails(product: product),
-            ),
-          );
+          print('Product tapped: $productName');
         },
-        child: Card(
-          // White card wrapper
-          color: Colors.white, // White background for the entire card
-          elevation: 2, // Optional: adds shadow
-          shape: RoundedRectangleBorder(
-            // borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Product Image// Product Name - Black text
-                Text(
-                  product.productName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black, // Black text
-                    fontFamily: 'Custom',
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 120,
-                  width: double.infinity, // Take full width of card
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: product.images.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            product.images,
-                            width: double.infinity,
-                            height: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
                                 Icons.image,
-                                size: 40,
-                                color: Colors.grey[400],
-                              );
-                            },
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: Icon(
+                            Icons.image,
+                            size: 50,
+                            color: Colors.grey,
                           ),
-                        )
-                      : Icon(Icons.image, size: 40, color: Colors.grey[400]),
-                ),
-                const SizedBox(height: 15),
-
-                // Product Category - Black text
-                // Text(
-                //   product.category,
-                //   style: const TextStyle(
-                //     fontSize: 10,
-                //     color: Colors.black87, // Black text (slightly softer)
-                //     fontFamily: 'Custom',
-                //   ),
-                // ),
-                // const SizedBox(height: 6),
-                // Price
-                if (hasDiscount) ...[
-                  Text(
-                    "${product.cost.toString()} Ks",
-                    style: TextStyle(
-                      fontSize: 10,
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey[600],
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                ] else ...[
-                  Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                ],
-              ],
+                        ),
+                      ),
+              ),
             ),
-          ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Custom',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    '${price.toString()} Ks',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      color: Color.fromARGB(
+                          255, 13, 27, 42),
+                    ),
+                  ),
+
+                  if (cost > price)
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius:
+                            BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Save ${(cost - price).toString()} Ks',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // =========================
+  // MODIFIED SEARCH BAR
+  // =========================
   Widget _searchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 5),
       child: TextField(
-        style: const TextStyle(color: Colors.white, fontFamily: "Custom"),
+        controller: _searchController,
+        focusNode: _focusNode,
+        style: const TextStyle(
+          color: Colors.white,
+          fontFamily: "Custom",
+        ),
         cursorColor: Colors.white,
         decoration: InputDecoration(
-          hintText: "What are you looking for ?",
+          hintText: animatedText,
           hintStyle: const TextStyle(
             fontFamily: 'Custom',
-            color: Colors.white70,
+            color: Colors.white,
           ),
           filled: true,
-          fillColor: const Color.fromARGB(255, 13, 27, 42),
-          prefixIcon: const Icon(Icons.search, color: Colors.white),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+          fillColor:
+              const Color.fromARGB(255, 13, 27, 42),
+
+          suffixIcon: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+
+          suffixIconColor: Colors.white,
+
+          contentPadding:
+              const EdgeInsets.symmetric(
+            horizontal: 10,
+          ),
+
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(30),
+            borderSide: BorderSide.none,
           ),
         ),
       ),
@@ -408,74 +450,47 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _banner() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CarouselSlider(
-          items: images.map((item) => Container(
-            margin: EdgeInsets.all(0),
-            decoration: BoxDecoration(
-              // borderRadius: BorderRadius.circular(10),
-              image: DecorationImage(image: AssetImage(item),fit: BoxFit.cover)
-            ),
-          )).toList(), 
-          options: CarouselOptions(
-            height: 180,
-            autoPlay: true,
-            autoPlayInterval: Duration(seconds: 5),
-            autoPlayAnimationDuration: Duration(milliseconds: 900),
-            enlargeCenterPage: true,
-            aspectRatio: 16/9,
-            viewportFraction: 1,
-            onPageChanged: (index,reason){
-              setState(() {
-                currentIndex = index;
-              });
-            }
-          )
+    return Container(
+      height: 180,
+      margin: const EdgeInsets.all(5),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        image: const DecorationImage(
+          image: AssetImage(
+              "assets/images/Group1208.png"),
+          fit: BoxFit.cover,
         ),
-        SizedBox(height: 5),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: images.asMap().entries.map((item) => Container(
-            height: 7,
-            width: 7,
-            margin: EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: currentIndex == item.key ? Colors.black : Colors.grey,
-            ),
-          )).toList(),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _section(String title, VoidCallback onTap) {
+  Widget _section(
+      String title, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 10, vertical: 5),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
+              color:
+                  Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w900,
               fontFamily: 'Custom',
               fontSize: 18,
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: onTap,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text(
-              "See All",
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-                fontFamily: 'Custom',
-              ),
+            icon: const Icon(
+              Icons.arrow_forward_ios_sharp,
+              color:
+                  Color.fromARGB(255, 13, 27, 42),
+              size: 18,
             ),
           ),
         ],
@@ -484,20 +499,22 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _categoriesWidget() {
-    if (_isLoadingCategories && !_isRefreshing) {
+    if (_isLoadingCategories) {
       return const SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
+        height: 110,
+        child:
+            Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_categoriesError != null) {
       return SizedBox(
-        height: 100,
+        height: 110,
         child: Center(
           child: Text(
             _categoriesError!,
-            style: const TextStyle(color: Colors.red),
+            style:
+                const TextStyle(color: Colors.red),
           ),
         ),
       );
@@ -505,84 +522,82 @@ class _DashBoardState extends State<DashBoard> {
 
     if (_categoriesList.isEmpty) {
       return const SizedBox(
-        height: 100,
-        child: Center(child: Text('No categories available')),
+        height: 110,
+        child: Center(
+            child: Text('No categories available')),
       );
     }
 
     return SizedBox(
-      height: 130,
+      height: 110,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
         itemCount: _categoriesList.length,
         itemBuilder: (context, index) {
           final category = _categoriesList[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoryPage(
-                    categoryName: category.name,
-                    categoryId: category.id,
+
+          return Padding(
+            padding:
+                const EdgeInsets.only(left: 16),
+            child: Column(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  padding:
+                      const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        Color.fromARGB(255, 13, 27, 42),
+                  ),
+                  child: category.imageUrl !=
+                              null &&
+                          category.imageUrl!
+                              .isNotEmpty
+                      ? ClipOval(
+                          child: Image.network(
+                            category.imageUrl!,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context,
+                                error, stackTrace) {
+                              return const Icon(
+                                Icons.sports,
+                                size: 30,
+                                color: Colors.white,
+                              );
+                            },
+                          ),
+                        )
+                      : const Icon(
+                          Icons.sports,
+                          size: 30,
+                          color: Colors.white,
+                        ),
+                ),
+
+                const SizedBox(height: 6),
+
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color.fromARGB(
+                          255, 13, 27, 42),
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: Column(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color.fromARGB(255, 13, 27, 42),
-                      // border: Border.all(color: Colors.white24, width: 1),
-                    ),
-                    child:
-                        category.imageUrl != null &&
-                            category.imageUrl!.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              category.imageUrl!,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.category,
-                                  size: 30,
-                                  color: Colors.black,
-                                );
-                              },
-                            ),
-                          )
-                        : const Icon(
-                            Icons.category,
-                            size: 30,
-                            color: Colors.white,
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 70,
-                    child: Text(
-                      category.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontFamily: 'Custom',
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           );
         },
