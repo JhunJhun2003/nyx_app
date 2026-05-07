@@ -2,6 +2,7 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
 // import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
@@ -69,8 +70,11 @@ class _LoginPageState extends State<LoginPage> {
               _MainIcon(),
               Divider(),
               _inputform(),
-              _forget(),
+              SizedBox(height: 10),
+
               _login(),
+              SizedBox(height: 10),
+              _toSignUp(),
               SizedBox(height: 10),
               _continuewith("--- or Continue With ---"),
               SizedBox(height: 15),
@@ -99,8 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(
                   builder: (context) => MainDashboard(
                     sessionService: widget.sessionService,
-                    cartService:
-                        widget.cartService, // ✅ Remove the ! (nullable)
+                    cartService: widget.cartService, //  Remove the ! (nullable)
                   ),
                 ),
                 (route) => false,
@@ -126,24 +129,27 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  bool _isPasswordVisible = false;
+
   Widget _inputform() {
     return Form(
       key: _formKey,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Email Field
             TextFormField(
               controller: emailController,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Color.fromARGB(255, 255, 255, 255),
               ),
               decoration: InputDecoration(
                 hintText: "Email",
                 filled: true,
-                fillColor: Color.fromARGB(255, 13, 27, 42),
+                fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -158,22 +164,35 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 10),
 
+            // Password Field with Visibility Toggle
             TextFormField(
               controller: passwordController,
-              obscureText: true,
-              style: TextStyle(
+              obscureText: !_isPasswordVisible,
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Color.fromARGB(255, 255, 255, 255),
               ),
               decoration: InputDecoration(
                 hintText: "Password",
                 filled: true,
-                fillColor: Color.fromARGB(255, 13, 27, 42),
+                fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
               ),
-
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return "Enter password";
@@ -269,7 +288,7 @@ class _LoginPageState extends State<LoginPage> {
             // Get token first
             final String token = responseMap['token']?.toString() ?? '';
 
-            // ✅ Fetch full user profile using the token
+            //  Fetch full user profile using the token
             final profileResult = await Api.getMyProfile(token: token);
 
             User user;
@@ -277,7 +296,7 @@ class _LoginPageState extends State<LoginPage> {
             if (profileResult['success'] == true) {
               // Use profile data which should have full user info
               final userData = profileResult['data'] as Map<String, dynamic>;
-              print("📦 Profile data: $userData");
+              print(" Profile data: $userData");
 
               user = User(
                 id: userData['id'] != null
@@ -301,7 +320,7 @@ class _LoginPageState extends State<LoginPage> {
                 userJson = responseMap;
               }
 
-              print("📦 Login response user data: $userJson");
+              print(" Login response user data: $userJson");
 
               user = User(
                 id: userJson['id'] != null
@@ -317,7 +336,7 @@ class _LoginPageState extends State<LoginPage> {
             }
 
             print(
-              "✅ User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}",
+              " User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}",
             );
 
             await widget.sessionService.saveSession(user, token);
@@ -325,7 +344,7 @@ class _LoginPageState extends State<LoginPage> {
             // Verify save
             final savedUser = widget.sessionService.getStoredUser();
             print(
-              "✅ Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}",
+              " Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}",
             );
 
             if (!mounted) return;
@@ -405,5 +424,39 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _MainIcon() {
     return Center(child: FaIcon(FontAwesomeIcons.user, size: 200));
+  }
+
+  Widget _toSignUp() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Don't have an account",
+          style: TextStyle(fontFamily: "Custom", fontSize: 15),
+        ),
+        SizedBox(width: 10),
+        GestureDetector(
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SignupPage(
+                  sessionService: widget.sessionService,
+                  cartService: widget.cartService,
+                ),
+              ),
+            );
+          },
+          child: Text(
+            "Sign Up",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 15,
+              color: Colors.red,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

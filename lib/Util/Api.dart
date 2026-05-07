@@ -1,5 +1,3 @@
-<<<<<<< HEAD:lib/util/Api.dart
-=======
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -678,4 +676,3 @@ class Api {
     }
   }
 }
->>>>>>> 1a7828d1daf2b140370b792696f61401bb9c72b6:lib/Util/Api.dart

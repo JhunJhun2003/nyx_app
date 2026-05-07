@@ -8,7 +8,8 @@ import 'package:nyxproject/util/Api.dart';
 
 class SignupPage extends StatefulWidget {
   final SessionService sessionService;
-   final CartService? cartService;
+  final CartService? cartService;
+  
   const SignupPage({super.key, required this.sessionService, this.cartService});
 
   @override
@@ -18,14 +19,16 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final formKey = GlobalKey<FormState>();
   bool _isChecked = false;
+  
+  // Password visibility toggles
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController =
-      TextEditingController(); // ADDED
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
 
   Future<void> _selectDate() async {
@@ -38,9 +41,9 @@ class _SignupPageState extends State<SignupPage> {
 
     if (pickedDate != null) {
       setState(() {
-        // dobController.text = "${pickedDate.year}-${pickedDate.month}-${pickedDate.day}";
-        dobController.text =
-            "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+        // Store in YYYY-MM-DD format for API
+        dobController.text = 
+            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
       });
     }
   }
@@ -49,7 +52,7 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     nameController.dispose();
     emailController.dispose();
-    phoneController.dispose(); // ADDED
+    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     dobController.dispose();
@@ -88,10 +91,7 @@ class _SignupPageState extends State<SignupPage> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           const Expanded(
             child: Text(
@@ -130,6 +130,7 @@ class _SignupPageState extends State<SignupPage> {
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
               ),
               validator: (value) {
@@ -155,6 +156,7 @@ class _SignupPageState extends State<SignupPage> {
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
               ),
               validator: (value) {
@@ -170,7 +172,7 @@ class _SignupPageState extends State<SignupPage> {
 
             const SizedBox(height: 10),
 
-            // Phone Field - ADDED
+            // Phone Field
             TextFormField(
               controller: phoneController,
               style: const TextStyle(
@@ -184,6 +186,7 @@ class _SignupPageState extends State<SignupPage> {
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
                 prefixIcon: const Icon(Icons.phone, color: Colors.white70),
               ),
@@ -212,23 +215,18 @@ class _SignupPageState extends State<SignupPage> {
               onTap: _selectDate,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: "Date of Birth*",
+                hintText: "Date of Birth* (YYYY-MM-DD)",
                 hintStyle: const TextStyle(color: Colors.grey),
-                prefixIcon: const Icon(
-                  Icons.calendar_today,
-                  color: Colors.white,
-                ),
+                prefixIcon: const Icon(Icons.calendar_today, color: Colors.white),
                 filled: true,
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.blue),
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -241,10 +239,10 @@ class _SignupPageState extends State<SignupPage> {
 
             const SizedBox(height: 10),
 
-            // Password Field
+            // Password Field with Visibility Toggle
             TextFormField(
               controller: passwordController,
-              obscureText: true,
+              obscureText: !_isPasswordVisible,
               style: const TextStyle(
                 fontFamily: "Custom",
                 color: Color.fromARGB(255, 255, 255, 255),
@@ -255,6 +253,18 @@ class _SignupPageState extends State<SignupPage> {
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
               ),
               validator: (value) {
@@ -270,10 +280,10 @@ class _SignupPageState extends State<SignupPage> {
 
             const SizedBox(height: 10),
 
-            // Confirm Password Field
+            // Confirm Password Field with Visibility Toggle
             TextFormField(
               controller: confirmPasswordController,
-              obscureText: true,
+              obscureText: !_isConfirmPasswordVisible,
               style: const TextStyle(
                 fontFamily: "Custom",
                 color: Color.fromARGB(255, 255, 255, 255),
@@ -284,6 +294,18 @@ class _SignupPageState extends State<SignupPage> {
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                    });
+                  },
                 ),
               ),
               validator: (value) {
@@ -306,6 +328,9 @@ class _SignupPageState extends State<SignupPage> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(350, 50),
                   backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
                 onPressed: _handleSignUp,
                 child: const Text(
@@ -338,8 +363,10 @@ class _SignupPageState extends State<SignupPage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            LoginPage(sessionService: widget.sessionService),
+                        builder: (context) => LoginPage(
+                          sessionService: widget.sessionService,
+                          cartService: widget.cartService,
+                        ),
                       ),
                     );
                   },
@@ -360,7 +387,6 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  // Separate signup handler method
   Future<void> _handleSignUp() async {
     // Check if form is valid
     if (!formKey.currentState!.validate()) return;
@@ -375,44 +401,41 @@ class _SignupPageState extends State<SignupPage> {
 
     // Check password match
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
       return;
     }
 
-    // Parse date of birth to YYYY-MM-DD format for API
-    String formattedDate = _parseDateForApi(dobController.text.trim());
+    // Date is already in YYYY-MM-DD format from the date picker
+    String formattedDate = dobController.text.trim();
 
     try {
       final Map<String, dynamic> signupResult = await Api.signupUser(
         name: nameController.text.trim(),
         email: emailController.text.trim(),
-        phone: phoneController.text.trim(), // Make sure you have this field
+        phone: phoneController.text.trim(),
         dateOfBirth: formattedDate,
         password: passwordController.text.trim(),
       );
 
       if (!mounted) return;
 
-      // Check success using the 'success' field from our fixed API
       final bool success = signupResult['success'] == true;
 
       if (success) {
         final String email = emailController.text.trim();
-        // Get tempToken from the response
         final String tempToken = signupResult['tempToken']?.toString() ?? '';
 
-        print("TempToken received: $tempToken"); // Debug print
+        print("TempToken received: $tempToken");
 
         if (tempToken.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Missing verification token from server"),
-            ),
+            const SnackBar(content: Text("Missing verification token from server")),
           );
           return;
         }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -421,6 +444,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
           );
         }
+        
         // Navigate to OTP page
         Navigator.pushReplacement(
           context,
@@ -436,9 +460,7 @@ class _SignupPageState extends State<SignupPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              signupResult['message']?.toString() ?? "Signup failed",
-            ),
+            content: Text(signupResult['message']?.toString() ?? "Signup failed"),
             backgroundColor: Colors.red,
           ),
         );
@@ -449,21 +471,6 @@ class _SignupPageState extends State<SignupPage> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
-    }
-  }
-
-  // Helper method to parse date from DD/MM/YYYY to YYYY-MM-DD
-  String _parseDateForApi(String date) {
-    try {
-      final parts = date.split('/');
-      if (parts.length == 3) {
-        final day = parts[0].padLeft(2, '0');
-        final month = parts[1].padLeft(2, '0');
-        return "${parts[2]}-$month-$day";
-      }
-      return date;
-    } catch (e) {
-      return date;
     }
   }
 
@@ -481,7 +488,6 @@ class _SignupPageState extends State<SignupPage> {
           },
           controlAffinity: ListTileControlAffinity.leading,
         ),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -504,10 +510,9 @@ class _SignupPageState extends State<SignupPage> {
             const Text(" and "),
             TextButton(
               onPressed: () {
-                // Navigate to Privacy Policy
                 // Navigator.push(
                 //   context,
-                //   MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
+                //   MaterialPageRoute(builder: (context) => const privacyPage()),
                 // );
               },
               child: const Text(
