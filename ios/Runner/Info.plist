@@ -33,7 +33,7 @@
 	<string>This app needs gallery access to select profile pictures</string>
 	
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs permission to save profile pictures to your gallery</string>
+	<string>Save order receipts to your photo library</string>
 	
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

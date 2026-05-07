@@ -6,6 +6,7 @@ import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
+import 'package:nyxproject/services/cart_service.dart';
 // import 'package:nyxproject/pages/main_dashboard.dart';
 // import '../../../db_helper.dart';
 // import 'package:http/http.dart' as http;
@@ -31,7 +32,8 @@ import 'package:nyxproject/util/Api.dart';
 
 class LoginPage extends StatefulWidget {
   final SessionService sessionService;
-  const LoginPage({super.key, required this.sessionService});
+  final CartService? cartService;
+  const LoginPage({super.key, required this.sessionService, this.cartService});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -91,18 +93,26 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           IconButton(
             onPressed: () {
-              Navigator.pushReplacement(
+              // Navigate back to MainDashboard
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      MainDashboard(sessionService: widget.sessionService),
+                  builder: (context) => MainDashboard(
+                    sessionService: widget.sessionService,
+                    cartService:
+                        widget.cartService, // ✅ Remove the ! (nullable)
+                  ),
                 ),
+                (route) => false,
               );
             },
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
           ),
-          Expanded(
-            child: const Text(
+          const Expanded(
+            child: Text(
               "Login",
               style: TextStyle(
                 fontFamily: "Custom",
@@ -220,13 +230,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _login() {
     return Center(
-      // padding: EdgeInsets.symmetric(horizontal: 10),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(350, 50),
           backgroundColor: Colors.red,
         ),
-
         onPressed: () async {
           if (!_formKey.currentState!.validate()) return;
 
@@ -240,6 +248,7 @@ class _LoginPageState extends State<LoginPage> {
           final bool success = loginResult['success'] == true;
 
           if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -257,22 +266,77 @@ class _LoginPageState extends State<LoginPage> {
               responseMap = rawData;
             }
 
-            final dynamic rawUser = responseMap['user'];
-            final Map<String, dynamic> userJson =
-                rawUser is Map<String, dynamic>
-                ? rawUser
-                : <String, dynamic>{'email': email};
-            final User user = User.fromJson(userJson);
+            // Get token first
             final String token = responseMap['token']?.toString() ?? '';
+
+            // ✅ Fetch full user profile using the token
+            final profileResult = await Api.getMyProfile(token: token);
+
+            User user;
+
+            if (profileResult['success'] == true) {
+              // Use profile data which should have full user info
+              final userData = profileResult['data'] as Map<String, dynamic>;
+              print("📦 Profile data: $userData");
+
+              user = User(
+                id: userData['id'] != null
+                    ? int.tryParse(userData['id'].toString())
+                    : null,
+                name: userData['name']?.toString(),
+                email: userData['email']?.toString() ?? email,
+                phone: userData['phone']?.toString(),
+                imageUrl: userData['image_url']?.toString(),
+                dateOfBirth: userData['dateOfBirth']?.toString(),
+                address: userData['address']?.toString(),
+              );
+            } else {
+              // Fallback to login response data
+              final dynamic rawUser = responseMap['user'];
+              Map<String, dynamic> userJson = {};
+
+              if (rawUser is Map<String, dynamic>) {
+                userJson = rawUser;
+              } else {
+                userJson = responseMap;
+              }
+
+              print("📦 Login response user data: $userJson");
+
+              user = User(
+                id: userJson['id'] != null
+                    ? int.tryParse(userJson['id'].toString())
+                    : null,
+                name: userJson['name']?.toString(),
+                email: userJson['email']?.toString() ?? email,
+                phone: userJson['phone']?.toString(),
+                imageUrl: userJson['image_url']?.toString(),
+                dateOfBirth: userJson['dateOfBirth']?.toString(),
+                address: userJson['address']?.toString(),
+              );
+            }
+
+            print(
+              "✅ User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}",
+            );
 
             await widget.sessionService.saveSession(user, token);
 
+            // Verify save
+            final savedUser = widget.sessionService.getStoredUser();
+            print(
+              "✅ Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}",
+            );
+
             if (!mounted) return;
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    MainDashboard(sessionService: widget.sessionService),
+                builder: (_) => MainDashboard(
+                  sessionService: widget.sessionService,
+                  cartService: widget.cartService,
+                ),
               ),
             );
           }

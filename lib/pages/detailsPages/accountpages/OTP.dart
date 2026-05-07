@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
 
 class OTP extends StatefulWidget {
   final String email;
   final String tempToken;
   final SessionService sessionService;
+  final CartService? cartService;  // ✅ Add cartService
   
   const OTP({
     super.key,
     required this.email,
     required this.tempToken,
     required this.sessionService,
+    this.cartService,  // ✅ Add cartService
   });
 
   @override
@@ -157,38 +160,6 @@ class _OTPState extends State<OTP> {
             ),
 
             const SizedBox(height: 20),
-
-            // Send OTP Button
-            // Center(
-            //   child: ElevatedButton(
-            //     style: ElevatedButton.styleFrom(
-            //       minimumSize: const Size(200, 45),
-            //       backgroundColor: Colors.red,
-            //     ),
-            //     onPressed: (_isSendingCode || _resendCooldown > 0) ? null : () => _sendOtpCode(),
-            //     child: _isSendingCode
-            //         ? const SizedBox(
-            //             height: 20,
-            //             width: 20,
-            //             child: CircularProgressIndicator(
-            //               strokeWidth: 2,
-            //               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            //             ),
-            //           )
-            //         : Text(
-            //             _resendCooldown > 0 
-            //                 ? "Resend OTP (${_resendCooldown}s)" 
-            //                 : "Send OTP Code",
-            //             style: const TextStyle(
-            //               fontFamily: "Custom",
-            //               fontSize: 15,
-            //               color: Colors.white,
-            //             ),
-            //           ),
-            //   ),
-            // ),
-
-            // const SizedBox(height: 20),
 
             // OTP Input Field
             TextFormField(
@@ -336,7 +307,7 @@ class _OTPState extends State<OTP> {
       if (success) {
         final responseData = result['data'];
         
-        // Initialize with default values - FIXED: Use int? for userId
+        // Initialize with default values
         int? userId;
         String userName = 'User';
         String userEmail = widget.email;
@@ -370,7 +341,7 @@ class _OTPState extends State<OTP> {
                       '';
         }
 
-        // Create user object with int? id - FIXED: Now passing int?
+        // Create user object
         final user = User(
           id: userId,
           name: userName,
@@ -388,10 +359,14 @@ class _OTPState extends State<OTP> {
             ),
           );
 
+          // ✅ Fix: Pass cartService to MainDashboard
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => MainDashboard(sessionService: widget.sessionService),
+              builder: (_) => MainDashboard(
+                sessionService: widget.sessionService,
+                cartService: widget.cartService,  // ✅ Add this line
+              ),
             ),
             (route) => false,
           );
