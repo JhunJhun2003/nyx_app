@@ -169,13 +169,13 @@ class _ProductDetailsState extends State<ProductDetails> {
                 ),
             ],
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.compare_rounded,
-              color: Colors.white,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(
+          //     Icons.compare_rounded,
+          //     color: Colors.white,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -706,17 +706,17 @@ class _ProductDetailsState extends State<ProductDetails> {
           ),
           Row(
             children: [
-              ElevatedButton(
-                onPressed: _isInStock ? () {} : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                ),
-                child: const Text(
-                  "Buy Now",
-                  style: TextStyle(fontFamily: "Custom", color: Colors.white),
-                ),
-              ),
+              // ElevatedButton(
+              //   onPressed: _isInStock ? () {} : null,
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Colors.red,
+              //     padding: const EdgeInsets.symmetric(horizontal: 12),
+              //   ),
+              //   child: const Text(
+              //     "Buy Now",
+              //     style: TextStyle(fontFamily: "Custom", color: Colors.white),
+              //   ),
+              // ),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _isInStock && !_isAddingToCart

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/contactInfo_snack.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/tennis_class.dart';
 
@@ -13,36 +12,39 @@ class ClassesPage extends StatefulWidget {
 
 class _ClassesPageState extends State<ClassesPage> {
   int selectedIndex = 0;
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildTab("TRAININGS", 0),
-                    _buildTab("RENTALS", 1),
-                    _buildTab("CANTEEN", 2),
-                  ],
-                ),
-                SizedBox(height: 15),
-                AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  child: selectedIndex == 0
-                      ? _trainings()
-                      : selectedIndex == 1
-                        ? _rentals()
-                        : _canteen(),
-                ),
-              ],
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTab("TRAININGS", 0),
+                  _buildTab("RENTALS", 1),
+                  _buildTab("CANTEEN", 2),
+                ],
+              ),
+              SizedBox(height: 15),
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: selectedIndex == 0
+                    ? _trainings()
+                    : selectedIndex == 1
+                    ? _rentals(screenWidth, screenHeight)
+                    : _canteen( screenWidth, screenHeight),
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 
@@ -59,7 +61,9 @@ class _ClassesPageState extends State<ClassesPage> {
         width: 120,
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Color.fromARGB(255, 13, 27, 42) : Colors.grey[300],
+          color: isSelected
+              ? Color.fromARGB(255, 13, 27, 42)
+              : Colors.grey[300],
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
@@ -82,10 +86,8 @@ class _ClassesPageState extends State<ClassesPage> {
           GestureDetector(
             onTap: () {
               Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (contex) => BadmintonClass(),
-                ),
+                context,
+                MaterialPageRoute(builder: (contex) => BadmintonClass()),
               );
             },
             child: Container(
@@ -103,7 +105,7 @@ class _ClassesPageState extends State<ClassesPage> {
                 ],
                 image: DecorationImage(
                   image: AssetImage("assets/classes/Badminton.png"),
-                  fit: BoxFit.fill
+                  fit: BoxFit.fill,
                 ),
               ),
             ),
@@ -111,10 +113,8 @@ class _ClassesPageState extends State<ClassesPage> {
           GestureDetector(
             onTap: () {
               Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (contex) => futsalClass(),
-                ),
+                context,
+                MaterialPageRoute(builder: (contex) => futsalClass()),
               );
             },
             child: Container(
@@ -133,7 +133,6 @@ class _ClassesPageState extends State<ClassesPage> {
                 image: DecorationImage(
                   image: AssetImage("assets/classes/Futsal.png"),
                   fit: BoxFit.fill,
-                  
                 ),
               ),
             ),
@@ -141,10 +140,8 @@ class _ClassesPageState extends State<ClassesPage> {
           GestureDetector(
             onTap: () {
               Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (contex) => tennisClass(),
-                ),
+                context,
+                MaterialPageRoute(builder: (contex) => tennisClass()),
               );
             },
             child: Container(
@@ -162,7 +159,7 @@ class _ClassesPageState extends State<ClassesPage> {
                 ],
                 image: DecorationImage(
                   image: AssetImage("assets/classes/Tennis.png"),
-                  fit: BoxFit.fill
+                  fit: BoxFit.fill,
                 ),
               ),
             ),
@@ -173,7 +170,7 @@ class _ClassesPageState extends State<ClassesPage> {
     );
   }
 
-  Widget _rentals() {
+  Widget _rentals(double screenWidth, double screenHeight) {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +184,7 @@ class _ClassesPageState extends State<ClassesPage> {
                 fontSize: 19,
                 fontFamily: "Custom",
                 fontWeight: FontWeight.w700,
-                color: Colors.black
+                color: Colors.black,
               ),
             ),
           ),
@@ -199,16 +196,16 @@ class _ClassesPageState extends State<ClassesPage> {
               style: TextStyle(
                 fontSize: 15,
                 fontFamily: "Custom",
-                color: Colors.black
+                color: Colors.black,
               ),
             ),
           ),
           SizedBox(height: 10),
-          _badmintonCourt(),
+          _badmintonCourt(screenWidth, screenHeight),
           SizedBox(height: 10),
-          _tennisCourt(),
+          _tennisCourt(screenWidth, screenHeight),
           SizedBox(height: 10),
-          _futsals(),
+          _futsals(screenWidth, screenHeight),
           SizedBox(height: 10),
         ],
         key: ValueKey("rentals"),
@@ -216,13 +213,13 @@ class _ClassesPageState extends State<ClassesPage> {
     );
   }
 
-  Widget _badmintonCourt(){
+  Widget _badmintonCourt(double screenWidth, double screenHeight) {
     return Container(
-      height: 350,
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      height: screenHeight * 0.45, // Responsive height
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125),
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(15)
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Stack(
         children: [
@@ -232,71 +229,76 @@ class _ClassesPageState extends State<ClassesPage> {
             right: 0,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.asset("assets/images/badminton_court.jpg",
-              fit: BoxFit.cover,
+              child: Image.asset(
+                "assets/images/badminton_court.jpg",
+                fit: BoxFit.cover,
+                height: screenHeight * 0.3,
+                width: screenWidth,
               ),
             ),
           ),
           Positioned(
-            left: 10,
-            bottom: 50,
+            left: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
             child: Text(
               "Badminton Courts",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-             right: 10,
-             bottom: 50,
-             child: Text(
+            right: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
+            child: Text(
               "25,000 Ks",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-            bottom: 2,
+            bottom: screenHeight * 0.01,
+            left: 0,
+            right: 0,
             child: GestureDetector(
-              onTap: (){},
+              onTap: () {},
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                width: 400,
-                height: 35,
+                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                width: screenWidth * 0.95,
+                height: screenHeight * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  "See Details",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
+                    fontFamily: "Custom",
+                    color: Colors.white,
                   ),
-                  child: Text(
-                    "See Details",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "Custom",
-                      color: Colors.white
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               ),
-            )
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _tennisCourt(){
+  Widget _tennisCourt(double screenWidth, double screenHeight) {
     return Container(
-      height: 350,
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      height: screenHeight * 0.45,
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125),
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(15)
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Stack(
         children: [
@@ -306,71 +308,76 @@ class _ClassesPageState extends State<ClassesPage> {
             right: 0,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.asset("assets/images/tennis_court.jpg",
-              fit: BoxFit.cover,
+              child: Image.asset(
+                "assets/images/tennis_court.jpg",
+                fit: BoxFit.cover,
+                height: screenHeight * 0.3,
+                width: screenWidth,
               ),
             ),
           ),
           Positioned(
-            left: 10,
-            bottom: 50,
+            left: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
             child: Text(
               "Tennis Courts",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-             right: 10,
-             bottom: 50,
-             child: Text(
+            right: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
+            child: Text(
               "25,000 Ks",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-            bottom: 2,
+            bottom: screenHeight * 0.01,
+            left: 0,
+            right: 0,
             child: GestureDetector(
-              onTap: (){},
+              onTap: () {},
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                width: 400,
-                height: 35,
+                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                width: screenWidth * 0.95,
+                height: screenHeight * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  "See Details",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
+                    fontFamily: "Custom",
+                    color: Colors.white,
                   ),
-                  child: Text(
-                    "See Details",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "Custom",
-                      color: Colors.white
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               ),
-            )
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _futsals(){
+  Widget _futsals(double screenWidth, double screenHeight) {
     return Container(
-      height: 350,
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      height: screenHeight * 0.45,
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125),
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(15)
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Stack(
         children: [
@@ -380,86 +387,91 @@ class _ClassesPageState extends State<ClassesPage> {
             right: 0,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.asset("assets/images/futsal_court.jpg",
-              fit: BoxFit.cover,
+              child: Image.asset(
+                "assets/images/futsal_court.jpg",
+                fit: BoxFit.cover,
+                height: screenHeight * 0.3,
+                width: screenWidth,
               ),
             ),
           ),
           Positioned(
-            left: 10,
-            bottom: 50,
+            left: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
             child: Text(
               "Futsal Courts",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-             right: 10,
-             bottom: 50,
-             child: Text(
+            right: screenWidth * 0.025,
+            bottom: screenHeight * 0.07,
+            child: Text(
               "25,000 Ks",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontFamily: "Custom",
-                color: Colors.white
+                color: Colors.white,
               ),
             ),
           ),
           Positioned(
-            bottom: 2,
+            bottom: screenHeight * 0.01,
+            left: 0,
+            right: 0,
             child: GestureDetector(
-              onTap: (){},
+              onTap: () {},
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                width: 400,
-                height: 35,
+                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                width: screenWidth * 0.95,
+                height: screenHeight * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  "See Details",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
+                    fontFamily: "Custom",
+                    color: Colors.white,
                   ),
-                  child: Text(
-                    "See Details",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "Custom",
-                      color: Colors.white
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               ),
-            )
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _canteen() {
+  Widget _canteen(double screenWidth, double screenHeight) {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _gridCards(),
-          SizedBox(height: 10),
-          _comfirm(),
-        ],
+        children: [_gridCards(screenWidth, screenHeight), SizedBox(height: 10)],
         key: ValueKey("canteen"),
       ),
     );
   }
 
-  Widget _gridCards() {
+  //for canteen products
+  Widget _gridCards(double screenWidth, double screenHeight) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 5,vertical: 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.001,
+        vertical: screenHeight * 0.006,
+      ),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
+        mainAxisSpacing: 10,
         crossAxisSpacing: 12,
         childAspectRatio: 0.7,
       ),
@@ -471,53 +483,55 @@ class _ClassesPageState extends State<ClassesPage> {
             decoration: BoxDecoration(
               color: Color.fromARGB(255, 13, 27, 42),
               borderRadius: BorderRadius.circular(23),
-              border: BoxBorder.all(color: Colors.black, width: 2),
+              border: Border.all(color: Colors.black, width: 2),
             ),
-            child: Stack(
+            child: Column(
               children: [
-                Positioned(
-                  child: Icon(
-                    Icons.image,
-                    size: 180,
-                    color: Colors.white,
-                  )
-                ),
-                Positioned(
-                  left: 10,
-                  top: 170,
-                  child: Text(
-                    "Name",
-                    style: const TextStyle(fontFamily: "Custom", fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 170,
-                  child: Text(
-                    "Price(Ks)",
-                    style: const TextStyle(fontFamily: "Custom", fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-                Positioned(
-                  left: 10,
-                  top: 195,
-                  child: Text(
-                    "Catagory",
-                    style: const TextStyle(fontFamily: "Custom", fontSize: 15, color: Colors.white),
-                  ),
-                ),
-                Positioned(
-                  left: 1,
-                  bottom: 0,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStatePropertyAll(Colors.red),
-                      foregroundColor: WidgetStatePropertyAll(Colors.white),
-                      fixedSize: WidgetStatePropertyAll(Size(189, 10)),
+                // Upper row - Image
+                Expanded(
+                  flex: 2,
+                  child: Center(
+                    child: Icon(
+                      Icons.image,
+                      size: screenWidth * 0.45,
+                      color: Colors.white,
                     ),
-                    onPressed: (){}, 
-                    child: Text("Add to bill",style: const TextStyle(fontFamily: "Custom", fontSize: 15),)
-                  )
+                  ),
+                ),
+                // Lower section - Text information
+                Container(
+                  padding: EdgeInsets.all(screenWidth * 0.02),
+                  child: Column(
+                    children: [
+                      // First row - Name and Price (side by side)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Name",
+                            style: TextStyle(
+                              fontFamily: "Custom",
+                              fontSize: screenWidth * 0.04,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            "Price(Ks)",
+                            style: TextStyle(
+                              fontFamily: "Custom",
+                              fontSize: screenWidth * 0.04,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: screenHeight * 0.005),
+
+                      // Second row - Category (full width)
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -526,68 +540,4 @@ class _ClassesPageState extends State<ClassesPage> {
       },
     );
   }
-
-  Widget _comfirm(){
-    return Container(
-      height: 80,
-      margin: EdgeInsets.symmetric(horizontal: 5),
-      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      decoration: BoxDecoration(
-        color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(10)
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 5,
-            left: 5,
-            child: Text(
-              "Total :",
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: "Custom",
-                fontSize: 15,
-              ),
-            )
-          ),
-          Positioned(
-            top: 5,
-            right: 10,
-            child: Text(
-              "10,000 Ks",
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: "Custom",
-                fontSize: 15,
-              ),
-            )
-          ),
-          Positioned(
-            left: 120,
-            bottom: 0,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              onPressed: (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => contactInfoSnack()),
-                );
-              }, 
-              child: Text(
-                "Order Comfirm",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: 15,
-                ),
-              )
-            )
-          ),
-        ],
-      ),
-    );
-  }
-
 }
