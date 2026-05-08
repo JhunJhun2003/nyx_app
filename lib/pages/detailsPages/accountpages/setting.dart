@@ -8,21 +8,13 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
+
   double get screenWidth => MediaQuery.of(context).size.width;
+  bool isVisible = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar( 
-      //   title: 
-      //     Text("Help Center"),
-      //     titleTextStyle: 
-      //       TextStyle(
-      //         fontSize: 20,
-      //         fontFamily: 'Custom',
-      //         color: const Color(0xFF0D1B2A),
-      //         fontWeight: FontWeight.w700
-      //       ),
-      // ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -32,8 +24,13 @@ class _SettingState extends State<Setting> {
               SizedBox(height: 10),
               _menuItem(
                   Icons.key,
-                  "Privacy and Security",() {},
+                  "Privacy and Security",() {
+                    setState(() {
+                      isVisible = !isVisible;
+                    });
+                  },
                 ),
+              _visibalSetting(),
               _menuItem(
                   Icons.language,
                   "Languages",() {},
@@ -90,12 +87,36 @@ class _SettingState extends State<Setting> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: ListTile(
-          leading: Icon(icon, color: const Color.fromARGB(255, 255, 255, 255)),
+          leading: Icon(icon, color: Color.fromARGB(255, 255, 255, 255)),
           title: Text(title, style: TextStyle(fontFamily: 'Custom',color: Colors.white),),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white, ),
+          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white, ),
           onTap: onTap,
         ),
       ),
+    );
+  }
+
+  Widget _visibalSetting(){
+    return Column(
+      children: [
+        if (isVisible)
+          Column(
+            children: [
+              Text(
+                "Hello Flutter",
+                style: TextStyle(fontSize: 24),
+              ),
+              Text(
+                "Hello Flutter",
+                style: TextStyle(fontSize: 24),
+              ),
+              Text(
+                "Hello Flutter",
+                style: TextStyle(fontSize: 24),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }
