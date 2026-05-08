@@ -45,7 +45,7 @@ class _slipPageState extends State<slipPage> {
 
   double subTotal = 0;
   double tax = 0;
-  double deliveryFee = 1500;
+  double deliveryFee = 0;
   double total = 0;
 
   @override
@@ -278,7 +278,7 @@ class _slipPageState extends State<slipPage> {
           const SizedBox(height: 10),
           _priceRow("Sub Total :", "${subTotal.toStringAsFixed(0)} Ks"),
           _priceRow("Tax (5%) :", "${tax.toStringAsFixed(0)} Ks"),
-          _priceRow("Delivery Fee :", "${deliveryFee.toStringAsFixed(0)} Ks"),
+          // _priceRow("Delivery Fee :", "${deliveryFee.toStringAsFixed(0)} Ks"),
           const SizedBox(height: 8),
           const Divider(color: Colors.white54),
           _priceRow("Total :", "${total.toStringAsFixed(0)} Ks", isBold: true),

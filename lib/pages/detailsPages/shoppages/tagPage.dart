@@ -63,7 +63,7 @@ class _TagPageState extends State<TagPage> {
           _allProducts = result['data'] ?? [];
           _isLoadingProducts = false;
         });
-        print('✅ Loaded ${_allProducts.length} products');
+        print(' Loaded ${_allProducts.length} products');
         _applyFilters();
       } else {
         setState(() {
@@ -194,8 +194,8 @@ class _TagPageState extends State<TagPage> {
           children: [
             const SizedBox(height: 5),
             _header(title),
-            _searchBar(),
-            _filterInfo(),
+            // _searchBar(),
+            // _filterInfo(),
             Expanded(child: _gridCards())
           ],
         ),

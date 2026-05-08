@@ -5,6 +5,7 @@ import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/categoryPage.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/tagPage.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -168,6 +169,8 @@ class _DashBoardState extends State<DashBoard> {
               const SizedBox(height: 10),
               // _searchBar(), // Uncomment if you want to use it
               _banner(),
+              const SizedBox(height: 3),
+              const Divider(thickness: 1, height: 2),
               _section("Categories", () {
                 Navigator.push(
                   context,
@@ -177,9 +180,10 @@ class _DashBoardState extends State<DashBoard> {
                 );
               }),
               _categoriesWidget(),
-              const SizedBox(height: 10),
+              const Divider(thickness: 1, height: 1),
+              // const SizedBox(height: 10),
               _buildProductSections(),
-              const SizedBox(height: 10),
+              // const SizedBox(height: 10),
             ],
           ),
         ),
@@ -261,8 +265,8 @@ class _DashBoardState extends State<DashBoard> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CategoryPage(
-                        categoryName: sectionTitle,
+                      builder: (context) => TagPage(
+                        tagName: sectionTitle,
                       ),
                     ),
                   );
@@ -274,7 +278,7 @@ class _DashBoardState extends State<DashBoard> {
                   "See All",
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.red,
+                    color: Colors.black,
                     fontFamily: 'Custom',
                   ),
                 ),
@@ -299,7 +303,7 @@ class _DashBoardState extends State<DashBoard> {
             return _productCard(product);
           },
         ),
-        const Divider(thickness: 1, height: 24),
+        const Divider(thickness: 1, height: 15),
       ],
     );
   }
@@ -308,7 +312,7 @@ class _DashBoardState extends State<DashBoard> {
     final hasDiscount = product.cost > product.price && product.cost > 0;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -411,39 +415,6 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _searchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      child: TextField(
-        onChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
-        },
-        style: const TextStyle(color: Colors.black, fontFamily: "Custom"),
-        cursorColor: Colors.black,
-        decoration: InputDecoration(
-          hintText: "What are you looking for ?",
-          hintStyle: const TextStyle(
-            fontFamily: 'Custom',
-            color: Colors.grey,
-          ),
-          filled: true,
-          fillColor: Colors.grey[100],
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _banner() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -508,8 +479,8 @@ class _DashBoardState extends State<DashBoard> {
             child: const Text(
               "See All",
               style: TextStyle(
-                fontSize: 13,
-                color: Colors.red,
+                fontSize: 12,
+                color: Colors.black,
                 fontFamily: 'Custom',
               ),
             ),

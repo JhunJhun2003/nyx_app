@@ -404,7 +404,7 @@ class _PaymentState extends State<Payment> {
     }
 
     // Always include Cash on Delivery
-    List<String> displayOptions = ["Cash on Delivery"];
+    List<String> displayOptions = [];
     
     // Add payment methods from API
     for (var method in _paymentMethods) {
