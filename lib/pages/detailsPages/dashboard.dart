@@ -1,6 +1,5 @@
-import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/categoryPage.dart';
@@ -10,10 +9,7 @@ import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
 
 class DashBoard extends StatefulWidget {
-  final SessionService? sessionService;
-  final CartService? cartService;
-
-  const DashBoard({super.key, this.sessionService, this.cartService});
+  const DashBoard({super.key});
 
   @override
   State<DashBoard> createState() => _DashBoardState();
@@ -21,11 +17,10 @@ class DashBoard extends StatefulWidget {
 
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
-  List<Product> _allProducts = [];
+  List<Map<String, dynamic>> _groupedProducts = [];
 
   bool _isLoadingCategories = true;
-  bool _isLoadingProducts = true;
-  bool _isRefreshing = false;
+  bool _isLoadingHomeData = true;
 
   String? _categoriesError;
   String? _productsError;
@@ -43,32 +38,60 @@ class _DashBoardState extends State<DashBoard> {
   void initState() {
     super.initState();
     _loadAllData();
+
+    // =========================
+    // ADDED FOCUS LISTENER
+    // =========================
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _startTypingAnimation();
+      }
+    });
   }
 
+  // =========================
+  // ADDED TYPEWRITER FUNCTION
+  // =========================
+  void _startTypingAnimation() {
+    timer?.cancel();
+
+    animatedText = "";
+    textIndex = 0;
+
+    timer = Timer.periodic(
+      const Duration(milliseconds: 70),
+      (timer) {
+        if (textIndex < fullText.length) {
+          setState(() {
+            animatedText += fullText[textIndex];
+            textIndex++;
+          });
+        } else {
+          timer.cancel();
+        }
+      },
+    );
+  }
+
+  // =========================
+  // ADDED DISPOSE
+  // =========================
   @override
   void dispose() {
+    timer?.cancel();
+    _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _refreshData() async {
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    await _loadAllData();
-
-    setState(() {
-      _isRefreshing = false;
-    });
-  }
-
   Future<void> _loadAllData() async {
-    await Future.wait([_loadCategories(), _loadProducts()]);
+    await Future.wait([
+      _loadCategories(),
+      _loadHomeData(),
+    ]);
   }
 
   Future<void> _loadCategories() async {
-    if (!mounted) return;
-
     setState(() {
       _isLoadingCategories = true;
       _categoriesError = null;
@@ -76,8 +99,6 @@ class _DashBoardState extends State<DashBoard> {
 
     try {
       final result = await Api.getAllCategories();
-
-      if (!mounted) return;
 
       if (result['success'] == true) {
         setState(() {
@@ -87,12 +108,12 @@ class _DashBoardState extends State<DashBoard> {
         print('✅ Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
-          _categoriesError = result['message'] ?? 'Failed to load categories';
+          _categoriesError =
+              result['message'] ?? 'Failed to load categories';
           _isLoadingCategories = false;
         });
       }
     } catch (e) {
-      if (!mounted) return;
       setState(() {
         _categoriesError = 'Error loading categories: $e';
         _isLoadingCategories = false;
@@ -100,84 +121,74 @@ class _DashBoardState extends State<DashBoard> {
     }
   }
 
-  Future<void> _loadProducts() async {
-    if (!mounted) return;
-
+  Future<void> _loadHomeData() async {
     setState(() {
-      _isLoadingProducts = true;
-      _productsError = null;
+      _isLoadingHomeData = true;
+      _homeDataError = null;
     });
 
     try {
-      final result = await GetallproductApi.getAllProducts();
-
-      if (!mounted) return;
+      final result = await Api.getHomeData();
 
       if (result['success'] == true) {
         setState(() {
-          _allProducts = result['data'] ?? [];
-          _isLoadingProducts = false;
+          _groupedProducts = result['data'] ?? [];
+          _isLoadingHomeData = false;
         });
-        print('✅ Loaded ${_allProducts.length} products');
+
+        print(
+            '✅ Loaded ${_groupedProducts.length} product groups');
+
+        for (var group in _groupedProducts) {
+          print(
+              'Group: ${group['tagName']} - ${(group['products'] as List).length} products');
+        }
       } else {
         setState(() {
-          _productsError = result['message'] ?? 'Failed to load products';
-          _isLoadingProducts = false;
+          _homeDataError =
+              result['message'] ?? 'Failed to load home data';
+          _isLoadingHomeData = false;
         });
       }
     } catch (e) {
-      if (!mounted) return;
       setState(() {
-        _productsError = 'Error loading products: $e';
-        _isLoadingProducts = false;
+        _homeDataError = 'Error loading home data: $e';
+        _isLoadingHomeData = false;
       });
     }
-  }
-
-  List<String> _getUniqueTags() {
-    Set<String> tags = {};
-    for (var product in _allProducts) {
-      if (product.tags != null && product.tags!.isNotEmpty) {
-        tags.add(product.tags!);
-      }
-    }
-    return tags.toList();
-  }
-
-  List<Product> _getProductsByTag(String tagName) {
-    return _allProducts.where((product) {
-      return product.tags != null && product.tags == tagName;
-    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: Colors.red,
-        backgroundColor: Colors.white,
+      backgroundColor:
+          const Color.fromARGB(255, 255, 255, 255),
+      body: SafeArea(
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
-              // _searchBar(),
+              const SizedBox(height: 5),
+              _searchBar(),
               _banner(),
+
               _section("Categories", () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CategoryPage(categoryName: "All"),
+                    builder: (context) =>
+                        Catagory(index: 0),
                   ),
                 );
               }),
+
               _categoriesWidget(),
-              const SizedBox(height: 10),
+              const Divider(),
+
               _buildProductSections(),
-              const SizedBox(height: 10),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -186,7 +197,7 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _buildProductSections() {
-    if (_isLoadingProducts && !_isRefreshing) {
+    if (_isLoadingHomeData) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -195,19 +206,19 @@ class _DashBoardState extends State<DashBoard> {
       );
     }
 
-    if (_productsError != null) {
+    if (_homeDataError != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            _productsError!,
+            _homeDataError!,
             style: const TextStyle(color: Colors.red),
           ),
         ),
       );
     }
 
-    if (_allProducts.isEmpty) {
+    if (_groupedProducts.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -237,7 +248,8 @@ class _DashBoardState extends State<DashBoard> {
     final displayProducts = products.length > 4 ? products.sublist(0, 4) : products;
     
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
         Padding(
@@ -302,8 +314,14 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _productCard(Product product) {
-    final hasDiscount = product.cost > product.price;
+  Widget _productCard(
+      Map<String, dynamic> product) {
+    final productName =
+        product['product_name'] ?? 'Unknown';
+
+    final price = product['price'] ?? 0;
+    final imageUrl = product['image_url'] ?? '';
+    final cost = product['cost'] ?? 0;
 
     return GestureDetector(
       onTap: () {
@@ -470,22 +488,26 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  Widget _section(String title, VoidCallback onTap) {
+  Widget _section(
+      String title, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 10, vertical: 5),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
+              color:
+                  Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w900,
               fontFamily: 'Custom',
               fontSize: 18,
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: onTap,
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text(
@@ -503,7 +525,7 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Widget _categoriesWidget() {
-    if (_isLoadingCategories && !_isRefreshing) {
+    if (_isLoadingCategories) {
       return const SizedBox(
         height: 130,
         child: Center(child: CircularProgressIndicator()),
@@ -516,7 +538,8 @@ class _DashBoardState extends State<DashBoard> {
         child: Center(
           child: Text(
             _categoriesError!,
-            style: const TextStyle(color: Colors.red),
+            style:
+                const TextStyle(color: Colors.red),
           ),
         ),
       );
@@ -530,10 +553,9 @@ class _DashBoardState extends State<DashBoard> {
     }
 
     return SizedBox(
-      height: 130,
+      height: 110,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
         itemCount: _categoriesList.length,
         itemBuilder: (context, index) {
           final category = _categoriesList[index];
