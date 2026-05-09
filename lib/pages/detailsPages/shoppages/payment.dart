@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nyxproject/Util/Constant.dart';
 import 'package:nyxproject/Util/PaymentApi.dart';
+import 'package:nyxproject/Util/TaxApi.dart'; // Add this import
 import 'package:nyxproject/models/Payment.dart';
+import 'package:nyxproject/models/Tax.dart'; // Add this import
 import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/slip.dart';
 import 'package:nyxproject/services/cart_service.dart';
@@ -27,27 +29,67 @@ class _PaymentState extends State<Payment> {
   File? _transactionImage;
   bool _isProcessing = false;
   bool _isLoadingPayments = true;
+  bool _isLoadingTax = true; // Add this
   final ImagePicker _picker = ImagePicker();
-  
+
   List<PaymentMethod> _paymentMethods = [];
+  Tax? _tax; // Add this variable
+  double _taxRate = 0; // Add this variable
 
   @override
   void initState() {
     super.initState();
     _fetchPaymentMethods();
+    _fetchTax(); // Add this
+  }
+
+  // Add this method to fetch tax
+  Future<void> _fetchTax() async {
+    setState(() {
+      _isLoadingTax = true;
+    });
+
+    try {
+      final result = await TaxApi.getTax();
+
+      if (result['success']) {
+        setState(() {
+          _tax = result['tax'];
+          _taxRate = _tax?.tax.toDouble() ?? 0;
+          _isLoadingTax = false;
+        });
+        print(' Tax loaded: ${_tax?.tax}%');
+      } else {
+        setState(() {
+          _isLoadingTax = false;
+          // Default to 5% if API fails
+          _taxRate = 5;
+        });
+        print("Error fetching tax: ${result['message']}");
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingTax = false;
+        _taxRate = 5; // Default fallback
+      });
+      print("Error: $e");
+    }
   }
 
   Future<void> _fetchPaymentMethods() async {
     setState(() {
       _isLoadingPayments = true;
     });
-    
+
     try {
-      final sessionService = Provider.of<SessionService>(context, listen: false);
+      final sessionService = Provider.of<SessionService>(
+        context,
+        listen: false,
+      );
       final token = sessionService.getToken();
-      
+
       final result = await PaymentApi.getPaymentMethods(token: token);
-      
+
       if (result['success']) {
         setState(() {
           _paymentMethods = result['data'];
@@ -65,6 +107,18 @@ class _PaymentState extends State<Payment> {
       });
       print("Error: $e");
     }
+  }
+
+  // Calculate tax amount
+  double get _taxAmount {
+    final subtotal = widget.totalAmount ?? 0;
+    return subtotal * (_taxRate / 100);
+  }
+
+  // Calculate grand total
+  double get _grandTotal {
+    final subtotal = widget.totalAmount ?? 0;
+    return subtotal + _taxAmount;
   }
 
   Future<void> _pickImage() async {
@@ -148,15 +202,17 @@ class _PaymentState extends State<Payment> {
 
   @override
   Widget build(BuildContext context) {
-    final totalAmount = widget.totalAmount ?? 100000.0;
+    final subtotal = widget.totalAmount ?? 0;
 
-    final contactInfo = widget.contactInfo ?? {
-      'name': 'N/A',
-      'phone': 'N/A',
-      'email': 'N/A',
-      'address': 'N/A',
-      'remark': 'N/A',
-    };
+    final contactInfo =
+        widget.contactInfo ??
+        {
+          'name': 'N/A',
+          'phone': 'N/A',
+          'email': 'N/A',
+          'address': 'N/A',
+          'remark': 'N/A'
+        };
 
     return Scaffold(
       body: SafeArea(
@@ -178,8 +234,13 @@ class _PaymentState extends State<Payment> {
               const SizedBox(height: 10),
               _information("Remark", contactInfo['remark'] ?? 'N/A'),
               const SizedBox(height: 10),
+             
               const Divider(),
-              _information1("Total Amount", "${totalAmount.toStringAsFixed(0)} Ks"),
+              _information1("Subtotal", "${subtotal.toStringAsFixed(0)} Ks"),
+              const SizedBox(height: 5),
+              _information("Tax (${_taxRate.toStringAsFixed(0)}%)", "${_taxAmount.toStringAsFixed(0)} Ks"),
+              const SizedBox(height: 5),
+              _information1("Grand Total", "${_grandTotal.toStringAsFixed(0)} Ks"),
               const Divider(),
               _section("Select Payment Method"),
               const SizedBox(height: 5),
@@ -187,9 +248,7 @@ class _PaymentState extends State<Payment> {
               const SizedBox(height: 5),
               _paymentInfo(),
               const SizedBox(height: 10),
-              if (_showTransactionInput()) ...[
-                _imageUploadSection(),
-              ],
+              if (_showTransactionInput()) ...[_imageUploadSection()],
               const SizedBox(height: 20),
               _confirm(),
               const SizedBox(height: 30),
@@ -200,6 +259,60 @@ class _PaymentState extends State<Payment> {
     );
   }
 
+  // Add tax section widget
+ Widget _taxSection() {
+  if (_isLoadingTax) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text(
+            "Tax",
+            style: TextStyle(
+              color: Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Custom',
+              fontSize: 15,
+            ),
+          ),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 10),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Tax (${_taxRate.toStringAsFixed(0)}%)",
+          style: const TextStyle(
+            color: Color.fromARGB(255, 13, 27, 42),
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Custom',
+            fontSize: 15,
+          ),
+        ),
+        Text(
+          "${_taxAmount.toStringAsFixed(0)} Ks",
+          style: const TextStyle(
+            color: Color.fromARGB(255, 13, 27, 42),
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Custom',
+            fontSize: 15,
+          ),
+        ),
+      ],
+    ),
+  );
+}
   bool _showTransactionInput() {
     return currentOption != "Cash on Delivery";
   }
@@ -228,7 +341,10 @@ class _PaymentState extends State<Payment> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 13, 27, 42),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -296,7 +412,10 @@ class _PaymentState extends State<Payment> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
           ),
           const Expanded(
             child: Text(
@@ -403,10 +522,8 @@ class _PaymentState extends State<Payment> {
       );
     }
 
-    // Always include Cash on Delivery
     List<String> displayOptions = [];
-    
-    // Add payment methods from API
+
     for (var method in _paymentMethods) {
       if (!displayOptions.contains(method.paymentMethod)) {
         displayOptions.add(method.paymentMethod);
@@ -451,7 +568,6 @@ class _PaymentState extends State<Payment> {
       return const SizedBox.shrink();
     }
 
-    // Find the selected payment method from the list
     PaymentMethod? selectedMethod;
     for (var method in _paymentMethods) {
       if (method.paymentMethod.toLowerCase() == currentOption.toLowerCase()) {
@@ -480,7 +596,11 @@ class _PaymentState extends State<Payment> {
                 selectedMethod.paymentImageUrl,
                 height: 60,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.account_balance, size: 40, color: Colors.white);
+                  return const Icon(
+                    Icons.account_balance,
+                    size: 40,
+                    color: Colors.white,
+                  );
                 },
               ),
             ),
@@ -584,7 +704,10 @@ class _PaymentState extends State<Payment> {
 
     try {
       final cartService = Provider.of<CartService>(context, listen: false);
-      final sessionService = Provider.of<SessionService>(context, listen: false);
+      final sessionService = Provider.of<SessionService>(
+        context,
+        listen: false,
+      );
 
       final user = sessionService.getStoredUser();
       final userId = user?.id ?? 0;
@@ -608,8 +731,7 @@ class _PaymentState extends State<Payment> {
       }).toList();
 
       final itemsJsonString = jsonEncode(itemsList);
-      final tax = cartService.totalPrice * 0.05;
-      final deliveryFee = 5000.0;
+      final deliveryFee = 0;
       final contactInfo = widget.contactInfo ?? {};
 
       final Uri uri = Uri.parse("${Constant.API_URL}/cart/order");
@@ -628,14 +750,16 @@ class _PaymentState extends State<Payment> {
       request.fields['remark'] = contactInfo['remark'] ?? '';
       request.fields['payment_method'] = currentOption.toLowerCase();
       request.fields['items'] = itemsJsonString;
-      request.fields['tax'] = tax.toString();
+      request.fields['tax'] = _taxAmount.toString(); // Use calculated tax
       request.fields['delivery_fee'] = deliveryFee.toString();
+      request.fields['total_amount'] = _grandTotal.toString(); // Add grand total
 
       if (input.text.trim().isNotEmpty) {
         request.fields['transaction_number'] = input.text.trim();
       }
 
       if (_transactionImage != null) {
+        request.fields['has_slip'] = 'true';
         request.files.add(
           await http.MultipartFile.fromPath('image', _transactionImage!.path),
         );
@@ -659,7 +783,7 @@ class _PaymentState extends State<Payment> {
               builder: (context) => slipPage(
                 paymentMethod: currentOption,
                 transactionNumber: input.text.trim(),
-                totalAmount: widget.totalAmount,
+                totalAmount: _grandTotal, // Use grand total
                 contactInfo: widget.contactInfo,
                 orderResponse: responseData,
               ),
@@ -672,12 +796,9 @@ class _PaymentState extends State<Payment> {
           final errorData = jsonDecode(response.body);
           errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
         } catch (e) {}
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
     } catch (e) {

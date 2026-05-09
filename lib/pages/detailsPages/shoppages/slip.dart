@@ -47,6 +47,7 @@ class _slipPageState extends State<slipPage> {
   double tax = 0;
   double deliveryFee = 0;
   double total = 0;
+  double taxRate = 5;
 
   @override
   void initState() {
@@ -55,34 +56,78 @@ class _slipPageState extends State<slipPage> {
   }
 
   void _calculateTotals() {
+    // FIRST PRIORITY: Use totalAmount passed from Payment page (most accurate)
+    if (widget.totalAmount != null && widget.totalAmount! > 0) {
+      total = widget.totalAmount!;
+      
+      // If we have orderResponse with breakdown, use that
+      if (widget.orderResponse != null) {
+        final orderData = widget.orderResponse!['data'];
+        if (orderData is List && orderData.isNotEmpty) {
+          subTotal = (orderData[0]['subtotal'] ?? orderData[0]['Sub_total'] ?? 0).toDouble();
+          tax = (orderData[0]['tax'] ?? 0).toDouble();
+          deliveryFee = (orderData[0]['delivery_fee'] ?? 0).toDouble();
+          
+          if (tax > 0 && subTotal > 0) {
+            taxRate = (tax / subTotal) * 100;
+          }
+          // Don't recalculate total, keep the passed value
+          return;
+        } else if (orderData is Map<String, dynamic>) {
+          subTotal = (orderData['subtotal'] ?? orderData['Sub_total'] ?? 0).toDouble();
+          tax = (orderData['tax'] ?? 0).toDouble();
+          deliveryFee = (orderData['delivery_fee'] ?? 0).toDouble();
+          
+          if (tax > 0 && subTotal > 0) {
+            taxRate = (tax / subTotal) * 100;
+          }
+          return;
+        }
+      }
+      
+      // If no breakdown available, estimate from total
+      // Assuming tax is 5% of subtotal
+      taxRate = 5;
+      subTotal = total / 1.05;
+      tax = total - subTotal;
+      return;
+    }
+    
+    // SECOND PRIORITY: Use orderResponse values
+    if (widget.orderResponse != null) {
+      final orderData = widget.orderResponse!['data'];
+      if (orderData is List && orderData.isNotEmpty) {
+        subTotal = (orderData[0]['subtotal'] ?? orderData[0]['Sub_total'] ?? 0).toDouble();
+        tax = (orderData[0]['tax'] ?? 0).toDouble();
+        deliveryFee = (orderData[0]['delivery_fee'] ?? 0).toDouble();
+        total = (orderData[0]['total'] ?? orderData[0]['Total'] ?? 0).toDouble();
+        
+        if (tax > 0 && subTotal > 0) {
+          taxRate = (tax / subTotal) * 100;
+        }
+        return;
+      } else if (orderData is Map<String, dynamic>) {
+        subTotal = (orderData['subtotal'] ?? orderData['Sub_total'] ?? 0).toDouble();
+        tax = (orderData['tax'] ?? 0).toDouble();
+        deliveryFee = (orderData['delivery_fee'] ?? 0).toDouble();
+        total = (orderData['total'] ?? orderData['Total'] ?? 0).toDouble();
+        
+        if (tax > 0 && subTotal > 0) {
+          taxRate = (tax / subTotal) * 100;
+        }
+        return;
+      }
+    }
+    
+    // LAST RESORT: Calculate from cartItems
     if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
       subTotal = widget.cartItems!.fold(
         0,
         (sum, item) => sum + (item.product.price * item.quantity),
       );
-    } else if (widget.totalAmount != null) {
-      subTotal = widget.totalAmount!;
-    } else if (widget.orderResponse != null) {
-      final orderData = widget.orderResponse!['data'];
-      if (orderData is List && orderData.isNotEmpty) {
-        subTotal = (orderData[0]['Sub_total'] ?? 0).toDouble();
-        tax = (orderData[0]['tax'] ?? 0).toDouble();
-        deliveryFee = (orderData[0]['delivery_fee'] ?? 0).toDouble();
-        total = (orderData[0]['Total'] ?? 0).toDouble();
-        return;
-      } else if (orderData is Map<String, dynamic>) {
-        subTotal = (orderData['Sub_total'] ?? 0).toDouble();
-        tax = (orderData['tax'] ?? 0).toDouble();
-        deliveryFee = (orderData['delivery_fee'] ?? 0).toDouble();
-        total = (orderData['Total'] ?? 0).toDouble();
-        return;
-      }
-    } else {
-      subTotal = 100000;
+      tax = subTotal * (taxRate / 100);
+      total = subTotal + tax + deliveryFee;
     }
-    
-    tax = subTotal * 0.05;
-    total = subTotal + tax + deliveryFee;
   }
 
   Future<void> _shareReceipt() async {
@@ -91,42 +136,45 @@ class _slipPageState extends State<slipPage> {
     });
     
     try {
-      // Capture screenshot
       RenderRepaintBoundary boundary = _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       var image = await boundary.toImage(pixelRatio: 2.0);
       ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
       
-      // Save to temporary file
       final directory = await getTemporaryDirectory();
       final imagePath = await File('${directory.path}/receipt_${DateTime.now().millisecondsSinceEpoch}.png').create();
       await imagePath.writeAsBytes(pngBytes);
       
-      // Share the image
       await Share.shareXFiles(
         [XFile(imagePath.path)],
         text: "Order Receipt #$orderNo\nTotal: ${total.toStringAsFixed(0)} Ks",
         subject: "Order Receipt",
       );
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Receipt shared successfully!"),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Receipt shared successfully!"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: ${e.toString()}"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error sharing receipt: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isSharing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSharing = false;
+        });
+      }
     }
   }
 
@@ -155,6 +203,7 @@ class _slipPageState extends State<slipPage> {
               ),
               const SizedBox(height: 15),
               _buttons(),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -196,7 +245,7 @@ class _slipPageState extends State<slipPage> {
     if (dateTimeString == null) return date;
     try {
       final dateObj = DateTime.parse(dateTimeString);
-      return '${dateObj.day}/${dateObj.month}/${dateObj.year}';
+      return '${dateObj.day.toString().padLeft(2, '0')}/${dateObj.month.toString().padLeft(2, '0')}/${dateObj.year}';
     } catch (e) {
       return date;
     }
@@ -277,8 +326,9 @@ class _slipPageState extends State<slipPage> {
           const Divider(color: Colors.white54),
           const SizedBox(height: 10),
           _priceRow("Sub Total :", "${subTotal.toStringAsFixed(0)} Ks"),
-          _priceRow("Tax (5%) :", "${tax.toStringAsFixed(0)} Ks"),
-          // _priceRow("Delivery Fee :", "${deliveryFee.toStringAsFixed(0)} Ks"),
+          _priceRow("Tax (${taxRate.toStringAsFixed(0)}%) :", "${tax.toStringAsFixed(0)} Ks"),
+          if (deliveryFee > 0) 
+            _priceRow("Delivery Fee :", "${deliveryFee.toStringAsFixed(0)} Ks"),
           const SizedBox(height: 8),
           const Divider(color: Colors.white54),
           _priceRow("Total :", "${total.toStringAsFixed(0)} Ks", isBold: true),
@@ -383,23 +433,27 @@ class _slipPageState extends State<slipPage> {
       if (widget.orderResponse!.containsKey('data')) {
         final data = widget.orderResponse!['data'];
         if (data is List && data.isNotEmpty) {
-          itemsList = data[0]['items'] ?? [];
+          itemsList = data[0]['items'] ?? data[0]['order_items'] ?? [];
         } else if (data is Map<String, dynamic>) {
-          itemsList = data['items'] ?? [];
+          itemsList = data['items'] ?? data['order_items'] ?? [];
         }
       } else if (widget.orderResponse!.containsKey('items')) {
         itemsList = widget.orderResponse!['items'] ?? [];
+      } else if (widget.orderResponse!.containsKey('order_items')) {
+        itemsList = widget.orderResponse!['order_items'] ?? [];
       }
       
       if (itemsList.isNotEmpty) {
         return Column(
           children: itemsList.map((item) {
-            final productName = item['product_name']?.toString() ?? 'Unknown';
+            final productName = item['product_name']?.toString() ?? 
+                               item['name']?.toString() ?? 
+                               'Unknown';
             final quantity = item['quantity']?.toString() ?? '0';
             final price = item['total']?.toString() ?? 
-                          (item['price'] != null 
-                              ? (int.parse(item['price'].toString()) * int.parse(quantity)).toString()
-                              : '0');
+                         (item['price'] != null 
+                             ? (double.parse(item['price'].toString()) * int.parse(quantity)).toStringAsFixed(0)
+                             : '0');
             return _productRow(productName, quantity, price);
           }).toList(),
         );
@@ -576,4 +630,4 @@ class _slipPageState extends State<slipPage> {
       ),
     );
   }
-} 
+}

@@ -219,7 +219,7 @@ class CartPage extends StatelessWidget {
 
   Widget _confirm(BuildContext context, CartService cart, SessionService session) {
     final subtotal = cart.totalPrice;
-    final deliveryFee = 5000.0;
+    final deliveryFee = 0;
     final total = subtotal + deliveryFee;
     
     return Container(
@@ -250,7 +250,7 @@ class CartPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("Delivery Fee:", style: TextStyle(fontSize: 14)),
-              const Text("5,000 Ks", style: TextStyle(fontSize: 14)),
+              const Text("0 Ks", style: TextStyle(fontSize: 14)),
             ],
           ),
           const Divider(height: 16),
