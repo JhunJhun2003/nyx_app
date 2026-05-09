@@ -41,7 +41,6 @@ class _SignupPageState extends State<SignupPage> {
 
     if (pickedDate != null) {
       setState(() {
-        // Store in YYYY-MM-DD format for API
         dobController.text = 
             "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
       });
@@ -117,7 +116,6 @@ class _SignupPageState extends State<SignupPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name Field
             TextFormField(
               controller: nameController,
               style: const TextStyle(
@@ -140,10 +138,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Email Field
             TextFormField(
               controller: emailController,
               style: const TextStyle(
@@ -169,10 +164,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Phone Field
             TextFormField(
               controller: phoneController,
               style: const TextStyle(
@@ -205,10 +197,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Date of Birth Field
             TextFormField(
               controller: dobController,
               readOnly: true,
@@ -236,10 +225,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Password Field with Visibility Toggle
             TextFormField(
               controller: passwordController,
               obscureText: !_isPasswordVisible,
@@ -277,10 +263,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Confirm Password Field with Visibility Toggle
             TextFormField(
               controller: confirmPasswordController,
               obscureText: !_isConfirmPasswordVisible,
@@ -318,10 +301,7 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 35),
-
-            // SIGN UP BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -343,10 +323,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
-
-            // Login Link
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -388,10 +365,8 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _handleSignUp() async {
-    // Check if form is valid
     if (!formKey.currentState!.validate()) return;
 
-    // Check if terms are accepted
     if (!_isChecked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please agree to the Terms & Conditions")),
@@ -399,7 +374,6 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Check password match
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Passwords do not match")),
@@ -407,7 +381,6 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Date is already in YYYY-MM-DD format from the date picker
     String formattedDate = dobController.text.trim();
 
     try {
@@ -421,11 +394,10 @@ class _SignupPageState extends State<SignupPage> {
 
       if (!mounted) return;
 
-      final bool success = signupResult['success'] == true;
-
-      if (success) {
+      if (signupResult['success'] == true) {
         final String email = emailController.text.trim();
         final String tempToken = signupResult['tempToken']?.toString() ?? '';
+        final String password = passwordController.text.trim(); // Store password
 
         print("TempToken received: $tempToken");
 
@@ -445,13 +417,14 @@ class _SignupPageState extends State<SignupPage> {
           );
         }
         
-        // Navigate to OTP page
+        // Navigate to OTP page with password for auto-login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => OTP(
               email: email,
               tempToken: tempToken,
+              password: password, // Pass password for auto-login
               sessionService: widget.sessionService,
               cartService: widget.cartService,
             ),
@@ -509,12 +482,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             const Text(" and "),
             TextButton(
-              onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const privacyPage()),
-                // );
-              },
+              onPressed: () {},
               child: const Text(
                 "Privacy Policy",
                 style: TextStyle(

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:nyxproject/Util/LoginAfterSignupApi.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart'; // Add this import
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -9,15 +11,17 @@ import 'package:nyxproject/util/Api.dart';
 class OTP extends StatefulWidget {
   final String email;
   final String tempToken;
+  final String password;
   final SessionService sessionService;
-  final CartService? cartService;  // ✅ Add cartService
-  
+  final CartService? cartService;
+
   const OTP({
     super.key,
     required this.email,
     required this.tempToken,
+    required this.password,
     required this.sessionService,
-    this.cartService,  // ✅ Add cartService
+    this.cartService,
   });
 
   @override
@@ -25,41 +29,16 @@ class OTP extends StatefulWidget {
 }
 
 class _OTPState extends State<OTP> {
-  final formKey = GlobalKey<FormState>();
   final TextEditingController otpController = TextEditingController();
   bool _isLoading = false;
-  bool _isSendingCode = false;
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
-  
-  @override
-  void initState() {
-    super.initState();
-    // OTP is already sent during signup, so we do not auto-send here to avoid format errors.
-  }
 
   @override
   void dispose() {
     otpController.dispose();
     _cooldownTimer?.cancel();
     super.dispose();
-  }
-
-  void _startCooldownTimer() {
-    _cooldownTimer?.cancel();
-    setState(() {
-      _resendCooldown = 60;
-    });
-    
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted && _resendCooldown > 0) {
-        setState(() {
-          _resendCooldown--;
-        });
-      } else {
-        timer.cancel();
-      }
-    });
   }
 
   @override
@@ -75,6 +54,8 @@ class _OTPState extends State<OTP> {
               _main(),
               const SizedBox(height: 15),
               _verifyBTN(),
+              const SizedBox(height: 20),
+              _resendButton(),
             ],
           ),
         ),
@@ -93,15 +74,15 @@ class _OTPState extends State<OTP> {
           IconButton(
             onPressed: () {
               Navigator.pop(context);
-            }, 
+            },
             icon: const Icon(
-              Icons.arrow_back_ios_new_rounded, 
+              Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
             ),
           ),
           const Expanded(
             child: Text(
-              "Verification", 
+              "Verification",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -117,81 +98,63 @@ class _OTPState extends State<OTP> {
   Widget _main() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Form(
-        key: formKey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Please verify your email account.", 
-              style: TextStyle(
-                fontFamily: "Custom",
-                color: const Color.fromARGB(255, 13, 27, 42),
-                fontSize: 15,
-              ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Please verify your email account.",
+            style: TextStyle(
+              fontFamily: "Custom",
+              color: const Color.fromARGB(255, 13, 27, 42),
+              fontSize: 15,
             ),
-
-            const SizedBox(height: 15),
-
-            // Email Display (read-only)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 13, 27, 42),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.email, color: Colors.white70),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.email,
-                      style: const TextStyle(
-                        fontFamily: "Custom",
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 13, 27, 42),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.email, color: Colors.white70),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.email,
+                    style: const TextStyle(
+                      fontFamily: "Custom",
+                      color: Colors.white,
+                      fontSize: 16,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // OTP Input Field
-            TextFormField(
-              controller: otpController,
-              style: const TextStyle(
-                fontFamily: "Custom",
-                color: Color.fromARGB(255, 255, 255, 255),
-              ),
-              decoration: InputDecoration(
-                hintText: "Enter your OTP",
-                hintStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: const Color.fromARGB(255, 13, 27, 42),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15)
                 ),
-                prefixIcon: const Icon(Icons.security, color: Colors.white70),
-              ),
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Please enter OTP";
-                }
-                if (value.length != 6) {
-                  return "OTP must be 6 digits";
-                }
-                return null;
-              },
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: otpController,
+            style: const TextStyle(
+              fontFamily: "Custom",
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+            decoration: InputDecoration(
+              hintText: "Enter your OTP",
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: const Color.fromARGB(255, 13, 27, 42),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              prefixIcon: const Icon(Icons.security, color: Colors.white70),
+            ),
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+          ),
+        ],
       ),
     );
   }
@@ -225,174 +188,185 @@ class _OTPState extends State<OTP> {
     );
   }
 
-  Future<void> _sendOtpCode({bool autoSend = false}) async {
-    if (!autoSend && _resendCooldown > 0) return;
-    
+  Widget _resendButton() {
+    return Center(
+      // child: TextButton(
+      //   onPressed: _resendCooldown > 0 ? null : _resendOTP,
+      //   child: Text(
+      //     _resendCooldown > 0
+      //         ? "Resend OTP in ${_resendCooldown}s"
+      //         : "Resend OTP",
+      //     style: TextStyle(
+      //       color: _resendCooldown > 0 ? Colors.grey : Colors.red,
+      //       fontFamily: "Custom",
+      //       fontSize: 14,
+      //     ),
+      //   ),
+      // ),
+    );
+  }
+
+  Future<void> _resendOTP() async {
     setState(() {
-      _isSendingCode = true;
+      _resendCooldown = 60;
+    });
+
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _resendCooldown > 0) {
+        setState(() {
+          _resendCooldown--;
+        });
+      } else {
+        timer.cancel();
+      }
     });
 
     try {
-      final Map<String, dynamic> result = await Api.sendOtpCode(
-        email: widget.email,
-      );
-
-      if (!mounted) return;
-      
-      if (result['success'] == true) {
+      final result = await Api.sendOtpCode(email: widget.email);
+      if (mounted && result['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("OTP sent successfully! Check your email."),
+            content: Text("OTP resent successfully!"),
             backgroundColor: Colors.green,
-          ),
-        );
-        
-        _startCooldownTimer();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result['message']?.toString() ?? "Failed to send OTP",
-            ),
-            backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSendingCode = false;
-        });
-      }
+      print("Error resending OTP: $e");
     }
   }
 
-  Future<void> _verifyOtp() async {
-    final String otp = otpController.text.trim();
+Future<void> _verifyOtp() async {
+  final String otp = otpController.text.trim();
 
-    if (otp.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter OTP")),
-      );
-      return;
-    }
+  if (otp.isEmpty || otp.length != 6) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please enter valid 6-digit OTP")),
+    );
+    return;
+  }
 
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP must be 6 digits")),
-      );
-      return;
-    }
+  setState(() {
+    _isLoading = true;
+  });
 
-    setState(() {
-      _isLoading = true;
-    });
+  try {
+    final Map<String, dynamic> verifyResult = await Api.verifyOtp(
+      otp: otp,
+      tempToken: widget.tempToken,
+    );
 
-    try {
-      final Map<String, dynamic> result = await Api.verifyOtp(
-        otp: otp,
-        tempToken: widget.tempToken,
-      );
-
-      if (!mounted) return;
+    if (!mounted) return;
+    
+    if (verifyResult['success'] == true) {
+      print("✅ OTP Verified Successfully");
+      print("📧 Email: ${widget.email}");
+      print("🔑 Password: ${widget.password}");
       
-      final bool success = result['success'] == true;
+      final loginResult = await Loginaftersignupapi.loginAfterSignup(widget.email, widget.password);
       
-      if (success) {
-        final responseData = result['data'];
+      print("📝 Login Result: $loginResult");
+      
+      if (loginResult['success'] == true) {
+        print("✅ Auto Login Successful");
+        final token = loginResult['token'];
         
-        // Initialize with default values
-        int? userId;
-        String userName = 'User';
-        String userEmail = widget.email;
-        String userPhone = '';
-        String authToken = '';
-
-        if (responseData is Map<String, dynamic>) {
-          Map<String, dynamic> userData = responseData;
-          
-          if (responseData['user'] != null && responseData['user'] is Map<String, dynamic>) {
-            userData = responseData['user'] as Map<String, dynamic>;
-          }
-          
-          // Extract id and convert to int properly
-          if (userData['id'] != null) {
-            final idValue = userData['id'];
-            if (idValue is int) {
-              userId = idValue;
-            } else if (idValue is String) {
-              userId = int.tryParse(idValue);
-            } else if (idValue is num) {
-              userId = idValue.toInt();
-            }
-          }
-          
-          userName = userData['name']?.toString() ?? userName;
-          userPhone = userData['phone']?.toString() ?? userPhone;
-          
-          authToken = responseData['token']?.toString() ?? 
-                      responseData['accessToken']?.toString() ?? 
-                      '';
-        }
-
-        // Create user object
+        // Extract user data from the token or create from email
+        // Since the response doesn't have a separate user object,
+        // we need to either decode the JWT token or use the email
+        
+        // Option 1: Create user from email (temporary)
         final user = User(
-          id: userId,
-          name: userName,
-          email: userEmail,
-          phone: userPhone,
+          id: null, // Will be updated when fetching profile
+          name: widget.email.split('@').first, // Use part before @ as name
+          email: widget.email,
+          phone: '',
         );
-
-        await widget.sessionService.saveSession(user, authToken);
-
+        
+        print("🔐 Token: $token");
+        print("👤 User: ${user.name}");
+        
+        await widget.sessionService.saveSession(user, token);
+        
+        // Optional: Fetch full user profile after login
+        // This will get the complete user data including ID and phone
+        try {
+          final profileResult = await Api.getMyProfile(token: token);
+          if (profileResult['success'] == true) {
+            final fullUserData = profileResult['data'];
+            final updatedUser = User(
+              id: fullUserData['id'] as int?,
+              name: fullUserData['name']?.toString() ?? user.name,
+              email: widget.email,
+              phone: fullUserData['phone']?.toString() ?? '',
+            );
+            await widget.sessionService.saveSession(updatedUser, token);
+            print("✅ Full user profile fetched");
+          }
+        } catch (e) {
+          print("⚠️ Could not fetch full profile: $e");
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Sign Up successfully!"),
-              backgroundColor: Colors.white,
+              content: Text("Account created and logged in successfully!"),
+              backgroundColor: Colors.green,
             ),
           );
-
-          //  Fix: Pass cartService to MainDashboard
+          
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => MainDashboard(
+              builder: (context) => MainDashboard(
                 sessionService: widget.sessionService,
-                cartService: widget.cartService,  //  Add this line
+                cartService: widget.cartService,
               ),
             ),
             (route) => false,
           );
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']?.toString() ?? "Invalid OTP"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+        print("❌ Auto Login Failed: ${loginResult['message']}");
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text("Account verified! Please login manually."),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginPage(
+              sessionService: widget.sessionService,
+              cartService: widget.cartService,
+            ),
+          ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(verifyResult['message']?.toString() ?? "Invalid OTP"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    print("❌ Error in OTP verification: $e");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+}
 }
