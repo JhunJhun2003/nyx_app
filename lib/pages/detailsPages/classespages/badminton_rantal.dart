@@ -52,12 +52,10 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
               _bookDate(),
               SizedBox(height: 5),
               _timeSchedule(),
-              SizedBox(height: 5),
-              _courtSelection(),
-              Divider(),
               _schedule(),
               SizedBox(height: 5),
               _rentalSection(),
+              _confirm()
             ],
           ),
         ),
@@ -85,7 +83,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           SizedBox(width: 20),
           Expanded(
             child: Text(
-              "Court",
+              "Court Rentals",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -298,38 +296,6 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
         );
       },
     );
-  }
-
-  Widget _courtSelection(){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(courts.length, (index) {
-        bool isCourtSelected = selectedCourt == index;
-        return Padding(
-          padding: const EdgeInsets.all(2),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              fixedSize: Size(130, 30),
-              backgroundColor: isCourtSelected ? Colors.red : Colors.white,
-            ),
-            onPressed: () {
-              setState(() {
-                selectedCourt = index;
-              });
-            },
-            child: Text(
-              courts[index],
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                fontFamily: "Custom",
-                color: isCourtSelected ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        );
-      }),
-    ); 
   }
 
   bool _isChecked = false;
@@ -565,6 +531,28 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _confirm(){
+    return Center(
+      child: ElevatedButton(
+        style: ButtonStyle(
+          backgroundColor: WidgetStatePropertyAll(Colors.red)
+        ),
+        onPressed: (){
+          
+        }, 
+        child: Text(
+          "Booking Now",
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: "Custom",
+            fontSize: 17,
+            fontWeight: FontWeight.w700
+          ),
+        ),
       ),
     );
   }

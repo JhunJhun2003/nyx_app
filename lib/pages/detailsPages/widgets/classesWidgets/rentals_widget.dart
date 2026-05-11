@@ -1,6 +1,6 @@
 // lib/pages/detailsPages/classesWidgets/rentals_widget.dart
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/badminton_rantal.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/courts.dart';
 
 class RentalsWidget extends StatelessWidget {
   final double screenWidth;
@@ -82,7 +82,7 @@ class RentalsWidget extends StatelessWidget {
     double screenHeight,
   ) {
     return Container(
-      height: screenHeight * 0.45,
+      height: screenHeight * 0.4,
       margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 13, 27, 42),
@@ -137,7 +137,7 @@ class RentalsWidget extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const badmintonRantalState(),
+                    builder: (context) => Courts(),
                   ),
                 );
               },
