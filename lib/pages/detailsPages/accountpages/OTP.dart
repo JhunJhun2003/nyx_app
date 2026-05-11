@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/LoginAfterSignupApi.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/login.dart'; // Add this import
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart'; 
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -259,16 +259,16 @@ Future<void> _verifyOtp() async {
     if (!mounted) return;
     
     if (verifyResult['success'] == true) {
-      print("✅ OTP Verified Successfully");
-      print("📧 Email: ${widget.email}");
-      print("🔑 Password: ${widget.password}");
+      print(" OTP Verified Successfully");
+      print(" Email: ${widget.email}");
+      print(" Password: ${widget.password}");
       
       final loginResult = await Loginaftersignupapi.loginAfterSignup(widget.email, widget.password);
       
-      print("📝 Login Result: $loginResult");
+      print(" Login Result: $loginResult");
       
       if (loginResult['success'] == true) {
-        print("✅ Auto Login Successful");
+        print(" Auto Login Successful");
         final token = loginResult['token'];
         
         // Extract user data from the token or create from email
@@ -283,8 +283,8 @@ Future<void> _verifyOtp() async {
           phone: '',
         );
         
-        print("🔐 Token: $token");
-        print("👤 User: ${user.name}");
+        print(" Token: $token");
+        print(" User: ${user.name}");
         
         await widget.sessionService.saveSession(user, token);
         
@@ -301,10 +301,10 @@ Future<void> _verifyOtp() async {
               phone: fullUserData['phone']?.toString() ?? '',
             );
             await widget.sessionService.saveSession(updatedUser, token);
-            print("✅ Full user profile fetched");
+            print(" Full user profile fetched");
           }
         } catch (e) {
-          print("⚠️ Could not fetch full profile: $e");
+          print(" Could not fetch full profile: $e");
         }
         
         if (mounted) {
