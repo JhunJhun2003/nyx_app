@@ -3,38 +3,15 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
-// import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
-import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
 import 'package:nyxproject/services/cart_service.dart';
-// import 'package:nyxproject/pages/main_dashboard.dart';
-// import '../../../db_helper.dart';
-// import 'package:http/http.dart' as http;
-// import 'dart:convert';
-// import 'lib/pages/detailsPages/accountpages/signup.dart';
-// import 'home.dart';
-
-// Future<bool> loginUser(String email, String password) async {
-//   final url = Uri.parse(""); // emulator fix - API Here
-
-//   final response = await http.post(
-//     url,
-//     headers: {"Content-Type": "application/json"},
-//     body: jsonEncode({
-//       "email": email,
-//       "password": password,
-//     }),
-//   );
-
-//   final data = jsonDecode(response.body);
-//   return data["success"];
-// }
 
 class LoginPage extends StatefulWidget {
   final SessionService sessionService;
   final CartService? cartService;
+  
   const LoginPage({super.key, required this.sessionService, this.cartService});
 
   @override
@@ -45,11 +22,9 @@ class _LoginPageState extends State<LoginPage> {
   double get screenWidth => MediaQuery.of(context).size.width;
 
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  // DBHelper dbHelper = DBHelper();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -67,22 +42,20 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               _MainIcon(),
-              Divider(),
+              const Divider(),
               _inputform(),
-              SizedBox(height: 10),
-
+              const SizedBox(height: 10),
               _login(),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               _toSignUp(),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               _continuewith("--- or Continue With ---"),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               _choice(),
-              SizedBox(height: 15),
-              _toSignUp(),
-              Divider(),
+              const SizedBox(height: 15),
+              const Divider(),
             ],
           ),
         ),
@@ -100,13 +73,12 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           IconButton(
             onPressed: () {
-              // Navigate back to MainDashboard
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                   builder: (context) => MainDashboard(
                     sessionService: widget.sessionService,
-                    cartService: widget.cartService, //  Remove the ! (nullable)
+                    cartService: widget.cartService,
                   ),
                 ),
                 (route) => false,
@@ -132,8 +104,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  bool _isPasswordVisible = false;
-
   Widget _inputform() {
     return Form(
       key: _formKey,
@@ -142,7 +112,6 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Email Field
             TextFormField(
               controller: emailController,
               style: const TextStyle(
@@ -164,10 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 10),
-
-            // Password Field with Visibility Toggle
             TextFormField(
               controller: passwordController,
               obscureText: !_isPasswordVisible,
@@ -212,44 +178,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  InputDecoration inputStyle(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Color.fromARGB(255, 13, 27, 42)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 13, 27, 42),
-          width: 2,
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 13, 27, 42),
-          width: 2,
-        ),
-      ),
-    );
-  }
-
-  Widget _forget() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      child: TextButton(
-        onPressed: () {},
-        child: Text(
-          "Forget password?",
-          style: TextStyle(
-            fontFamily: "Custom",
-            fontSize: 15,
-            color: Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _login() {
     return Center(
       child: ElevatedButton(
@@ -288,18 +216,15 @@ class _LoginPageState extends State<LoginPage> {
               responseMap = rawData;
             }
 
-            // Get token first
             final String token = responseMap['token']?.toString() ?? '';
 
-            //  Fetch full user profile using the token
             final profileResult = await Api.getMyProfile(token: token);
 
             User user;
 
             if (profileResult['success'] == true) {
-              // Use profile data which should have full user info
               final userData = profileResult['data'] as Map<String, dynamic>;
-              print(" Profile data: $userData");
+              print("Profile data: $userData");
 
               user = User(
                 id: userData['id'] != null
@@ -313,7 +238,6 @@ class _LoginPageState extends State<LoginPage> {
                 address: userData['address']?.toString(),
               );
             } else {
-              // Fallback to login response data
               final dynamic rawUser = responseMap['user'];
               Map<String, dynamic> userJson = {};
 
@@ -323,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                 userJson = responseMap;
               }
 
-              print(" Login response user data: $userJson");
+              print("Login response user data: $userJson");
 
               user = User(
                 id: userJson['id'] != null
@@ -338,17 +262,12 @@ class _LoginPageState extends State<LoginPage> {
               );
             }
 
-            print(
-              " User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}",
-            );
+            print("User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}");
 
             await widget.sessionService.saveSession(user, token);
 
-            // Verify save
             final savedUser = widget.sessionService.getStoredUser();
-            print(
-              " Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}",
-            );
+            print("Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}");
 
             if (!mounted) return;
 
@@ -363,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         },
-        child: Text(
+        child: const Text(
           "LOGIN",
           style: TextStyle(
             fontFamily: "Custom",
@@ -377,7 +296,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _continuewith(String title) {
     return Center(
-      child: Text(title, style: TextStyle(fontFamily: "Custom", fontSize: 15)),
+      child: Text(title, style: const TextStyle(fontFamily: "Custom", fontSize: 15)),
     );
   }
 
@@ -385,40 +304,36 @@ class _LoginPageState extends State<LoginPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        SizedBox(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: Icon(Icons.facebook_rounded),
-            label: Text(
-              "Facebook",
-              style: TextStyle(
-                fontFamily: "Custom",
-                fontSize: 15,
-                color: Colors.white,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 13, 27, 42),
-              iconColor: Colors.white,
+        ElevatedButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.facebook_rounded),
+          label: const Text(
+            "Facebook",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 15,
+              color: Colors.white,
             ),
           ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+            iconColor: Colors.white,
+          ),
         ),
-        SizedBox(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: FaIcon(FontAwesomeIcons.google),
-            label: Text(
-              "Google",
-              style: TextStyle(
-                fontFamily: "Custom",
-                fontSize: 15,
-                color: Colors.white,
-              ),
+        ElevatedButton.icon(
+          onPressed: () {},
+          icon: const FaIcon(FontAwesomeIcons.google),
+          label: const Text(
+            "Google",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 15,
+              color: Colors.white,
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 13, 27, 42),
-              iconColor: Colors.white,
-            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+            iconColor: Colors.white,
           ),
         ),
       ],
@@ -426,18 +341,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _MainIcon() {
-    return Center(child: FaIcon(FontAwesomeIcons.user, size: 200));
+    return const Center(child: FaIcon(FontAwesomeIcons.user, size: 200));
   }
 
   Widget _toSignUp() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
+        const Text(
           "Don't have an account",
           style: TextStyle(fontFamily: "Custom", fontSize: 15),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         GestureDetector(
           onTap: () {
             Navigator.pushReplacement(
@@ -450,47 +365,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           },
-          child: Text(
+          child: const Text(
             "Sign Up",
             style: TextStyle(
               fontFamily: "Custom",
               fontSize: 15,
               color: Colors.red,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _toSignUp(){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Don't have an account",
-          style: TextStyle(
-            fontFamily: "Custom",
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(width: 10),
-        GestureDetector(
-          onTap: (){
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                SignupPage(),
-              )
-            );
-          },
-          child: Text(
-            "Sign Up",
-            style: TextStyle(
-              fontFamily: "Custom",
-              fontSize: 15,
-              color: Colors.red
             ),
           ),
         ),
