@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/badminton_rantal.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/contactInfo_snack.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/tennis_class.dart';
 
@@ -266,7 +268,14 @@ class _ClassesPageState extends State<ClassesPage> {
             left: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () {},
+              onTap: (){
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (contex) => badmintonRantalState(),
+                  ),
+                );
+              },
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                 width: screenWidth * 0.95,
@@ -345,7 +354,14 @@ class _ClassesPageState extends State<ClassesPage> {
             left: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () {},
+              onTap: (){
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (contex) => badmintonRantalState(),
+                  ),
+                );
+              },
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                 width: screenWidth * 0.95,
@@ -424,7 +440,14 @@ class _ClassesPageState extends State<ClassesPage> {
             left: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () {},
+              onTap: (){
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (contex) => badmintonRantalState(),
+                  ),
+                );
+              },
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                 width: screenWidth * 0.95,
