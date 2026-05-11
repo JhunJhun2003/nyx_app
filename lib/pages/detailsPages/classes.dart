@@ -1,7 +1,7 @@
 // lib/pages/detailsPages/classes.dart
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Canteen.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/classesWidgets/canteen_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/canteen_widget.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/rentals_widget.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/tab_widget.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/trainings_widget.dart';

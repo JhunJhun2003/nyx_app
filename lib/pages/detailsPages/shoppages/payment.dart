@@ -211,7 +211,7 @@ class _PaymentState extends State<Payment> {
           'phone': 'N/A',
           'email': 'N/A',
           'address': 'N/A',
-          'remark': 'N/A'
+          'remark': 'N/A',
         };
 
     return Scaffold(
@@ -234,13 +234,19 @@ class _PaymentState extends State<Payment> {
               const SizedBox(height: 10),
               _information("Remark", contactInfo['remark'] ?? 'N/A'),
               const SizedBox(height: 10),
-             
+
               const Divider(),
               _information1("Subtotal", "${subtotal.toStringAsFixed(0)} Ks"),
               const SizedBox(height: 5),
-              _information("Tax (${_taxRate.toStringAsFixed(0)}%)", "${_taxAmount.toStringAsFixed(0)} Ks"),
+              _information(
+                "Tax (${_taxRate.toStringAsFixed(0)}%)",
+                "${_taxAmount.toStringAsFixed(0)} Ks",
+              ),
               const SizedBox(height: 5),
-              _information1("Grand Total", "${_grandTotal.toStringAsFixed(0)} Ks"),
+              _information1(
+                "Grand Total",
+                "${_grandTotal.toStringAsFixed(0)} Ks",
+              ),
               const Divider(),
               _section("Select Payment Method"),
               const SizedBox(height: 5),
@@ -260,59 +266,60 @@ class _PaymentState extends State<Payment> {
   }
 
   // Add tax section widget
- Widget _taxSection() {
-  if (_isLoadingTax) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+  Widget _taxSection() {
+    if (_isLoadingTax) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              "Tax",
+              style: TextStyle(
+                color: Color.fromARGB(255, 13, 27, 42),
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Custom',
+                fontSize: 15,
+              ),
+            ),
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
+        children: [
           Text(
-            "Tax",
-            style: TextStyle(
+            "Tax (${_taxRate.toStringAsFixed(0)}%)",
+            style: const TextStyle(
               color: Color.fromARGB(255, 13, 27, 42),
               fontWeight: FontWeight.w500,
               fontFamily: 'Custom',
               fontSize: 15,
             ),
           ),
-          SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+          Text(
+            "${_taxAmount.toStringAsFixed(0)} Ks",
+            style: const TextStyle(
+              color: Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Custom',
+              fontSize: 15,
+            ),
           ),
         ],
       ),
     );
   }
 
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Tax (${_taxRate.toStringAsFixed(0)}%)",
-          style: const TextStyle(
-            color: Color.fromARGB(255, 13, 27, 42),
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Custom',
-            fontSize: 15,
-          ),
-        ),
-        Text(
-          "${_taxAmount.toStringAsFixed(0)} Ks",
-          style: const TextStyle(
-            color: Color.fromARGB(255, 13, 27, 42),
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Custom',
-            fontSize: 15,
-          ),
-        ),
-      ],
-    ),
-  );
-}
   bool _showTransactionInput() {
     return currentOption != "Cash on Delivery";
   }
@@ -752,7 +759,8 @@ class _PaymentState extends State<Payment> {
       request.fields['items'] = itemsJsonString;
       request.fields['tax'] = _taxAmount.toString(); // Use calculated tax
       request.fields['delivery_fee'] = deliveryFee.toString();
-      request.fields['total_amount'] = _grandTotal.toString(); // Add grand total
+      request.fields['total_amount'] = _grandTotal
+          .toString(); // Add grand total
 
       if (input.text.trim().isNotEmpty) {
         request.fields['transaction_number'] = input.text.trim();
@@ -784,6 +792,9 @@ class _PaymentState extends State<Payment> {
                 paymentMethod: currentOption,
                 transactionNumber: input.text.trim(),
                 totalAmount: _grandTotal, // Use grand total
+                subTotal: widget.totalAmount ?? 0,
+                taxRate: _taxRate,
+                taxAmount: _taxAmount,
                 contactInfo: widget.contactInfo,
                 orderResponse: responseData,
               ),
@@ -794,7 +805,8 @@ class _PaymentState extends State<Payment> {
         String errorMessage = 'Failed to place order';
         try {
           final errorData = jsonDecode(response.body);
-          errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
+          errorMessage =
+              errorData['message'] ?? errorData['error'] ?? errorMessage;
         } catch (e) {}
 
         ScaffoldMessenger.of(context).showSnackBar(

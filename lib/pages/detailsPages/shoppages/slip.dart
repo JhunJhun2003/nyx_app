@@ -17,6 +17,9 @@ class slipPage extends StatefulWidget {
   final List<CartItem>? cartItems;
   final Map<String, String>? contactInfo;
   final Map<String, dynamic>? orderResponse;
+  final double? taxRate;
+  final double? taxAmount;
+  final double? subTotal;
 
   const slipPage({
     super.key,
@@ -26,6 +29,9 @@ class slipPage extends StatefulWidget {
     this.cartItems,
     this.contactInfo,
     this.orderResponse,
+    this.taxRate,
+    this.taxAmount,
+    this.subTotal,
   });
 
   @override
@@ -56,45 +62,39 @@ class _slipPageState extends State<slipPage> {
   }
 
   void _calculateTotals() {
-    // FIRST PRIORITY: Use totalAmount passed from Payment page (most accurate)
+    // FIRST PRIORITY: Use values passed from Payment page
+    if (widget.subTotal != null && widget.subTotal! > 0) {
+      subTotal = widget.subTotal!;
+    }
+    
+    if (widget.taxAmount != null && widget.taxAmount! > 0) {
+      tax = widget.taxAmount!;
+    }
+    
+    if (widget.taxRate != null && widget.taxRate! > 0) {
+      taxRate = widget.taxRate!;
+    }
+    
     if (widget.totalAmount != null && widget.totalAmount! > 0) {
       total = widget.totalAmount!;
-      
-      // If we have orderResponse with breakdown, use that
-      if (widget.orderResponse != null) {
-        final orderData = widget.orderResponse!['data'];
-        if (orderData is List && orderData.isNotEmpty) {
-          subTotal = (orderData[0]['subtotal'] ?? orderData[0]['Sub_total'] ?? 0).toDouble();
-          tax = (orderData[0]['tax'] ?? 0).toDouble();
-          deliveryFee = (orderData[0]['delivery_fee'] ?? 0).toDouble();
-          
-          if (tax > 0 && subTotal > 0) {
-            taxRate = (tax / subTotal) * 100;
-          }
-          // Don't recalculate total, keep the passed value
-          return;
-        } else if (orderData is Map<String, dynamic>) {
-          subTotal = (orderData['subtotal'] ?? orderData['Sub_total'] ?? 0).toDouble();
-          tax = (orderData['tax'] ?? 0).toDouble();
-          deliveryFee = (orderData['delivery_fee'] ?? 0).toDouble();
-          
-          if (tax > 0 && subTotal > 0) {
-            taxRate = (tax / subTotal) * 100;
-          }
-          return;
-        }
-      }
-      
-      // If no breakdown available, estimate from total
-      // Assuming tax is 5% of subtotal
-      taxRate = 5;
-      subTotal = total / 1.05;
+    }
+    
+    // Calculate missing values if needed
+    if (subTotal > 0 && tax == 0 && taxRate > 0) {
+      tax = subTotal * (taxRate / 100);
+    }
+    
+    if (subTotal > 0 && tax > 0 && total == 0) {
+      total = subTotal + tax + deliveryFee;
+    }
+    
+    if (subTotal == 0 && total > 0 && taxRate > 0) {
+      subTotal = total / (1 + taxRate / 100);
       tax = total - subTotal;
-      return;
     }
     
     // SECOND PRIORITY: Use orderResponse values
-    if (widget.orderResponse != null) {
+    if (widget.orderResponse != null && subTotal == 0) {
       final orderData = widget.orderResponse!['data'];
       if (orderData is List && orderData.isNotEmpty) {
         subTotal = (orderData[0]['subtotal'] ?? orderData[0]['Sub_total'] ?? 0).toDouble();
@@ -120,12 +120,16 @@ class _slipPageState extends State<slipPage> {
     }
     
     // LAST RESORT: Calculate from cartItems
-    if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
+    if (widget.cartItems != null && widget.cartItems!.isNotEmpty && subTotal == 0) {
       subTotal = widget.cartItems!.fold(
         0,
         (sum, item) => sum + (item.product.price * item.quantity),
       );
-      tax = subTotal * (taxRate / 100);
+      if (taxRate > 0) {
+        tax = subTotal * (taxRate / 100);
+      } else {
+        tax = subTotal * 0.05;
+      }
       total = subTotal + tax + deliveryFee;
     }
   }
