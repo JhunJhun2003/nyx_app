@@ -1,16 +1,17 @@
-import 'package:carousel_slider/carousel_slider.dart';
+// lib/pages/dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/categoryPage.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/tagPage.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/dashboardWidgets/banner_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/dashboardWidgets/categories_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/dashboardWidgets/product_section.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/dashboardWidgets/section_header.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/util/Api.dart';
-
-import 'shoppages/catagory.dart';
 
 class DashBoard extends StatefulWidget {
   final SessionService? sessionService;
@@ -38,9 +39,6 @@ class _DashBoardState extends State<DashBoard> {
     "assets/classes/Futsal.png",
     "assets/classes/Tennis.png",
   ];
-
-  int currentIndex = 0;
-  String searchQuery = "";
 
   @override
   void initState() {
@@ -167,23 +165,31 @@ class _DashBoardState extends State<DashBoard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              // _searchBar(), // Uncomment if you want to use it
-              _banner(),
+              BannerWidget(
+                images: images,
+                onPageChanged: (index) {},
+              ),
               const SizedBox(height: 3),
               const Divider(thickness: 1, height: 2),
-              _section("Categories", () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CategoryPage(categoryName: "All"),
-                  ),
-                );
-              }),
-              _categoriesWidget(),
+              SectionHeader(
+                title: "Categories",
+                onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CategoryPage(categoryName: "All"),
+                    ),
+                  );
+                },
+              ),
+              CategoriesWidget(
+                categories: _categoriesList,
+                isLoading: _isLoadingCategories && !_isRefreshing,
+                error: _categoriesError,
+                onRetry: _loadCategories,
+              ),
               const Divider(thickness: 1, height: 1),
-              // const SizedBox(height: 10),
               _buildProductSections(),
-              // const SizedBox(height: 10),
             ],
           ),
         ),
@@ -225,372 +231,37 @@ class _DashBoardState extends State<DashBoard> {
     final uniqueTags = _getUniqueTags();
 
     if (uniqueTags.isEmpty) {
-      return _productCardSection(_allProducts, "All Products");
+      return ProductSection(
+        products: _allProducts,
+        sectionTitle: "All Products",
+        onSeeAll: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TagPage(tagName: "All Products"),
+            ),
+          );
+        },
+      );
     }
 
     return Column(
       children: uniqueTags.map((tagName) {
         final products = _getProductsByTag(tagName);
         if (products.isEmpty) return const SizedBox.shrink();
-        return _productCardSection(products, tagName);
-      }).toList(),
-    );
-  }
-
-  // Fixed: Changed from _productCardSection to match the method name
-  Widget _productCardSection(List<Product> products, String sectionTitle) {
-    // Show only first 4 products
-    final displayProducts = products.length > 4 ? products.sublist(0, 4) : products;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                sectionTitle,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontFamily: 'Custom',
-                ),
+        return ProductSection(
+          products: products,
+          sectionTitle: tagName,
+          onSeeAll: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TagPage(tagName: tagName),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TagPage(
-                        tagName: sectionTitle,
-                      ),
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                ),
-                child: const Text(
-                  "See All",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black,
-                    fontFamily: 'Custom',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.65,
-          ),
-          itemCount: displayProducts.length,
-          itemBuilder: (context, index) {
-            final product = displayProducts[index];
-            return _productCard(product);
+            );
           },
-        ),
-        const Divider(thickness: 1, height: 15),
-      ],
-    );
-  }
-
-  Widget _productCard(Product product) {
-    final hasDiscount = product.cost > product.price && product.cost > 0;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductDetails(product: product),
-            ),
-          );
-        },
-        child: Card(
-          color: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Product Image
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: product.images.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            product.images, // Fixed: use .first
-                            width: double.infinity,
-                            height: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.image,
-                                size: 40,
-                                color: Colors.grey[400],
-                              );
-                            },
-                          ),
-                        )
-                      : Icon(Icons.image, size: 40, color: Colors.grey[400]),
-                ),
-                const SizedBox(height: 8),
-                // Product Name
-                Text(
-                  product.productName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                    fontFamily: 'Custom',
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                // Price
-                if (hasDiscount) ...[
-                  Text(
-                    "${product.cost.toString()} Ks",
-                    style: TextStyle(
-                      fontSize: 10,
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey[600],
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                ] else ...[
-                  Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _banner() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CarouselSlider(
-          items: images.map((item) => Container(
-            margin: const EdgeInsets.all(0),
-            decoration: BoxDecoration(
-              image: DecorationImage(image: AssetImage(item), fit: BoxFit.cover)
-            ),
-          )).toList(), 
-          options: CarouselOptions(
-            height: 180,
-            autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 5),
-            autoPlayAnimationDuration: const Duration(milliseconds: 900),
-            enlargeCenterPage: true,
-            aspectRatio: 16/9,
-            viewportFraction: 1,
-            onPageChanged: (index, reason) {
-              setState(() {
-                currentIndex = index;
-              });
-            }
-          )
-        ),
-        const SizedBox(height: 5),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: images.asMap().entries.map((item) => Container(
-            height: 7,
-            width: 7,
-            margin: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: currentIndex == item.key ? Colors.black : Colors.grey,
-            ),
-          )).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _section(String title, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Custom',
-              fontSize: 18,
-            ),
-          ),
-          TextButton(
-            onPressed: onTap,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text(
-              "See All",
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.black,
-                fontFamily: 'Custom',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _categoriesWidget() {
-    if (_isLoadingCategories && !_isRefreshing) {
-      return const SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_categoriesError != null) {
-      return SizedBox(
-        height: 100,
-        child: Center(
-          child: Text(
-            _categoriesError!,
-            style: const TextStyle(color: Colors.red),
-          ),
-        ),
-      );
-    }
-
-    if (_categoriesList.isEmpty) {
-      return const SizedBox(
-        height: 100,
-        child: Center(child: Text('No categories available')),
-      );
-    }
-
-    return SizedBox(
-      height: 130,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: _categoriesList.length,
-        itemBuilder: (context, index) {
-          final category = _categoriesList[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoryPage(
-                    categoryName: category.name,
-                    categoryId: category.id,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: Column(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromARGB(255, 13, 27, 42),
-                    ),
-                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              category.imageUrl!,
-                              width: 70,
-                              height: 70,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.category,
-                                  size: 40,
-                                  color: Colors.white,
-                                );
-                              },
-                            ),
-                          )
-                        : const Icon(
-                            Icons.category,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      category.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontFamily: 'Custom',
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+        );
+      }).toList(),
     );
   }
 }
