@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/booking_form.dart';
 
 class badmintonRantalState extends StatefulWidget {
   const badmintonRantalState({super.key});
@@ -542,7 +543,12 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           backgroundColor: WidgetStatePropertyAll(Colors.red)
         ),
         onPressed: (){
-          
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => bookingForm(),
+            ),
+          );
         }, 
         child: Text(
           "Booking Now",
