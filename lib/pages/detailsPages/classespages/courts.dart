@@ -17,6 +17,9 @@ class _CourtsState extends State<Courts> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
+              SizedBox(height: 10),
+              _courtHeader(),
+              SizedBox(height: 10),
             ],
           ),
         )
@@ -57,4 +60,33 @@ class _CourtsState extends State<Courts> {
       ),
     );
   }
+
+  Widget _courtHeader(){
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Choose Court",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 3),
+          Text(
+            "Choose you court to play comfortablly.",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 }

@@ -129,7 +129,7 @@ class RentalsWidget extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: screenHeight * 0.01,
+            bottom: screenHeight * 0.02,
             left: 0,
             right: 0,
             child: GestureDetector(
@@ -144,10 +144,10 @@ class RentalsWidget extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                 width: screenWidth * 0.95,
-                height: screenHeight * 0.06,
+                height: screenHeight * 0.04,
                 decoration: BoxDecoration(
                   color: Colors.red,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "See Details",
