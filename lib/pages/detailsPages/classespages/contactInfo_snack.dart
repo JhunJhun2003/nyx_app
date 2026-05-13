@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/payment.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/shop_payment.dart';
 
 class contactInfoSnack extends StatefulWidget {
   const contactInfoSnack({super.key});

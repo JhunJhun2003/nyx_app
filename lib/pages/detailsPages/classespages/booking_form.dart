@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental_payment.dart';
 
 class bookingForm extends StatefulWidget {
   const bookingForm({super.key});
@@ -305,7 +306,7 @@ class _bookingFormState extends State<bookingForm> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => bookingForm(),
+              builder: (context) => rentalPayment(),
             ),
           );
         }, 
