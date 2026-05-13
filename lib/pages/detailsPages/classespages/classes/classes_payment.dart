@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental_slip.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/classes_slip.dart';
 
-class rentalPayment extends StatefulWidget {
-  const rentalPayment({super.key});
+class classesPayment extends StatefulWidget {
+  const classesPayment({super.key});
 
   @override
-  State<rentalPayment> createState() => _rentalPaymentState();
+  State<classesPayment> createState() => _classesPaymentState();
 }
 
 List<String> options = ["CB Pay","Kpay","WavePay","AYA Pay"];
 
-class _rentalPaymentState extends State<rentalPayment> {
+class _classesPaymentState extends State<classesPayment> {
   String currentOption = options[0];
   final TextEditingController input = TextEditingController();
   @override
@@ -23,33 +23,21 @@ class _rentalPaymentState extends State<rentalPayment> {
             children: [
               _header(),
               SizedBox(height: 5),
-              _section("Information"),
+              _section("Registration Information"),
               SizedBox(height: 5),
               _information("Name","xxxxxxxxxx"),
               SizedBox(height: 1),
+              _information("Age","xx"),
+              SizedBox(height: 1),
+              _information("Address","Yangon, Myanmar"),
+              SizedBox(height: 1),
               _information("Phone Number","09 xxx xxx xxx"),
               SizedBox(height: 1),
-              _information("Court","Badminton Court"),
+              _information("Email","example@gmail.com"),
               SizedBox(height: 1),
-              _information("Court Number","Court A"),
+              _information("Training Level","Beginner Level"),
               SizedBox(height: 1),
-              _information("Date","11-05-2026"),
-              SizedBox(height: 1),
-              _information("Time Slot","18:00 - 19:00"),
-              SizedBox(height: 1),
-              _information("Number of Session","1"),
-              SizedBox(height: 1),
-              _information("Rental Items","5"),
-              Divider(),
-              _information("Court Fees :","25,000 Ks"),
-              SizedBox(height: 1),
-              _information("Rental Fees :","10,000 Ks"),
-              Divider(),
-              _information("Total Amount","35,000 Ks"),
-              SizedBox(height: 1),
-              _information("Discount(%)","0"),
-              Divider(),
-              _information1("Total","35,000 Ks"),
+              _information("Training Schedule","8:00 - 10:00 AM"),
               SizedBox(height: 10),
               _section("Select Payment Method"),
                SizedBox(height: 5),
@@ -298,7 +286,7 @@ class _rentalPaymentState extends State<rentalPayment> {
         onPressed: (){
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => rentalSlip()),
+            MaterialPageRoute(builder: (context) => classesSlip()),
           );
         }, 
         child: Text(

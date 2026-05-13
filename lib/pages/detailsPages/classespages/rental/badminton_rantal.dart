@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/booking_form.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/booking_form.dart';
 
 class badmintonRantalState extends StatefulWidget {
   const badmintonRantalState({super.key});

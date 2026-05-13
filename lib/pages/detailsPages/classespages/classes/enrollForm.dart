@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/classes_payment.dart';
 
 class enrollForm extends StatefulWidget {
   const enrollForm({super.key});
@@ -220,7 +221,12 @@ class _enrollFormState extends State<enrollForm> {
   Widget _confirm(){
     return Center(
       child: ElevatedButton.icon(
-        onPressed: (){}, 
+        onPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => classesPayment()),
+          );
+        }, 
         label: Text(
           "Confirm",
           style: TextStyle(

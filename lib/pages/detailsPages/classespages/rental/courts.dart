@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/badminton_rantal.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/badminton_rantal.dart';
 
 class Courts extends StatefulWidget {
   const Courts({super.key});

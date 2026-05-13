@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental_payment.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/rental_payment.dart';
 
 class bookingForm extends StatefulWidget {
   const bookingForm({super.key});

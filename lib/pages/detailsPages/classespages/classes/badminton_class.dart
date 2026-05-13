@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/enrollForm.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/enrollForm.dart';
 
 class BadmintonClass extends StatefulWidget {
   const BadmintonClass({super.key});

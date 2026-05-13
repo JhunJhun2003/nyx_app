@@ -1,6 +1,6 @@
 // lib/pages/detailsPages/classesWidgets/rentals_widget.dart
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/courts.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/courts.dart';
 
 class RentalsWidget extends StatelessWidget {
   final double screenWidth;

@@ -1,8 +1,8 @@
 // lib/pages/detailsPages/classesWidgets/trainings_widget.dart
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/badminton_class.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/futsal_class.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/tennis_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/badminton_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/futsal_class.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/classes/tennis_class.dart';
 
 class TrainingsWidget extends StatelessWidget {
   const TrainingsWidget({super.key});
