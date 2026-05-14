@@ -137,36 +137,6 @@ class _classesPaymentState extends State<classesPayment> {
     );
   }
 
-  Widget _information1(String right, String left) {
-    return Container(
-      height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            right,
-            style: const TextStyle(
-              color: Color.fromARGB(255, 13, 27, 42),
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Custom',
-              fontSize: 17,
-            ),
-          ),
-          Text(
-            left,
-            style: const TextStyle(
-              color: Color.fromARGB(255, 13, 27, 42),
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Custom',
-              fontSize: 17,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _paymentMethod(){
     return Container(
       child: Column(
