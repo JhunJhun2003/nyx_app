@@ -85,7 +85,7 @@ class _MainDashboardState extends State<MainDashboard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           SizedBox(
-            height: 30,
+            height: 48,
             child: Image.asset(
               'assets/images/logo1.png',
               fit: BoxFit.contain,

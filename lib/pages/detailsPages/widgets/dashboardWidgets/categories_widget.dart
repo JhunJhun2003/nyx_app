@@ -49,7 +49,7 @@ class CategoriesWidget extends StatelessWidget {
       height: 130,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 13),
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
@@ -66,7 +66,7 @@ class CategoriesWidget extends StatelessWidget {
               );
             },
             child: Container(
-              margin: const EdgeInsets.only(right: 8),
+              margin: const EdgeInsets.only(right: 15),
               child: Column(
                 children: [
                   Container(

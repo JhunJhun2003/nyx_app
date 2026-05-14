@@ -10,10 +10,22 @@ class badmintonRantalState extends StatefulWidget {
 }
 
 class _badmintonRantalStateState extends State<badmintonRantalState> {
-
   int selectedIndex = 0;
+  int sessionCount = 1;
+  bool _isChecked = false;
+  int currentIndex = 0;
+  int selectedCourt = 0;
+  DateTime selectedDate = DateTime.now(); // Added missing variable
 
-  List<String> times  = [
+  List<DateTime> getAvailableDates() {
+    List<DateTime> dates = [];
+    for (int i = 0; i < 5; i++) {
+      dates.add(DateTime.now().add(Duration(days: i)));
+    }
+    return dates;
+  }
+
+  List<String> times = [
     "6:00 - 7:00",
     "7:30 - 8:30",
     "9:00 - 10:00",
@@ -22,13 +34,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     "20:30 - 21:30",
   ];
 
-  int selectedCourt = 0;
-
-  List<String> courts = [
-    "Court 1",
-    "Court 2",
-    "Court 3"
-  ];
+  List<String> courts = ["Court 1", "Court 2", "Court 3"];
 
   List<String> images = [
     "assets/classes/Badminton.png",
@@ -36,27 +42,45 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     "assets/classes/Tennis.png",
   ];
 
-  int currentIndex = 0;
+  // Equipment quantities
+  Map<String, int> equipmentQuantities = {
+    "Pro Racket": 0,
+    "Court Shoes": 0,
+    "Shuttlecock": 0,
+    "Jersey": 0,
+  };
+
+  Map<String, String> equipmentPrices = {
+    "Pro Racket": "2,000 Ks/hour",
+    "Court Shoes": "3,000 Ks/hour",
+    "Shuttlecock": "1,500 Ks/piece",
+    "Jersey": "3,000 Ks/piece",
+  };
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(),
-              _banner(),
-              _location(),
-              SizedBox(height: 5),
-              _bookDate(),
-              SizedBox(height: 5),
-              _timeSchedule(),
-              _schedule(),
-              SizedBox(height: 5),
-              _rentalSection(),
-              _confirm()
+              _header(screenWidth, screenHeight),
+              _banner(screenWidth, screenHeight),
+              _location(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.01),
+              _bookDate(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.01),
+              _timeSchedule(screenWidth, screenHeight),
+              _schedule(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.01),
+              _rentalSection(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.01),
+              _confirm(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.02),
             ],
           ),
         ),
@@ -64,32 +88,36 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _header() {
+  Widget _header(double screenWidth, double screenHeight) {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.02,
+        vertical: screenHeight * 0.01,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
-            }, 
+            },
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded, 
+              Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
+              size: screenWidth * 0.055,
             ),
           ),
-          SizedBox(width: 20),
+          SizedBox(width: screenWidth * 0.05),
           Expanded(
             child: Text(
               "Court Rentals",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700
+                fontSize: screenWidth * 0.055,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -98,39 +126,41 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _banner() {
+  Widget _banner(double screenWidth, double screenHeight) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CarouselSlider(
           items: images.map((item) => Container(
-            margin: EdgeInsets.all(5),
+            margin: EdgeInsets.all(screenWidth * 0.01),
             decoration: BoxDecoration(
-              // borderRadius: BorderRadius.circular(10),
-              image: DecorationImage(image: AssetImage(item),fit: BoxFit.cover)
+              image: DecorationImage(
+                image: AssetImage(item),
+                fit: BoxFit.cover,
+              ),
             ),
-          )).toList(), 
+          )).toList(),
           options: CarouselOptions(
-            height: 250,
+            height: screenHeight * 0.28,
             autoPlay: true,
-            autoPlayInterval: Duration(seconds: 10),
-            autoPlayAnimationDuration: Duration(milliseconds: 900),
+            autoPlayInterval: const Duration(seconds: 10),
+            autoPlayAnimationDuration: const Duration(milliseconds: 900),
             enlargeCenterPage: true,
-            aspectRatio: 16/9,
+            aspectRatio: 16 / 9,
             viewportFraction: 1,
-            onPageChanged: (index,reason){
+            onPageChanged: (index, reason) {
               setState(() {
                 currentIndex = index;
               });
-            }
-          )
+            },
+          ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: images.asMap().entries.map((item) => Container(
-            height: 7,
-            width: 7,
-            margin: EdgeInsets.all(4),
+            height: screenHeight * 0.008,
+            width: screenWidth * 0.02,
+            margin: EdgeInsets.all(screenWidth * 0.01),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: currentIndex == item.key ? Colors.black : Colors.grey,
@@ -141,25 +171,28 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _location(){
+  Widget _location(double screenWidth, double screenHeight) {
     return Padding(
-      padding: EdgeInsetsGeometry.symmetric(vertical: 5, horizontal: 5),
+      padding: EdgeInsets.symmetric(
+        vertical: screenHeight * 0.01,
+        horizontal: screenWidth * 0.03,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Icon(
             Icons.location_on_sharp,
             color: Colors.red,
-            size: 30,
+            size: screenWidth * 0.07,
           ),
-          SizedBox(width: 10),
+          SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Text(
-              "N0.(111), Hlaing Township, Yangon.",
+              "No.(111), Hlaing Township, Yangon.",
               style: TextStyle(
                 fontFamily: "Custom",
-                fontSize: 16,
-                fontWeight: FontWeight.w500
+                fontSize: screenWidth * 0.04,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -168,366 +201,253 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _bookDate(){
+  Widget _bookDate(double screenWidth, double screenHeight) {
+    List<DateTime> dates = getAvailableDates();
+    List<String> weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
     return Container(
-      height: 160,
+       height: 120,
       padding: EdgeInsets.symmetric(vertical: 3, horizontal: 3),
       margin: EdgeInsets.symmetric(horizontal: 3) ,
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(5),
+        // borderRadius: BorderRadius.circular(10),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            child: Row(
-              children: [
-                Icon(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [Icon(
                   Icons.calendar_month_outlined,
                   color: Colors.white,
                 ),
-                SizedBox(width: 5),
-                Text(
-                  "Select a reservation date",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: "Custom",
-                    fontWeight: FontWeight.w500
-                  ),
-                ),
-              ],
+                SizedBox(width: screenHeight * 0.012),
+            Text(
+              "Select a reservation date",
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),],
             ),
-          ),
-        ],
+            SizedBox(height: screenHeight * 0.012),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(dates.length, (index) {
+                bool isSelected = selectedDate.day == dates[index].day;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedDate = dates[index];
+                    });
+                  },
+                  child: Container(
+                    width: screenWidth * 0.17,
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.012),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.red : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? Colors.red : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          weekDays[index],
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black54,
+                            fontSize: screenWidth * 0.032,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.003),
+                        Text(
+                          dates[index].day.toString(),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _timeSchedule(){
+  Widget _timeSchedule(double screenWidth, double screenHeight) {
     return Padding(
-      padding: EdgeInsetsGeometry.symmetric(vertical: 5, horizontal: 5),
+      padding: EdgeInsets.symmetric(
+        vertical: screenHeight * 0.01,
+        horizontal: screenWidth * 0.03,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Icon(
             Icons.timer,
             color: const Color.fromARGB(255, 71, 250, 77),
-            size: 30,
+            size: screenWidth * 0.07,
           ),
-          SizedBox(width: 10),
+          SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Text(
               "Select a time slot & Court",
               style: TextStyle(
                 fontFamily: "Custom",
-                fontSize: 16,
-                fontWeight: FontWeight.w500
+                fontSize: screenWidth * 0.04,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Text(
-            "5 Session Available",
-            style: TextStyle(
-              color: Colors.red,
-              fontFamily: "Custom",
-              fontSize: 16,
-              fontWeight: FontWeight.w500
-            ),
-          ),
-          SizedBox(width: 10),
+          // Text(
+          //   "${times.length} Session Available",
+          //   style: TextStyle(
+          //     color: Colors.red,
+          //     fontFamily: "Custom",
+          //     fontSize: screenWidth * 0.035,
+          //     fontWeight: FontWeight.w500,
+          //   ),
+          // ),
         ],
       ),
     );
   }
 
-  Widget _schedule() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: times.length,
-      gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
-        childAspectRatio: 2.5,
-      ),
-      itemBuilder: (context, index) {
-        bool isSelected =
-            selectedIndex == index;
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              selectedIndex = index;
-            });
-          },
-          child: Container(
-            margin: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: isSelected
-                  ? Colors.red
-                  : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      Colors.black.withOpacity(0.1),
-                  blurRadius: 5,
-                  offset: Offset(0, 3),
-                ),
-              ],
+  Widget _schedule(double screenWidth, double screenHeight) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+      child: Column(
+        children: [
+          // Time slots grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: times.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: screenWidth * 0.02,
+              mainAxisSpacing: screenHeight * 0.01,
+              childAspectRatio: 2.2,
             ),
-            child: Center(
-              child: Text(
-                times[index],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: "Custom",
-                  color: isSelected
-                      ? Colors.white
-                      : Colors.black,
+            itemBuilder: (context, index) {
+              bool isSelected = selectedIndex == index;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+                child: Container(
+                  margin: EdgeInsets.all(screenWidth * 0.01),
+                  decoration: BoxDecoration(
+                    // borderRadius: BorderRadius.circular(0),
+                    color: isSelected ? Colors.red : Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      times[index],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: "Custom",
+                        color: isSelected ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  bool _isChecked = false;
-
-  Widget _rentalSection(){
+  Widget _rentalSection(double screenWidth, double screenHeight) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-      height: 350,
-      decoration: BoxDecoration(
-        color: Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(5),
+      margin: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.02,
+        vertical: screenHeight * 0.01,
       ),
-      child: Stack(
+      padding: EdgeInsets.all(screenWidth * 0.03),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            left: 8,
-            top: 5,
-            child: Row(
-              children: [
-                Text(
-                  "Rental Session",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: "Custom",
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
+          // Equipment Rental Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Equipment Rental",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Custom",
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.w600,
                 ),
-                SizedBox(width: 15),
-                Text(
-                  "10% OFF for 3+ sessions",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontFamily: "Custom",
-                    fontSize: 15,
-                  ),
-                )
-              ],
-            ),
-          ),
-          Positioned(
-            left: 8,
-            top: 35,
-            child: _sessionCount()
-          ),
-          Positioned(
-            left: 8,
-            top: 105,
-            child: Text(
-              "Equipment Rental",
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: "Custom",
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
               ),
-            )
+              
+            ],
           ),
-          Positioned(
-            right: 8,
-            top: 105,
-            child: Text(
-              "Optional",
-              style: TextStyle(
-                color: Colors.blue,
-                fontFamily: "Custom",
-                fontSize: 15,
+          SizedBox(height: screenHeight * 0.015),
+          // Equipment List
+          ...equipmentQuantities.keys.map((equipment) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: screenHeight * 0.01),
+              child: _rentalAccessories(
+                equipment,
+                equipmentPrices[equipment]!,
+                equipmentQuantities[equipment]!,
+                screenWidth,
+                screenHeight,
               ),
-            )
-          ),
-          Positioned(
-            left: 8,
-            top: 135,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 3),
-              child: Column(
-                children: [
-                  _rentalAccessories("Pro Racket", "2,000 Ks/hour"),
-                  SizedBox(height: 5),
-                  _rentalAccessories("Court Shoes", "3,000 Ks/hour"),
-                  SizedBox(height: 5),
-                  _rentalAccessories("Shuttlecock", "1,500 Ks/piece"),
-                  SizedBox(height: 5),
-                  _rentalAccessories("Jersey", "3,000 Ks/piece"),
-                ]
+            );
+          }),
+          SizedBox(height: screenHeight * 0.02),
+          // Checkbox
+          Row(
+            children: [
+              Checkbox(
+                value: _isChecked,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _isChecked = value!;
+                  });
+                },
+                activeColor: Colors.red,
               ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            bottom: -0,
-            child: Row(
-              children: [
-                Checkbox(
-                  value: _isChecked, 
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _isChecked = value!;
-                    });
-                  },
-                ),
-                SizedBox(width: 5),
-                Text(
+              Expanded(
+                child: Text(
                   "I agree to return all rented equipment in its original condition.",
                   style: TextStyle(
                     color: Colors.grey,
                     fontFamily: "Custom",
-                    fontSize: 12
+                    fontSize: screenWidth * 0.03,
                   ),
-                )
-              ],
-            )
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sessionCount(){
-    return Container(
-      width: 390,
-      height: 60,
-      padding: EdgeInsetsGeometry.symmetric(horizontal: 5),
-      decoration: BoxDecoration(
-        color: Colors.grey,
-        borderRadius: BorderRadius.circular(5)
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: 10,
-            top: -70,
-            child: GestureDetector(
-              onTap: (){},
-              child: Text(
-                "-",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: 120,
                 ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 180,
-            top: -20,
-            child: GestureDetector(
-              onTap: (){},
-              child: Text(
-                "1",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: 60,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 10,
-            top: -70,
-            child: GestureDetector(
-              onTap: (){},
-              child: Text(
-                "+",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: 120,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _rentalAccessories(String text, String price) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      width: 382,
-      height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white, width: 2)
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: "Custom",
-                fontSize: 17,
-              ),
-            ),
-          ),
-          SizedBox(width: 20),
-          Text(
-            price,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: "Custom",
-              fontSize: 17,
-            ),
-          ),
-          SizedBox(width: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              GestureDetector(
-                onTap: () {},
-                child: const Icon(Icons.remove, color: Colors.white, size: 18),
-              ),
-              SizedBox(width: 5),
-              Text(
-                '0',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(width: 5),
-              GestureDetector(
-                onTap: () {},
-                child: const Icon(Icons.add, color: Colors.white, size: 18),
               ),
             ],
           ),
@@ -536,27 +456,194 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _confirm(){
+  Widget _sessionCount(double screenWidth, double screenHeight) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (sessionCount > 1) sessionCount--;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.all(screenWidth * 0.03),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.remove,
+                color: Colors.white,
+                size: screenWidth * 0.06,
+              ),
+            ),
+          ),
+          Text(
+            sessionCount.toString(),
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: "Custom",
+              fontSize: screenWidth * 0.08,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                sessionCount++;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.all(screenWidth * 0.03),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.add,
+                color: Colors.white,
+                size: screenWidth * 0.06,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rentalAccessories(String text, String price, int quantity, double screenWidth, double screenHeight) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.008),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white, width: 1),
+      ),
+      child: Row(
+        children: [
+          // Product Name - Fixed width
+          SizedBox(
+            width: screenWidth * 0.25,
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: "Custom",
+                fontSize: screenWidth * 0.035,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Price - Fixed width
+          SizedBox(
+            width: screenWidth * 0.25,
+            child: Text(
+              price,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: "Custom",
+                fontSize: screenWidth * 0.03,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Quantity controls - Flexible
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (equipmentQuantities[text]! > 0) {
+                        equipmentQuantities[text] = equipmentQuantities[text]! - 1;
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(screenWidth * 0.01),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.remove, color: Colors.white, size: screenWidth * 0.04),
+                  ),
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                SizedBox(
+                  width: screenWidth * 0.08,
+                  child: Text(
+                    equipmentQuantities[text].toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      equipmentQuantities[text] = equipmentQuantities[text]! + 1;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(screenWidth * 0.01),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.add, color: Colors.white, size: screenWidth * 0.04),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _confirm(double screenWidth, double screenHeight) {
     return Center(
       child: ElevatedButton(
-        style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Colors.red)
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.1,
+            vertical: screenHeight * 0.015,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
-        onPressed: (){
+        onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => bookingForm(),
+              builder: (context) => const bookingForm(),
             ),
           );
-        }, 
+        },
         child: Text(
           "Booking Now",
           style: TextStyle(
             color: Colors.white,
             fontFamily: "Custom",
-            fontSize: 17,
-            fontWeight: FontWeight.w700
+            fontSize: screenWidth * 0.045,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

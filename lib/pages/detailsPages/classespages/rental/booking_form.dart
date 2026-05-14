@@ -9,12 +9,17 @@ class bookingForm extends StatefulWidget {
 }
 
 class _bookingFormState extends State<bookingForm> {
-
-  final TextEditingController inputController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController remarkController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
 
   String? Court;
   String? TimeSlot;
+  double courtPrice = 25000;
+  double sessionPrice = 25000;
+  double rentalFees = 0;
+  double totalCharges = 0;
 
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -31,120 +36,86 @@ class _bookingFormState extends State<bookingForm> {
       });
     }
   }
+
+  void calculateTotal() {
+    setState(() {
+      totalCharges = courtPrice + sessionPrice + rentalFees;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    calculateTotal();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(),
-              SizedBox(height: 20),
-              _formInput1("Name","Enter your name"),
-              SizedBox(height: 10),
-              _formInput1("Phone Number","09 xxx xxx xxx"),
-              SizedBox(height: 10),
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _selection2("Choose Court",),
-                      SizedBox(height: 5),
-                      CustomDropdownField(
-                        hint: "Court",
-                        value: Court,
-                        items: ["Court A", "Court B", "Court C"],
-                        onChanged: (val) => setState(() => Court = val),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 5),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _selection2("Court Price",),
-                      SizedBox(height: 5),
-                      _input("Auto Fill Price"),
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(height: 10),
-              _dateInput(),
-              SizedBox(height: 10),
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _selection2("Choose Time Slot",),
-                      SizedBox(height: 5),
-                      CustomDropdownField(
-                        hint: "Time Slot",
-                        value: TimeSlot,
-                        items: [
-                          "6:00 - 7:00",
-                          "7:30 - 8:30",
-                          "9:00 - 10:00",
-                          "16:30 - 17:30",
-                          "18:00 - 19:00",
-                          "20:30 - 21:30",
-                        ],
-                        onChanged: (val) => setState(() => TimeSlot = val),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 5),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _selection2("Session Price",),
-                      SizedBox(height: 5),
-                      _input("Auto Fill Price"),
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(height: 10),
-              _formInput1("Rantal Fees","Auto Fill"),
-              SizedBox(height: 10),
-              _formInput1("Total Charges (MMK)","Auto Fill (court * session)"),
-              SizedBox(height: 10),
-              _formInput2("Remark","Write remark"),
-              SizedBox(height: 30),
-              _confirm(),
+              _header(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.02),
+              _formInput1("Name", "Enter your name", nameController, screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.015),
+              _formInput1("Phone Number", "09 xxx xxx xxx", phoneController, screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.015),
+              _rowSelection(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.015),
+              _dateInput(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.015),
+              _rowTimeSlot(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.015),
+              _formInput1("Rental Fees", "Auto Fill", null, screenWidth, screenHeight, 
+                  value: "$rentalFees Ks", enabled: false),
+              SizedBox(height: screenHeight * 0.015),
+              _formInput1("Total Charges (MMK)", "Auto Fill (court + session)", null, screenWidth, screenHeight,
+                  value: "${totalCharges.toStringAsFixed(0)} Ks", enabled: false),
+              SizedBox(height: screenHeight * 0.015),
+              _formInput2("Remark", "Write remark", remarkController, screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.03),
+              _confirm(screenWidth, screenHeight),
+              SizedBox(height: screenHeight * 0.02),
             ],
           ),
-        )
+        ),
       ),
     );
   }
 
-  Widget _header() {
+  Widget _header(double screenWidth, double screenHeight) {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.02,
+        vertical: screenHeight * 0.01,
+      ),
       child: Row(
         children: [
           IconButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
             }, 
             icon: Icon(
               Icons.arrow_back_ios_new_rounded, 
               color: Colors.white,
+              size: screenWidth * 0.055,
             ),
           ),
-          SizedBox(width: 70),
+          SizedBox(width: screenWidth * 0.05),
           Text(
             "BOOKING FORM",
             style: TextStyle(
               fontFamily: "Custom",
               color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600
+              fontSize: screenWidth * 0.055,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -152,36 +123,43 @@ class _bookingFormState extends State<bookingForm> {
     );
   }
 
-  Widget _formInput1(String title, String text){
+  Widget _formInput1(String title, String hint, TextEditingController? controller, double screenWidth, double screenHeight,
+      {String? value, bool enabled = true}) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color: Color.fromARGB(255, 13, 27, 42), 
+            style: TextStyle(
+              color: const Color.fromARGB(255, 13, 27, 42), 
               fontWeight: FontWeight.w500,
               fontFamily: 'Custom',
-              fontSize: 17,
-            )
+              fontSize: screenWidth * 0.045,
+            ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: screenHeight * 0.008),
           Container(
-            height: 40,
+            height: screenHeight * 0.06,
             child: TextFormField(
-              controller: inputController,
+              controller: controller,
+              enabled: enabled,
               style: TextStyle(
                 fontFamily: "Custom",
-                color: Color.fromARGB(255, 255, 255, 255),
+                color: Colors.white,
+                fontSize: screenWidth * 0.04,
               ),
               decoration: InputDecoration(
-                hintText: text,
+                hintText: value ?? hint,
+                hintStyle: TextStyle(
+                  fontSize: screenWidth * 0.035,
+                  color: Colors.grey.shade400,
+                ),
                 filled: true,
-                fillColor: Color.fromARGB(255, 13, 27, 42),
+                fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10)
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -191,36 +169,42 @@ class _bookingFormState extends State<bookingForm> {
     );
   }
 
-  Widget _formInput2(String title, String text){
+  Widget _formInput2(String title, String hint, TextEditingController controller, double screenWidth, double screenHeight) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color: Color.fromARGB(255, 13, 27, 42), 
+            style: TextStyle(
+              color: const Color.fromARGB(255, 13, 27, 42), 
               fontWeight: FontWeight.w500,
               fontFamily: 'Custom',
-              fontSize: 17,
-            )
+              fontSize: screenWidth * 0.045,
+            ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: screenHeight * 0.008),
           Container(
-            height: 80,
+            height: screenHeight * 0.12,
             child: TextFormField(
-              controller: inputController,
+              controller: controller,
+              maxLines: 3,
               style: TextStyle(
                 fontFamily: "Custom",
-                color: Color.fromARGB(255, 255, 255, 255),
+                color: Colors.white,
+                fontSize: screenWidth * 0.04,
               ),
               decoration: InputDecoration(
-                hintText: text,
+                hintText: hint,
+                hintStyle: TextStyle(
+                  fontSize: screenWidth * 0.035,
+                  color: Colors.grey.shade400,
+                ),
                 filled: true,
-                fillColor: Color.fromARGB(255, 13, 27, 42),
+                fillColor: const Color.fromARGB(255, 13, 27, 42),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10)
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -230,93 +214,201 @@ class _bookingFormState extends State<bookingForm> {
     );
   }
 
-  Widget _input(String text){
+  Widget _rowSelection(double screenWidth, double screenHeight) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _selection2("Choose Court", screenWidth),
+                SizedBox(height: screenHeight * 0.008),
+                CustomDropdownField(
+                  hint: "Court",
+                  value: Court,
+                  items: ["Court 1", "Court 2", "Court 3"],
+                  onChanged: (val) {
+                    setState(() {
+                      Court = val;
+                      calculateTotal();
+                    });
+                  },
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: screenWidth * 0.03),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _selection2("Court Price", screenWidth),
+                SizedBox(height: screenHeight * 0.008),
+                _input("${courtPrice.toStringAsFixed(0)} Ks", screenWidth, screenHeight, enabled: false),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rowTimeSlot(double screenWidth, double screenHeight) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _selection2("Choose Time Slot", screenWidth),
+                SizedBox(height: screenHeight * 0.008),
+                CustomDropdownField(
+                  hint: "Time Slot",
+                  value: TimeSlot,
+                  items: [
+                    "6:00 - 7:00",
+                    "7:30 - 8:30",
+                    "9:00 - 10:00",
+                    "16:30 - 17:30",
+                    "18:00 - 19:00",
+                    "20:30 - 21:30",
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      TimeSlot = val;
+                      calculateTotal();
+                    });
+                  },
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: screenWidth * 0.03),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _selection2("Session Price", screenWidth),
+                SizedBox(height: screenHeight * 0.008),
+                _input("${sessionPrice.toStringAsFixed(0)} Ks", screenWidth, screenHeight, enabled: false),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _input(String text, double screenWidth, double screenHeight, {bool enabled = true}) {
     return Container(
-      height: 40,
-      width: 155,
+      height: screenHeight * 0.06,
       child: TextFormField(
-        controller: inputController,
+        enabled: enabled,
+        initialValue: text,
         style: TextStyle(
           fontFamily: "Custom",
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
+          fontSize: screenWidth * 0.04,
         ),
         decoration: InputDecoration(
-          hintText: text,
           filled: true,
-          fillColor: Color.fromARGB(255, 13, 27, 42),
+          fillColor: const Color.fromARGB(255, 13, 27, 42),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10)
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
       ),
     );
   }
 
-  Widget _dateInput(){
+  Widget _dateInput(double screenWidth, double screenHeight) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _selection2("Booking Date"),
-          SizedBox(height: 5),
+          _selection2("Booking Date", screenWidth),
+          SizedBox(height: screenHeight * 0.008),
           TextFormField(
-          controller: dobController,
-          readOnly: true,
-          onTap: _selectDate,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Booking Date (YYYY-MM-DD)",
-            hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Icons.calendar_today, color: Colors.white),
-            filled: true,
-            fillColor: const Color.fromARGB(255, 13, 27, 42),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
+            controller: dobController,
+            readOnly: true,
+            onTap: _selectDate,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: screenWidth * 0.04,
+            ),
+            decoration: InputDecoration(
+              hintText: "Booking Date (YYYY-MM-DD)",
+              hintStyle: TextStyle(
+                color: Colors.grey,
+                fontSize: screenWidth * 0.035,
+              ),
+              prefixIcon: Icon(Icons.calendar_today, color: Colors.white, size: screenWidth * 0.05),
+              filled: true,
+              fillColor: const Color.fromARGB(255, 13, 27, 42),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
-        ),
-        ]
+        ],
       ),
     );
   }
 
-  Widget _selection2(String main){
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 5),
+  Widget _selection2(String main, double screenWidth) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
       child: Text(
         main,
         style: TextStyle(
           fontFamily: "Custom",
-          color: Color.fromARGB(255, 13, 27, 42),
-          fontSize: 17
+          color: const Color.fromARGB(255, 13, 27, 42),
+          fontSize: screenWidth * 0.04,
         ),
       ),
     );
   }
 
-  Widget _confirm(){
+  Widget _confirm(double screenWidth, double screenHeight) {
     return Center(
       child: ElevatedButton(
-        style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Colors.red),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.1,
+            vertical: screenHeight * 0.015,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
-        onPressed: (){
+        onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => rentalPayment(),
             ),
           );
-        }, 
+        },
         child: Text(
           "Confirm",
           style: TextStyle(
             color: Colors.white,
             fontFamily: "Custom",
-            fontSize: 17,
-            fontWeight: FontWeight.w700
+            fontSize: screenWidth * 0.045,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -329,6 +421,8 @@ class CustomDropdownField extends StatelessWidget {
   final String? value;
   final List<String> items;
   final Function(String?) onChanged;
+  final double screenWidth;
+  final double screenHeight;
 
   const CustomDropdownField({
     super.key,
@@ -336,39 +430,46 @@ class CustomDropdownField extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    required this.screenWidth,
+    required this.screenHeight,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
-      width: 235,
-      margin: EdgeInsets.symmetric(horizontal: 5),
-      padding: EdgeInsets.symmetric(horizontal: 5),
+      height: screenHeight * 0.06,
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 13, 27, 42),
+        color: const Color.fromARGB(255, 13, 27, 42),
         borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           hint: Text(
-            hint, 
+            hint,
             style: TextStyle(
-              color: const Color.fromARGB(255, 79, 79, 79),
+              color: Colors.grey.shade400,
               fontFamily: "Custom",
-              fontSize: 17
+              fontSize: screenWidth * 0.035,
             ),
           ),
           value: value,
-          dropdownColor: Color(0xFF0F1E2E),
-          icon: Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-          style: TextStyle(color: Colors.white),
+          dropdownColor: const Color(0xFF0F1E2E),
+          icon: Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: screenWidth * 0.05),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: screenWidth * 0.04,
+          ),
           isExpanded: true,
           onChanged: onChanged,
           items: items.map((item) {
             return DropdownMenuItem(
               value: item,
-              child: Text(item),
+              child: Text(
+                item,
+                style: TextStyle(fontSize: screenWidth * 0.04),
+              ),
             );
           }).toList(),
         ),
