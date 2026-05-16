@@ -11,6 +11,8 @@ class _SettingState extends State<Setting> {
 
   double get screenWidth => MediaQuery.of(context).size.width;
   bool isVisible = false;
+  bool isVisible1 = false;
+  bool isSwitched = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +35,14 @@ class _SettingState extends State<Setting> {
               _visibalSetting(),
               _menuItem(
                   Icons.language,
-                  "Languages",() {},
+                  "Languages",() {
+                    setState(() {
+                      isVisible1 = !isVisible1;
+                    });
+                  },
                 ),
-              _menuItem(
+              _visibalSetting1(),
+              _menuItem1(
                   Icons.auto_stories,
                   "Auto Save E-Receipt",() {},
                 ),
@@ -96,24 +103,83 @@ class _SettingState extends State<Setting> {
     );
   }
 
+  Widget _menuItem1(IconData icon, String title, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color.fromARGB(255, 13, 27, 42),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ListTile(
+          leading: Icon(icon, color: Color.fromARGB(255, 255, 255, 255)),
+          title: Text(title, style: TextStyle(fontFamily: 'Custom',color: Colors.white),),
+          trailing: Switch(
+            value: isSwitched,
+            onChanged: (value) {
+              setState(() {
+                isSwitched = value;
+              });
+            },
+            activeTrackColor: Colors.redAccent,
+            activeColor: Colors.white,
+          ),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+
   Widget _visibalSetting(){
     return Column(
       children: [
         if (isVisible)
           Column(
             children: [
-              Text(
-                "Hello Flutter",
-                style: TextStyle(fontSize: 24),
+              _menuItem(
+                Icons.password,
+                "Change Password",
+                () {},
               ),
-              Text(
-                "Hello Flutter",
-                style: TextStyle(fontSize: 24),
+              _menuItem1(
+                Icons.fingerprint,
+                "Fingerprint/ Face ID",
+                () {},
               ),
-              Text(
-                "Hello Flutter",
-                style: TextStyle(fontSize: 24),
+              _menuItem(
+                Icons.paste_rounded,
+                "Device History",
+                () {},
               ),
+              Divider()
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _visibalSetting1(){
+    return Column(
+      children: [
+        if (isVisible1)
+          Column(
+            children: [
+              _menuItem(
+                Icons.flag,
+                "Myanmar",
+                () {},
+              ),
+              _menuItem(
+                Icons.flag,
+                "English",
+                () {},
+              ),
+              _menuItem(
+                Icons.flag,
+                "Chinese",
+                () {},
+              ),
+              Divider()
             ],
           ),
       ],
