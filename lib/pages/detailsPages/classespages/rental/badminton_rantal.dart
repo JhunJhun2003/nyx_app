@@ -58,6 +58,11 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
               _schedule(),
               SizedBox(height: 5),
               _rentalSection(),
+              SizedBox(height: 5),
+              _service1(),
+              SizedBox(height: 5),
+              _service2(),
+              SizedBox(height: 5),
               _ruleAndSafe(),
               _valid(),
               _confirm(),
@@ -563,6 +568,182 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           SizedBox(height: 3),
           _safetyWidget("Liability","Players play at their own risk. The management is not liable","for injuries."),
           SizedBox(height: 5),
+        ],
+      ),
+    );
+  }
+
+  Widget _service1(){
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Additional Services",
+            style: TextStyle(
+              color: Color.fromARGB(255, 13, 27, 42),
+              fontFamily: "Custom",
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Container(
+                width: 130,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.wifi,
+                      size: 50,
+                    ),
+                    Column(
+                      children: [
+                        SizedBox(height: 14,),
+                        Text("High Speed",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                        SizedBox(height: 2,),
+                        Text("Free Wifi",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(width: 5),
+              Container(
+                width: 130,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.shower,
+                      size: 60,
+                    ),
+                    Column(
+                      children: [
+                        SizedBox(height: 14,),
+                        Text("Free",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                        SizedBox(height: 2,),
+                        Text("Shower",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(width: 5),
+              Container(
+                width: 130,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.door_back_door,
+                      size: 60,
+                    ),
+                    Column(
+                      children: [
+                        SizedBox(height: 14,),
+                        Text("Locker",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                        SizedBox(height: 2,),
+                        Text("Room",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _service2(){
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Row(
+        children: [
+          Container(
+            width: 130,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.car_repair,
+                  size: 60,
+                ),
+                Column(
+                  children: [
+                    SizedBox(height: 10,),
+                    Text("Car",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                    SizedBox(height: 2,),
+                    Text("Packing",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                  ],
+                )
+              ],
+            ),
+          ),
+          SizedBox(width: 5),
+          Container(
+            width: 130,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.security,
+                  size: 60,
+                ),
+                Text("Security",style: TextStyle(fontSize: 16,fontFamily:"Custom"),)
+              ],
+            ),
+          ),
+          SizedBox(width: 5),
+          Container(
+            width: 130,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.room_preferences_outlined,
+                  size: 60,
+                ),
+                Column(
+                  children: [
+                    SizedBox(height: 10,),
+                    Text("Changing",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                    SizedBox(height: 2,),
+                    Text("Room",style: TextStyle(fontSize: 16,fontFamily:"Custom"),),
+                  ],
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );
