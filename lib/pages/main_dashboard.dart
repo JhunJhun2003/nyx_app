@@ -81,7 +81,7 @@ class _MainDashboardState extends State<MainDashboard> {
   Widget _header() {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -89,7 +89,7 @@ class _MainDashboardState extends State<MainDashboard> {
             height: 48,
             child: Image.asset(
               'assets/images/logo1.png',
-              fit: BoxFit.contain,
+              fit: BoxFit.fill,
               errorBuilder: (context, error, stackTrace) {
                 return const Text(
                   'NYX',

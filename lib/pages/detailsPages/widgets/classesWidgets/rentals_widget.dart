@@ -1,15 +1,24 @@
-// lib/pages/detailsPages/classesWidgets/rentals_widget.dart
+// lib/pages/detailsPages/widgets/classesWidgets/rentals_widget.dart
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/courts.dart';
+import 'package:nyxproject/models/Venue.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/Courts.dart';
 
 class RentalsWidget extends StatelessWidget {
   final double screenWidth;
   final double screenHeight;
+  final List<Venue> venues;
+  final bool isLoadingVenues;
+  final String? venuesError;
+  final VoidCallback onRetryVenues;
 
   const RentalsWidget({
     super.key,
     required this.screenWidth,
     required this.screenHeight,
+    required this.venues,
+    required this.isLoadingVenues,
+    this.venuesError,
+    required this.onRetryVenues,
   });
 
   @override
@@ -44,29 +53,7 @@ class RentalsWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _buildCourtCard(
-            context,
-            "Badminton Courts",
-            "assets/images/badminton_court.jpg",
-            screenWidth,
-            screenHeight,
-          ),
-          const SizedBox(height: 10),
-          _buildCourtCard(
-            context,
-            "Tennis Courts",
-            "assets/images/tennis_court.jpg",
-            screenWidth,
-            screenHeight,
-          ),
-          const SizedBox(height: 10),
-          _buildCourtCard(
-            context,
-            "Futsal Courts",
-            "assets/images/futsal_court.jpg",
-            screenWidth,
-            screenHeight,
-          ),
+          _buildVenueList(context),
           const SizedBox(height: 10),
         ],
         key: const ValueKey("rentals"),
@@ -74,85 +61,157 @@ class RentalsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCourtCard(
-    BuildContext context,
-    String title,
-    String imagePath,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    return Container(
-      height: screenHeight * 0.4,
-      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                height: screenHeight * 0.3,
-                width: screenWidth,
+  Widget _buildVenueList(BuildContext context) {
+    if (isLoadingVenues) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (venuesError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Text(
+                venuesError!,
+                style: const TextStyle(color: Colors.red),
               ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: onRetryVenues,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (venues.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text('No venues available'),
+        ),
+      );
+    }
+
+    return Column(
+      children: venues.map((venue) {
+        return _buildVenueCard(context, venue);
+      }).toList(),
+    );
+  }
+
+  Widget _buildVenueCard(BuildContext context, Venue venue) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to Courts page with venueId and venueName
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Courts(
+              venueId: venue.id,
+              venueName: venue.venueName,
             ),
           ),
-          Positioned(
-            left: screenWidth * 0.025,
-            bottom: screenHeight * 0.07,
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontFamily: "Custom",
-                color: Colors.white,
+        );
+      },
+      child: Container(
+        height: screenHeight * 0.45,
+        margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.0125, vertical: screenHeight * 0.01),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 13, 27, 42),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: venue.venueImageUrl.isNotEmpty
+                    ? Image.network(
+                        venue.venueImageUrl,
+                        fit: BoxFit.cover,
+                        height: screenHeight * 0.3,
+                        width: screenWidth,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: screenHeight * 0.3,
+                            width: screenWidth,
+                            color: Colors.grey,
+                            child: const Icon(
+                              Icons.sports,
+                              size: 50,
+                              color: Colors.white54,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        height: screenHeight * 0.3,
+                        width: screenWidth,
+                        color: Colors.grey,
+                        child: const Icon(
+                          Icons.sports,
+                          size: 50,
+                          color: Colors.white54,
+                        ),
+                      ),
               ),
             ),
-          ),
-          Positioned(
-            right: screenWidth * 0.025,
-            bottom: screenHeight * 0.07,
-            child: Text(
-              "25,000 Ks",
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontFamily: "Custom",
-                color: Colors.white,
+            Positioned(
+              left: screenWidth * 0.025,
+              bottom: screenHeight * 0.07,
+              child: Text(
+                venue.venueName,
+                style: TextStyle(
+                  fontSize: screenWidth * 0.045,
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: screenHeight * 0.02,
-            left: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Courts(),
-                  ),
-                );
-              },
+            Positioned(
+              right: screenWidth * 0.025,
+              bottom: screenHeight * 0.07,
+              child: Text(
+                "${venue.price.toString()} Ks",
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: screenHeight * 0.01,
+              left: 0,
+              right: 0,
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                 width: screenWidth * 0.95,
-                height: screenHeight * 0.04,
+                height: screenHeight * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.red,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text(
-                  "See Details",
+                child: const Text(
+                  "Book Now",
                   style: TextStyle(
-                    fontSize: screenWidth * 0.04,
+                    fontSize: 16,
                     fontFamily: "Custom",
                     color: Colors.white,
                   ),
@@ -160,8 +219,8 @@ class RentalsWidget extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

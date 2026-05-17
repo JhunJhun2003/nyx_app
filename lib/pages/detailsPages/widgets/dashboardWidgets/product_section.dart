@@ -24,12 +24,12 @@ class ProductSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         SectionHeader(
           title: sectionTitle,
           onSeeAll: onSeeAll,
         ),
-        const SizedBox(height: 10),
+        // const SizedBox(height: 10),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -37,7 +37,7 @@ class ProductSection extends StatelessWidget {
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            mainAxisSpacing: 5,
             childAspectRatio: 0.65,
           ),
           itemCount: displayProducts.length,
