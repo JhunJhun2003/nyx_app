@@ -38,6 +38,8 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
 
   int currentIndex = 0;
 
+  bool _isChecked2 = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +58,9 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
               _schedule(),
               SizedBox(height: 5),
               _rentalSection(),
-              _confirm()
+              _ruleAndSafe(),
+              _valid(),
+              _confirm(),
             ],
           ),
         ),
@@ -530,6 +534,110 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
                 child: const Icon(Icons.add, color: Colors.white, size: 18),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _ruleAndSafe(){
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Court Rules & Safety",
+            style: TextStyle(
+              color: Color.fromARGB(255, 13, 27, 42),
+              fontFamily: "Custom",
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          _safetyWidget("Footware","Arrive 10 minutes early. Bookings will be released if 15","minutes late."),
+          SizedBox(height: 3),
+          _safetyWidget("Grace Period","Arrive 10 minutes early. Bookings will be released if 15","minutes late."),
+          SizedBox(height: 3),
+          _safetyWidget("No Food/ Drinks","Only bottled water is allowed. Foods and Smoking are","strictly prohibited."),
+          SizedBox(height: 3),
+          _safetyWidget("Liability","Players play at their own risk. The management is not liable","for injuries."),
+          SizedBox(height: 5),
+        ],
+      ),
+    );
+  }
+
+  Widget _safetyWidget(String text1, String text2, String text3){
+    return Container(
+      width: 400,
+      height: 70,
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: 10,),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 3,),
+              Text(
+                text1,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Custom",
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                text2,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Custom",
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 1),
+              Text(
+                text3,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Custom",
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _valid(){
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 0),
+      child: Row(
+        children: [
+          Checkbox(
+            value: _isChecked2, 
+            onChanged: (bool? value) {
+              setState(() {
+                _isChecked2 = value!;
+              });
+            },
+          ),
+          Text(
+            "I have read and agree to follow the court rules & safety guidelines.",
+            style: TextStyle(
+              color: const Color.fromARGB(255, 72, 72, 72),
+              fontFamily: "Custom",
+              fontSize: 12
+            ),
           ),
         ],
       ),
