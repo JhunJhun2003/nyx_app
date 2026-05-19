@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:nyxproject/models/Category.dart';
 import 'package:nyxproject/models/Tag.dart';
-import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/util/Constant.dart';
 
 class Api {

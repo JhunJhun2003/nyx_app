@@ -21,17 +21,15 @@ class _ProductDetailsState extends State<ProductDetails> {
   // ✅ Check if product is in stock
   bool get _isInStock {
     // Check total_stock field
-    if (widget.product.totalStock != null && widget.product.totalStock != "0") {
+    if (widget.product.totalStock != "0") {
       final stock = int.tryParse(widget.product.totalStock);
       if (stock != null) {
         return stock > 0;
       }
     }
     // Check status field
-    if (widget.product.status != null) {
-      return widget.product.status!.toLowerCase() != "out of stock";
-    }
-    // Default to true if no stock info
+    return widget.product.status!.toLowerCase() != "out of stock";
+      // Default to true if no stock info
     return true;
   }
 

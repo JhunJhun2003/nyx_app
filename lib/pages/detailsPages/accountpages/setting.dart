@@ -122,7 +122,7 @@ class _SettingState extends State<Setting> {
               });
             },
             activeTrackColor: Colors.redAccent,
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
           ),
           onTap: onTap,
         ),

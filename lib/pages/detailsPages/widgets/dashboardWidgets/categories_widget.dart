@@ -76,10 +76,10 @@ class CategoriesWidget extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: Color.fromARGB(255, 13, 27, 42),
                     ),
-                    child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                    child: category.imageUrl.isNotEmpty
                         ? ClipOval(
                             child: Image.network(
-                              category.imageUrl!,
+                              category.imageUrl,
                               width: 70,
                               height: 70,
                               fit: BoxFit.cover,
