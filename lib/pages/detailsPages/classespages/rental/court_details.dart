@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:nyxproject/Util/RentelApi/AvaiSlotTimeApi.dart';
 import 'package:nyxproject/Util/RentelApi/VenueApi.dart';
+import 'package:nyxproject/models/AvaiSlotTime.dart';
 import 'package:nyxproject/pages/detailsPages/classespages/rental/booking_form.dart';
 import 'package:nyxproject/models/Venue.dart';
 import 'package:nyxproject/models/Court.dart';
@@ -9,18 +11,13 @@ class CourtDetails extends StatefulWidget {
   final Venue? selectedVenue;
   final Court? selectedCourt;
 
-  const CourtDetails({
-    super.key,
-    this.selectedVenue,
-    this.selectedCourt,
-  });
+  const CourtDetails({super.key, this.selectedVenue, this.selectedCourt});
 
   @override
-  State<CourtDetails> createState() => _badmintonRantalStateState();
+  State<CourtDetails> createState() => _CourtDetailsState();
 }
 
-class _badmintonRantalStateState extends State<CourtDetails> {
-  int selectedIndex = 0;
+class _CourtDetailsState extends State<CourtDetails> {
   int sessionCount = 1;
   bool _isChecked = false;
   int currentIndex = 0;
@@ -32,7 +29,17 @@ class _badmintonRantalStateState extends State<CourtDetails> {
   bool _isLoadingVenues = true;
   String? _venuesError;
 
-  // Get court price from selectedCourt or use default
+  List<AvailableSlot> _availableSlots = [];
+  bool _isLoadingSlots = false;
+  String? _slotsError;
+
+  Map<String, int> equipmentQuantities = {};
+  Map<String, String> equipmentPrices = {};
+  Map<String, int> equipmentMaxQty = {};
+
+  List<String> galleryImages = [];
+  bool _isLoadingGallery = true;
+
   double get courtPrice {
     if (widget.selectedCourt != null) {
       return widget.selectedCourt!.hourlyPrice.toDouble();
@@ -46,7 +53,6 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     return 25000;
   }
 
-  // Get court name
   String get courtName {
     if (widget.selectedCourt != null) {
       return widget.selectedCourt!.courtName;
@@ -68,58 +74,19 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     return dates;
   }
 
-  // Get time slots from selectedCourt or use default
-  List<String> getTimeSlots() {
-    if (widget.selectedCourt != null &&
-        widget.selectedCourt!.timeSlots != null &&
-        widget.selectedCourt!.timeSlots!.isNotEmpty) {
-      return widget.selectedCourt!.timeSlots!.map((slot) {
-        return "${_formatTime(slot.startTime)} - ${_formatTime(slot.endTime)}";
-      }).toList();
-    }
-    return [
-      "6:00 - 7:00",
-      "7:30 - 8:30",
-      "9:00 - 10:00",
-      "16:30 - 17:30",
-      "18:00 - 19:00",
-      "20:30 - 21:30",
-    ];
-  }
-
   String _formatTime(String time) {
     if (time.isEmpty) return "";
-    // Format "06:00:00" to "6:00"
     List<String> parts = time.split(':');
     int hour = int.parse(parts[0]);
     return "$hour:${parts[1]}";
   }
 
-  List<String> images = [
-    "assets/classes/Badminton.png",
-    "assets/classes/Futsal.png",
-    "assets/classes/Tennis.png",
-  ];
-
-  // Equipment quantities
-  Map<String, int> equipmentQuantities = {
-    "Pro Racket": 0,
-    "Court Shoes": 0,
-    "Shuttlecock": 0,
-    "Jersey": 0,
-  };
-
-  Map<String, String> equipmentPrices = {
-    "Pro Racket": "2,000 Ks/hour",
-    "Court Shoes": "3,000 Ks/hour",
-    "Shuttlecock": "1,500 Ks/piece",
-    "Jersey": "3,000 Ks/piece",
-  };
-
   @override
   void initState() {
     super.initState();
-    // Only load venues if no court or venue was passed
+    _loadGalleryFromCourt();
+    _loadEquipmentFromCourt();
+    _loadAvailableSlots();
     if (widget.selectedCourt == null && widget.selectedVenue == null) {
       _loadVenues();
     } else {
@@ -127,7 +94,37 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     }
   }
 
+  void _loadGalleryFromCourt() {
+    if (widget.selectedCourt != null &&
+        widget.selectedCourt!.gallery != null &&
+        widget.selectedCourt!.gallery!.isNotEmpty) {
+      galleryImages = widget.selectedCourt!.gallery!
+          .map((g) => g.courtImageUrl)
+          .where((url) => url.isNotEmpty)
+          .toList();
+
+      _isLoadingGallery = false;
+
+      if (galleryImages.isEmpty) {
+        _useDefaultImages();
+      }
+    } else {
+      _useDefaultImages();
+    }
+  }
+
+  void _useDefaultImages() {
+    galleryImages = [
+      "assets/classes/Badminton.png",
+      "assets/classes/Futsal.png",
+      "assets/classes/Tennis.png",
+    ];
+    _isLoadingGallery = false;
+  }
+
   Future<void> _loadVenues() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoadingVenues = true;
       _venuesError = null;
@@ -136,22 +133,64 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     try {
       final result = await VenueApi.getAllVenues();
 
+      if (!mounted) return;
+
       if (result['success'] == true) {
         setState(() {
           venues = result['data'] ?? [];
           _isLoadingVenues = false;
         });
-        print(' Loaded ${venues.length} venues');
       } else {
+        if (!mounted) return;
         setState(() {
           _venuesError = result['message'] ?? 'Failed to load venues';
           _isLoadingVenues = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _venuesError = 'Error loading venues: $e';
         _isLoadingVenues = false;
+      });
+    }
+  }
+
+  Future<void> _loadAvailableSlots() async {
+    if (widget.selectedCourt == null) return;
+
+    setState(() {
+      _isLoadingSlots = true;
+      _slotsError = null;
+    });
+
+    try {
+      String formattedDate =
+          "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
+
+      final result = await AvailableSlotApi.getAvailableSlots(
+        widget.selectedCourt!.id,
+        formattedDate,
+      );
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        setState(() {
+          _availableSlots = result['data'] ?? [];
+          _isLoadingSlots = false;
+        });
+      } else {
+        setState(() {
+          _slotsError = result['message'] ?? 'Failed to load available slots';
+          _isLoadingSlots = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _slotsError = 'Error loading available slots: $e';
+        _isLoadingSlots = false;
       });
     }
   }
@@ -186,13 +225,11 @@ class _badmintonRantalStateState extends State<CourtDetails> {
                 _venueSelection(screenWidth, screenHeight),
               _schedule(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
-              _rentalSessionSection(screenWidth, screenHeight),
-              SizedBox(height: screenHeight * 0.01),
               _rentalSection(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
-              _serviceSection(screenWidth, screenHeight),
+              // _serviceSection(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
-              _ruleAndSafe(screenWidth, screenHeight),
+              // _ruleAndSafe(screenWidth, screenHeight),
               _valid(screenWidth, screenHeight),
               _confirm(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.02),
@@ -207,12 +244,10 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),
       padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.02,
-        vertical: screenHeight * 0.01,
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.015,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
             onPressed: () {
@@ -221,20 +256,33 @@ class _badmintonRantalStateState extends State<CourtDetails> {
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
-              size: screenWidth * 0.055,
+              size: screenWidth * 0.05,
             ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
-          SizedBox(width: screenWidth * 0.05),
-          Expanded(
-            child: Text(
-              courtName,
-              style: TextStyle(
-                fontFamily: "Custom",
-                color: Colors.white,
-                fontSize: screenWidth * 0.055,
-                fontWeight: FontWeight.w700,
+          SizedBox(width: screenWidth * 0.03),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                courtName,
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+              Text(
+                "${courtPrice.toStringAsFixed(0)} Ks / hour",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.white70,
+                  fontSize: screenWidth * 0.03,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -242,57 +290,87 @@ class _badmintonRantalStateState extends State<CourtDetails> {
   }
 
   Widget _banner(double screenWidth, double screenHeight) {
+    if (_isLoadingGallery) {
+      return SizedBox(
+        height: screenHeight * 0.28,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (galleryImages.isEmpty) {
+      return SizedBox(
+        height: screenHeight * 0.28,
+        child: Container(
+          color: Colors.grey.shade800,
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Colors.white54,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "No images available",
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CarouselSlider(
-          items: images
-              .map(
-                (item) => Container(
-                  margin: EdgeInsets.all(screenWidth * 0.01),
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(item),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+          items: galleryImages.map((imageUrl) {
+            return Container(
+              margin: EdgeInsets.all(screenWidth * 0.01),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                image: DecorationImage(
+                  image: imageUrl.startsWith('http')
+                      ? NetworkImage(imageUrl) as ImageProvider
+                      : AssetImage(imageUrl),
+                  fit: BoxFit.cover,
                 ),
-              )
-              .toList(),
+              ),
+            );
+          }).toList(),
           options: CarouselOptions(
             height: screenHeight * 0.28,
             autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 10),
+            autoPlayInterval: const Duration(seconds: 5),
             autoPlayAnimationDuration: const Duration(milliseconds: 900),
             enlargeCenterPage: true,
-            aspectRatio: 16 / 9,
             viewportFraction: 1,
             onPageChanged: (index, reason) {
-              setState(() {
-                currentIndex = index;
-              });
+              if (mounted) {
+                setState(() {
+                  currentIndex = index;
+                });
+              }
             },
           ),
         ),
+        SizedBox(height: screenHeight * 0.01),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: images
-              .asMap()
-              .entries
-              .map(
-                (item) => Container(
-                  height: screenHeight * 0.008,
-                  width: screenWidth * 0.02,
-                  margin: EdgeInsets.all(screenWidth * 0.01),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: currentIndex == item.key
-                        ? Colors.black
-                        : Colors.grey,
-                  ),
-                ),
-              )
-              .toList(),
+          children: galleryImages.asMap().entries.map((item) {
+            return Container(
+              height: screenHeight * 0.008,
+              width: screenWidth * 0.02,
+              margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.005),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: currentIndex == item.key ? Colors.red : Colors.grey,
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -330,7 +408,19 @@ class _badmintonRantalStateState extends State<CourtDetails> {
 
   Widget _bookDate(double screenWidth, double screenHeight) {
     List<DateTime> dates = getAvailableDates();
-    List<String> weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+    List<String> getWeekDays() {
+      List<String> weekDays = [];
+      DateTime now = DateTime.now();
+      for (int i = 0; i < 5; i++) {
+        DateTime date = now.add(Duration(days: i));
+        String dayName = _getDayName(date.weekday);
+        weekDays.add(dayName);
+      }
+      return weekDays;
+    }
+
+    List<String> weekDays = getWeekDays();
 
     return Container(
       height: screenHeight * 0.16,
@@ -367,12 +457,18 @@ class _badmintonRantalStateState extends State<CourtDetails> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(dates.length, (index) {
-                bool isSelected = selectedDate.day == dates[index].day;
+                bool isSelected =
+                    selectedDate.day == dates[index].day &&
+                    selectedDate.month == dates[index].month &&
+                    selectedDate.year == dates[index].year;
                 return GestureDetector(
                   onTap: () {
-                    setState(() {
-                      selectedDate = dates[index];
-                    });
+                    if (mounted) {
+                      setState(() {
+                        selectedDate = dates[index];
+                      });
+                      _loadAvailableSlots();
+                    }
                   },
                   child: Container(
                     width: screenWidth * 0.17,
@@ -417,6 +513,27 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     );
   }
 
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1:
+        return "Mon";
+      case 2:
+        return "Tue";
+      case 3:
+        return "Wed";
+      case 4:
+        return "Thu";
+      case 5:
+        return "Fri";
+      case 6:
+        return "Sat";
+      case 7:
+        return "Sun";
+      default:
+        return "Mon";
+    }
+  }
+
   Widget _timeSchedule(double screenWidth, double screenHeight) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -434,7 +551,7 @@ class _badmintonRantalStateState extends State<CourtDetails> {
           SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Text(
-              "Select a time slot & Court",
+              "Available Time Slots",
               style: TextStyle(
                 fontFamily: "Custom",
                 fontSize: screenWidth * 0.04,
@@ -463,7 +580,9 @@ class _badmintonRantalStateState extends State<CourtDetails> {
             Text(_venuesError!, style: const TextStyle(color: Colors.red)),
             SizedBox(height: screenHeight * 0.01),
             ElevatedButton(
-              onPressed: _loadVenues,
+              onPressed: () {
+                if (mounted) _loadVenues();
+              },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('Retry'),
             ),
@@ -503,9 +622,11 @@ class _badmintonRantalStateState extends State<CourtDetails> {
                 bool isSelected = selectedVenueIndex == index;
                 return GestureDetector(
                   onTap: () {
-                    setState(() {
-                      selectedVenueIndex = index;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        selectedVenueIndex = index;
+                      });
+                    }
                   },
                   child: Container(
                     width: screenWidth * 0.4,
@@ -577,8 +698,53 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     );
   }
 
+  AvailableSlot? selectedTimeSlot;
   Widget _schedule(double screenWidth, double screenHeight) {
-    List<String> timeSlots = getTimeSlots();
+    if (_isLoadingSlots) {
+      return const Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_slotsError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                _slotsError!,
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _loadAvailableSlots,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_availableSlots.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            "No available time slots for selected date",
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
+
+    List<String> formattedSlots = _availableSlots.map((slot) {
+      return "${_formatTime(slot.startTime)} - ${_formatTime(slot.endTime)}";
+    }).toList();
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
@@ -587,7 +753,7 @@ class _badmintonRantalStateState extends State<CourtDetails> {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: timeSlots.length,
+            itemCount: formattedSlots.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: screenWidth * 0.02,
@@ -595,34 +761,33 @@ class _badmintonRantalStateState extends State<CourtDetails> {
               childAspectRatio: 2.2,
             ),
             itemBuilder: (context, index) {
-              bool isSelected = selectedIndex == index;
+              bool isSelected =
+                  selectedTimeSlot?.id == _availableSlots[index].id;
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    selectedIndex = index;
+                    selectedTimeSlot = _availableSlots[index];
                   });
                 },
                 child: Container(
                   margin: EdgeInsets.all(screenWidth * 0.01),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.red : Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    color: isSelected ? Colors.red : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected ? Colors.red : Colors.grey.shade400,
+                      width: 1,
+                    ),
                   ),
                   child: Center(
                     child: Text(
-                      timeSlots[index],
+                      formattedSlots[index],
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenWidth * 0.035,
                         fontWeight: FontWeight.w500,
                         fontFamily: "Custom",
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: isSelected ? Colors.white : Colors.black87,
                       ),
                     ),
                   ),
@@ -635,54 +800,11 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     );
   }
 
-  Widget _rentalSessionSection(double screenWidth, double screenHeight) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.02,
-        vertical: screenHeight * 0.01,
-      ),
-      padding: EdgeInsets.all(screenWidth * 0.03),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sessionCount(screenWidth, screenHeight),
-        ],
-      ),
-    );
-  }
-
-  Widget _sessionCount(double screenWidth, double screenHeight) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: screenHeight * 0.01,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        // Center the entire content
-        child: Text(
-          "$sessionCount SESSION${sessionCount > 1 ? 'S' : ''}",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: "Custom",
-            fontSize: screenWidth * 0.045,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _rentalSection(double screenWidth, double screenHeight) {
+    if (equipmentQuantities.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: screenWidth * 0.02,
@@ -708,6 +830,13 @@ class _badmintonRantalStateState extends State<CourtDetails> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              Text(
+                "Optional",
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
             ],
           ),
           SizedBox(height: screenHeight * 0.015),
@@ -718,35 +847,38 @@ class _badmintonRantalStateState extends State<CourtDetails> {
                 equipment,
                 equipmentPrices[equipment]!,
                 equipmentQuantities[equipment]!,
+                equipmentMaxQty[equipment] ?? 99,
                 screenWidth,
                 screenHeight,
               ),
             );
           }),
           SizedBox(height: screenHeight * 0.02),
-          Row(
-            children: [
-              Checkbox(
-                value: _isChecked,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _isChecked = value!;
-                  });
-                },
-                activeColor: Colors.red,
-              ),
-              Expanded(
-                child: Text(
-                  "I agree to return all rented equipment in its original condition.",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontFamily: "Custom",
-                    fontSize: screenWidth * 0.03,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Checkbox(
+          //       value: _isChecked,
+          //       onChanged: (bool? value) {
+          //         if (mounted) {
+          //           setState(() {
+          //             _isChecked = value!;
+          //           });
+          //         }
+          //       },
+          //       activeColor: Colors.red,
+          //     ),
+          //     Expanded(
+          //       child: Text(
+          //         "I agree to return all rented equipment in its original condition.",
+          //         style: TextStyle(
+          //           color: Colors.grey,
+          //           fontFamily: "Custom",
+          //           fontSize: screenWidth * 0.03,
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -756,6 +888,7 @@ class _badmintonRantalStateState extends State<CourtDetails> {
     String text,
     String price,
     int quantity,
+    int maxQty,
     double screenWidth,
     double screenHeight,
   ) {
@@ -793,12 +926,14 @@ class _badmintonRantalStateState extends State<CourtDetails> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    if (equipmentQuantities[text]! > 0) {
-                      equipmentQuantities[text] =
-                          equipmentQuantities[text]! - 1;
-                    }
-                  });
+                  if (mounted) {
+                    setState(() {
+                      if (equipmentQuantities[text]! > 0) {
+                        equipmentQuantities[text] =
+                            equipmentQuantities[text]! - 1;
+                      }
+                    });
+                  }
                 },
                 child: const Icon(Icons.remove, color: Colors.white, size: 18),
               ),
@@ -814,9 +949,14 @@ class _badmintonRantalStateState extends State<CourtDetails> {
               SizedBox(width: screenWidth * 0.02),
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    equipmentQuantities[text] = equipmentQuantities[text]! + 1;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      if (equipmentQuantities[text]! < maxQty) {
+                        equipmentQuantities[text] =
+                            equipmentQuantities[text]! + 1;
+                      }
+                    });
+                  }
                 },
                 child: const Icon(Icons.add, color: Colors.white, size: 18),
               ),
@@ -825,6 +965,22 @@ class _badmintonRantalStateState extends State<CourtDetails> {
         ],
       ),
     );
+  }
+
+  void _loadEquipmentFromCourt() {
+    equipmentQuantities.clear();
+    equipmentPrices.clear();
+    equipmentMaxQty.clear();
+
+    if (widget.selectedCourt != null &&
+        widget.selectedCourt!.equipment != null &&
+        widget.selectedCourt!.equipment!.isNotEmpty) {
+      for (var item in widget.selectedCourt!.equipment!) {
+        equipmentQuantities[item.productName] = 0;
+        equipmentPrices[item.productName] = "${item.rentalPrice} Ks/hour";
+        equipmentMaxQty[item.productName] = item.qtyTotal;
+      }
+    }
   }
 
   Widget _serviceSection(double screenWidth, double screenHeight) {
@@ -1056,9 +1212,11 @@ class _badmintonRantalStateState extends State<CourtDetails> {
           Checkbox(
             value: _isChecked2,
             onChanged: (bool? value) {
-              setState(() {
-                _isChecked2 = value!;
-              });
+              if (mounted) {
+                setState(() {
+                  _isChecked2 = value!;
+                });
+              }
             },
             activeColor: Colors.red,
           ),

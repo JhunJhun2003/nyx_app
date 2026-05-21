@@ -209,7 +209,7 @@ class RentalsWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: const Text(
-                  "Book Now",
+                  "Show Details",
                   style: TextStyle(
                     fontSize: 16,
                     fontFamily: "Custom",
