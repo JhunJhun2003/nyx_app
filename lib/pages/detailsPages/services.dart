@@ -2,21 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Canteen.dart';
 import 'package:nyxproject/models/Venue.dart';
-import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/canteen_widget.dart';
-import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/rentals_widget.dart';
-import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/tab_widget.dart';
-import 'package:nyxproject/pages/detailsPages/widgets/classesWidgets/trainings_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/servicesWidgets/canteen_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/servicesWidgets/rentals_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/servicesWidgets/tab_widget.dart';
+import 'package:nyxproject/pages/detailsPages/widgets/servicesWidgets/trainings_widget.dart';
 import 'package:nyxproject/util/CanteenApi.dart';
 import 'package:nyxproject/Util/RentelApi/VenueApi.dart';  // Add this import
 
-class ClassesPage extends StatefulWidget {
-  const ClassesPage({super.key});
+class Services extends StatefulWidget {
+  const Services({super.key});
 
   @override
-  State<ClassesPage> createState() => _ClassesPageState();
+  State<Services> createState() => _ClassesPageState();
 }
 
-class _ClassesPageState extends State<ClassesPage> {
+class _ClassesPageState extends State<Services> {
   int selectedIndex = 0;
   
   // Canteen variables

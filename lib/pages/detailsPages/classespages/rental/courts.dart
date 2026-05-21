@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/RentelApi/CourtApi.dart';
 import 'package:nyxproject/models/Court.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/badminton_rantal.dart';
+import 'package:nyxproject/pages/detailsPages/classespages/rental/court_details.dart';
 
 class Courts extends StatefulWidget {
   final int venueId;
@@ -42,7 +42,7 @@ class _CourtsState extends State<Courts> {
           _courts = result['data'] ?? [];
           _isLoading = false;
         });
-        print('✅ Loaded ${_courts.length} courts for venue ${widget.venueId}');
+        print(' Loaded ${_courts.length} courts for venue ${widget.venueId}');
       } else {
         setState(() {
           _error = result['message'] ?? 'Failed to load courts';
@@ -339,7 +339,7 @@ class _CourtsState extends State<Courts> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => badmintonRantalState(
+                              builder: (context) => CourtDetails(
                                 selectedCourt: court,
                               ),
                             ),

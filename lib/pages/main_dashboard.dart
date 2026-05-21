@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; 
 import 'package:nyxproject/pages/detailsPages/dashboard.dart';
-import 'package:nyxproject/pages/detailsPages/classes.dart';
+import 'package:nyxproject/pages/detailsPages/services.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
 import 'package:nyxproject/pages/detailsPages/shop.dart';
 import 'package:nyxproject/pages/detailsPages/account.dart';
@@ -34,7 +34,7 @@ class _MainDashboardState extends State<MainDashboard> {
         ShopPage(
           cartService: widget.cartService,
         ),
-        const ClassesPage(),
+        const Services(),
         CartPage(
         ),
         AccountPage(
@@ -70,7 +70,7 @@ class _MainDashboardState extends State<MainDashboard> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: "Shop"),
-          BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Classes"),
+          BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Services"),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
         ],

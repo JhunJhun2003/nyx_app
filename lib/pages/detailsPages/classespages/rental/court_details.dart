@@ -5,21 +5,21 @@ import 'package:nyxproject/pages/detailsPages/classespages/rental/booking_form.d
 import 'package:nyxproject/models/Venue.dart';
 import 'package:nyxproject/models/Court.dart';
 
-class badmintonRantalState extends StatefulWidget {
+class CourtDetails extends StatefulWidget {
   final Venue? selectedVenue;
   final Court? selectedCourt;
 
-  const badmintonRantalState({
+  const CourtDetails({
     super.key,
     this.selectedVenue,
     this.selectedCourt,
   });
 
   @override
-  State<badmintonRantalState> createState() => _badmintonRantalStateState();
+  State<CourtDetails> createState() => _badmintonRantalStateState();
 }
 
-class _badmintonRantalStateState extends State<badmintonRantalState> {
+class _badmintonRantalStateState extends State<CourtDetails> {
   int selectedIndex = 0;
   int sessionCount = 1;
   bool _isChecked = false;
@@ -27,7 +27,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
   int selectedVenueIndex = 0;
   DateTime selectedDate = DateTime.now();
   bool _isChecked2 = false;
-  
+
   List<Venue> venues = [];
   bool _isLoadingVenues = true;
   String? _venuesError;
@@ -70,8 +70,8 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
 
   // Get time slots from selectedCourt or use default
   List<String> getTimeSlots() {
-    if (widget.selectedCourt != null && 
-        widget.selectedCourt!.timeSlots != null && 
+    if (widget.selectedCourt != null &&
+        widget.selectedCourt!.timeSlots != null &&
         widget.selectedCourt!.timeSlots!.isNotEmpty) {
       return widget.selectedCourt!.timeSlots!.map((slot) {
         return "${_formatTime(slot.startTime)} - ${_formatTime(slot.endTime)}";
@@ -141,7 +141,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           venues = result['data'] ?? [];
           _isLoadingVenues = false;
         });
-        print('✅ Loaded ${venues.length} venues');
+        print(' Loaded ${venues.length} venues');
       } else {
         setState(() {
           _venuesError = result['message'] ?? 'Failed to load venues';
@@ -246,15 +246,19 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CarouselSlider(
-          items: images.map((item) => Container(
-            margin: EdgeInsets.all(screenWidth * 0.01),
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(item),
-                fit: BoxFit.cover,
-              ),
-            ),
-          )).toList(),
+          items: images
+              .map(
+                (item) => Container(
+                  margin: EdgeInsets.all(screenWidth * 0.01),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(item),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
           options: CarouselOptions(
             height: screenHeight * 0.28,
             autoPlay: true,
@@ -272,15 +276,23 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: images.asMap().entries.map((item) => Container(
-            height: screenHeight * 0.008,
-            width: screenWidth * 0.02,
-            margin: EdgeInsets.all(screenWidth * 0.01),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: currentIndex == item.key ? Colors.black : Colors.grey,
-            ),
-          )).toList(),
+          children: images
+              .asMap()
+              .entries
+              .map(
+                (item) => Container(
+                  height: screenHeight * 0.008,
+                  width: screenWidth * 0.02,
+                  margin: EdgeInsets.all(screenWidth * 0.01),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: currentIndex == item.key
+                        ? Colors.black
+                        : Colors.grey,
+                  ),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -322,11 +334,12 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
 
     return Container(
       height: screenHeight * 0.16,
-      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01, horizontal: screenWidth * 0.01),
-      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 13, 27, 42),
+      padding: EdgeInsets.symmetric(
+        vertical: screenHeight * 0.01,
+        horizontal: screenWidth * 0.01,
       ),
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
+      decoration: BoxDecoration(color: const Color.fromARGB(255, 13, 27, 42)),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
         child: Column(
@@ -334,7 +347,11 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_month_outlined, color: Colors.white, size: screenWidth * 0.05),
+                Icon(
+                  Icons.calendar_month_outlined,
+                  color: Colors.white,
+                  size: screenWidth * 0.05,
+                ),
                 SizedBox(width: screenWidth * 0.02),
                 Text(
                   "Select a reservation date",
@@ -359,7 +376,9 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
                   },
                   child: Container(
                     width: screenWidth * 0.17,
-                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                    padding: EdgeInsets.symmetric(
+                      vertical: screenHeight * 0.01,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.red : Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -441,10 +460,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           children: [
-            Text(
-              _venuesError!,
-              style: const TextStyle(color: Colors.red),
-            ),
+            Text(_venuesError!, style: const TextStyle(color: Colors.red)),
             SizedBox(height: screenHeight * 0.01),
             ElevatedButton(
               onPressed: _loadVenues,
@@ -530,7 +546,9 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
                               Text(
                                 venue.venueName,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black,
                                   fontWeight: FontWeight.w600,
                                   fontSize: screenWidth * 0.035,
                                 ),
@@ -538,7 +556,9 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
                               Text(
                                 "${venue.price.toString()} Ks",
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white70 : Colors.red,
+                                  color: isSelected
+                                      ? Colors.white70
+                                      : Colors.red,
                                   fontSize: screenWidth * 0.03,
                                 ),
                               ),
@@ -559,7 +579,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
 
   Widget _schedule(double screenWidth, double screenHeight) {
     List<String> timeSlots = getTimeSlots();
-    
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       child: Column(
@@ -629,39 +649,6 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                "Rental Session",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(width: screenWidth * 0.03),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.02,
-                  vertical: screenHeight * 0.003,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade700,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  "10% OFF for 3+ sessions",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: screenWidth * 0.03,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: screenHeight * 0.015),
           _sessionCount(screenWidth, screenHeight),
         ],
       ),
@@ -679,68 +666,18 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
         color: Colors.grey.shade800,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                if (sessionCount > 1) sessionCount--;
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.all(screenWidth * 0.02),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.remove,
-                color: Colors.white,
-                size: screenWidth * 0.05,
-              ),
-            ),
+      child: Center(
+        // Center the entire content
+        child: Text(
+          "$sessionCount SESSION${sessionCount > 1 ? 'S' : ''}",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: "Custom",
+            fontSize: screenWidth * 0.045,
+            fontWeight: FontWeight.bold,
           ),
-          Column(
-            children: [
-              Text(
-                "$sessionCount SESSION${sessionCount > 1 ? 'S' : ''}",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: "Custom",
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "${getSessionPrice().toStringAsFixed(0)} Ks",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: screenWidth * 0.03,
-                ),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                sessionCount++;
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.all(screenWidth * 0.02),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: screenWidth * 0.05,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -815,9 +752,18 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _rentalAccessories(String text, String price, int quantity, double screenWidth, double screenHeight) {
+  Widget _rentalAccessories(
+    String text,
+    String price,
+    int quantity,
+    double screenWidth,
+    double screenHeight,
+  ) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.008),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.02,
+        vertical: screenHeight * 0.008,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.white, width: 1),
@@ -840,10 +786,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           SizedBox(width: screenWidth * 0.05),
           Text(
             price,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: screenWidth * 0.04,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04),
           ),
           SizedBox(width: screenWidth * 0.05),
           Row(
@@ -852,7 +795,8 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
                 onTap: () {
                   setState(() {
                     if (equipmentQuantities[text]! > 0) {
-                      equipmentQuantities[text] = equipmentQuantities[text]! - 1;
+                      equipmentQuantities[text] =
+                          equipmentQuantities[text]! - 1;
                     }
                   });
                 },
@@ -903,17 +847,53 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _serviceCard(Icons.wifi, "High Speed", "Free Wifi", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.wifi,
+                  "High Speed",
+                  "Free Wifi",
+                  screenWidth,
+                  screenHeight,
+                ),
                 SizedBox(width: screenWidth * 0.02),
-                _serviceCard(Icons.shower, "Free", "Shower", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.shower,
+                  "Free",
+                  "Shower",
+                  screenWidth,
+                  screenHeight,
+                ),
                 SizedBox(width: screenWidth * 0.02),
-                _serviceCard(Icons.door_back_door, "Locker", "Room", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.door_back_door,
+                  "Locker",
+                  "Room",
+                  screenWidth,
+                  screenHeight,
+                ),
                 SizedBox(width: screenWidth * 0.02),
-                _serviceCard(Icons.car_repair, "Car", "Parking", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.car_repair,
+                  "Car",
+                  "Parking",
+                  screenWidth,
+                  screenHeight,
+                ),
                 SizedBox(width: screenWidth * 0.02),
-                _serviceCard(Icons.security, "Security", "", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.security,
+                  "Security",
+                  "",
+                  screenWidth,
+                  screenHeight,
+                ),
                 SizedBox(width: screenWidth * 0.02),
-                _serviceCard(Icons.room_preferences_outlined, "Changing", "Room", screenWidth, screenHeight),
+                _serviceCard(
+                  Icons.room_preferences_outlined,
+                  "Changing",
+                  "Room",
+                  screenWidth,
+                  screenHeight,
+                ),
               ],
             ),
           ),
@@ -922,7 +902,13 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
     );
   }
 
-  Widget _serviceCard(IconData icon, String line1, String line2, double screenWidth, double screenHeight) {
+  Widget _serviceCard(
+    IconData icon,
+    String line1,
+    String line2,
+    double screenWidth,
+    double screenHeight,
+  ) {
     return Container(
       width: screenWidth * 0.35,
       height: screenHeight * 0.11,
@@ -938,10 +924,22 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(line1, style: TextStyle(fontSize: screenWidth * 0.04, fontFamily: "Custom")),
+              Text(
+                line1,
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  fontFamily: "Custom",
+                ),
+              ),
               if (line2.isNotEmpty) ...[
                 SizedBox(height: screenHeight * 0.005),
-                Text(line2, style: TextStyle(fontSize: screenWidth * 0.04, fontFamily: "Custom")),
+                Text(
+                  line2,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
+                    fontFamily: "Custom",
+                  ),
+                ),
               ],
             ],
           ),
@@ -966,19 +964,49 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
             ),
           ),
           SizedBox(height: screenHeight * 0.01),
-          _safetyWidget("Footwear", "Arrive 10 minutes early. Bookings will be released if 15", "minutes late.", screenWidth, screenHeight),
+          _safetyWidget(
+            "Footwear",
+            "Arrive 10 minutes early. Bookings will be released if 15",
+            "minutes late.",
+            screenWidth,
+            screenHeight,
+          ),
           SizedBox(height: screenHeight * 0.005),
-          _safetyWidget("Grace Period", "Arrive 10 minutes early. Bookings will be released if 15", "minutes late.", screenWidth, screenHeight),
+          _safetyWidget(
+            "Grace Period",
+            "Arrive 10 minutes early. Bookings will be released if 15",
+            "minutes late.",
+            screenWidth,
+            screenHeight,
+          ),
           SizedBox(height: screenHeight * 0.005),
-          _safetyWidget("No Food/Drinks", "Only bottled water is allowed. Foods and Smoking are", "strictly prohibited.", screenWidth, screenHeight),
+          _safetyWidget(
+            "No Food/Drinks",
+            "Only bottled water is allowed. Foods and Smoking are",
+            "strictly prohibited.",
+            screenWidth,
+            screenHeight,
+          ),
           SizedBox(height: screenHeight * 0.005),
-          _safetyWidget("Liability", "Players play at their own risk. The management is not liable", "for injuries.", screenWidth, screenHeight),
+          _safetyWidget(
+            "Liability",
+            "Players play at their own risk. The management is not liable",
+            "for injuries.",
+            screenWidth,
+            screenHeight,
+          ),
         ],
       ),
     );
   }
 
-  Widget _safetyWidget(String title, String desc1, String desc2, double screenWidth, double screenHeight) {
+  Widget _safetyWidget(
+    String title,
+    String desc1,
+    String desc2,
+    double screenWidth,
+    double screenHeight,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(screenWidth * 0.03),
@@ -1065,9 +1093,7 @@ class _badmintonRantalStateState extends State<badmintonRantalState> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const bookingForm(),
-            ),
+            MaterialPageRoute(builder: (context) => const bookingForm()),
           );
         },
         child: Text(
