@@ -1,5 +1,6 @@
 class Court {
   final int id;
+  final int venueId;
   final String courtName;
   final int hourlyPrice;
   final String openAt;
@@ -15,6 +16,7 @@ class Court {
 
   Court({
     required this.id,
+    required this.venueId,
     required this.courtName,
     required this.hourlyPrice,
     required this.openAt,
@@ -32,6 +34,7 @@ class Court {
   factory Court.fromJson(Map<String, dynamic> json) {
     return Court(
       id: json['id'] as int,
+      venueId: json['venue_id'] as int? ?? 1,
       courtName: json['court_name']?.toString() ?? '',
       hourlyPrice: json['hourly_price'] as int? ?? 0,
       openAt: json['open_at']?.toString() ?? '',
@@ -129,11 +132,13 @@ class Rule {
 }
 
 class Equipment {
+  final int id;
   final int qtyTotal;
   final String productName;
   final int rentalPrice;
 
   Equipment({
+    required this.id,
     required this.qtyTotal,
     required this.productName,
     required this.rentalPrice,
@@ -141,6 +146,7 @@ class Equipment {
 
   factory Equipment.fromJson(Map<String, dynamic> json) {
     return Equipment(
+      id: json['id'] as int,
       qtyTotal: json['qty_total'] as int? ?? 0,
       productName: json['product_name']?.toString() ?? '',
       rentalPrice: json['rental_price'] as int? ?? 0,

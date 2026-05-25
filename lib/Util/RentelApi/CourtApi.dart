@@ -13,8 +13,8 @@ class CourtApi {
         headers: Constant.headers,
       ).timeout(const Duration(seconds: 30));
 
-      print("📡 Court Response Status: ${response.statusCode}");
-      print("📡 Court Response Body: ${response.body}");
+      print(" Court Response Status: ${response.statusCode}");
+      print(" Court Response Body: ${response.body}");
 
       if (response.body.isEmpty) {
         return {'success': false, 'message': 'Empty response from server'};
@@ -40,7 +40,7 @@ class CourtApi {
         };
       }
     } catch (e) {
-      print("❌ Get Courts Error: $e");
+      print(" Get Courts Error: $e");
       return {'success': false, 'message': 'Network error: $e'};
     }
   }

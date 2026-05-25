@@ -1,3 +1,7 @@
+import 'package:provider/provider.dart';
+import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:nyxproject/Util/RentelApi/AvaiSlotTimeApi.dart';
@@ -10,15 +14,20 @@ import 'package:nyxproject/models/Court.dart';
 class CourtDetails extends StatefulWidget {
   final Venue? selectedVenue;
   final Court? selectedCourt;
+  final int? venueId;
 
-  const CourtDetails({super.key, this.selectedVenue, this.selectedCourt});
+  const CourtDetails({
+    super.key,
+    this.selectedVenue,
+    this.selectedCourt,
+    this.venueId,
+  });
 
   @override
   State<CourtDetails> createState() => _CourtDetailsState();
 }
 
 class _CourtDetailsState extends State<CourtDetails> {
-  int sessionCount = 1;
   bool _isChecked = false;
   int currentIndex = 0;
   int selectedVenueIndex = 0;
@@ -30,12 +39,14 @@ class _CourtDetailsState extends State<CourtDetails> {
   String? _venuesError;
 
   List<AvailableSlot> _availableSlots = [];
+  AvailableSlot? selectedTimeSlot;
   bool _isLoadingSlots = false;
   String? _slotsError;
 
   Map<String, int> equipmentQuantities = {};
   Map<String, String> equipmentPrices = {};
   Map<String, int> equipmentMaxQty = {};
+  Map<String, int> equipmentIds = {};
 
   List<String> galleryImages = [];
   bool _isLoadingGallery = true;
@@ -64,6 +75,14 @@ class _CourtDetailsState extends State<CourtDetails> {
       return venues[selectedVenueIndex].venueName;
     }
     return "Badminton Court";
+  }
+
+  int get sessionCount => selectedTimeSlot != null ? 1 : 0;
+
+  double getSessionPrice() {
+    if (selectedTimeSlot == null) return 0;
+    double basePrice = courtPrice;
+    return basePrice;
   }
 
   List<DateTime> getAvailableDates() {
@@ -102,9 +121,7 @@ class _CourtDetailsState extends State<CourtDetails> {
           .map((g) => g.courtImageUrl)
           .where((url) => url.isNotEmpty)
           .toList();
-
       _isLoadingGallery = false;
-
       if (galleryImages.isEmpty) {
         _useDefaultImages();
       }
@@ -124,17 +141,13 @@ class _CourtDetailsState extends State<CourtDetails> {
 
   Future<void> _loadVenues() async {
     if (!mounted) return;
-
     setState(() {
       _isLoadingVenues = true;
       _venuesError = null;
     });
-
     try {
       final result = await VenueApi.getAllVenues();
-
       if (!mounted) return;
-
       if (result['success'] == true) {
         setState(() {
           venues = result['data'] ?? [];
@@ -158,23 +171,18 @@ class _CourtDetailsState extends State<CourtDetails> {
 
   Future<void> _loadAvailableSlots() async {
     if (widget.selectedCourt == null) return;
-
     setState(() {
       _isLoadingSlots = true;
       _slotsError = null;
     });
-
     try {
       String formattedDate =
           "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
-
       final result = await AvailableSlotApi.getAvailableSlots(
         widget.selectedCourt!.id,
         formattedDate,
       );
-
       if (!mounted) return;
-
       if (result['success'] == true) {
         setState(() {
           _availableSlots = result['data'] ?? [];
@@ -193,14 +201,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         _isLoadingSlots = false;
       });
     }
-  }
-
-  double getSessionPrice() {
-    double basePrice = courtPrice;
-    if (sessionCount >= 3) {
-      return basePrice * sessionCount * 0.9;
-    }
-    return basePrice * sessionCount;
   }
 
   @override
@@ -227,9 +227,6 @@ class _CourtDetailsState extends State<CourtDetails> {
               SizedBox(height: screenHeight * 0.01),
               _rentalSection(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
-              // _serviceSection(screenWidth, screenHeight),
-              SizedBox(height: screenHeight * 0.01),
-              // _ruleAndSafe(screenWidth, screenHeight),
               _valid(screenWidth, screenHeight),
               _confirm(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.02),
@@ -296,7 +293,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         child: const Center(child: CircularProgressIndicator()),
       );
     }
-
     if (galleryImages.isEmpty) {
       return SizedBox(
         height: screenHeight * 0.28,
@@ -322,7 +318,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         ),
       );
     }
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -408,14 +403,12 @@ class _CourtDetailsState extends State<CourtDetails> {
 
   Widget _bookDate(double screenWidth, double screenHeight) {
     List<DateTime> dates = getAvailableDates();
-
     List<String> getWeekDays() {
       List<String> weekDays = [];
       DateTime now = DateTime.now();
       for (int i = 0; i < 5; i++) {
         DateTime date = now.add(Duration(days: i));
-        String dayName = _getDayName(date.weekday);
-        weekDays.add(dayName);
+        weekDays.add(_getDayName(date.weekday));
       }
       return weekDays;
     }
@@ -466,6 +459,7 @@ class _CourtDetailsState extends State<CourtDetails> {
                     if (mounted) {
                       setState(() {
                         selectedDate = dates[index];
+                        selectedTimeSlot = null;
                       });
                       _loadAvailableSlots();
                     }
@@ -551,7 +545,7 @@ class _CourtDetailsState extends State<CourtDetails> {
           SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Text(
-              "Available Time Slots",
+              "Select Time Slot",
               style: TextStyle(
                 fontFamily: "Custom",
                 fontSize: screenWidth * 0.04,
@@ -559,6 +553,15 @@ class _CourtDetailsState extends State<CourtDetails> {
               ),
             ),
           ),
+          if (selectedTimeSlot != null)
+            Text(
+              "1 selected",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: screenWidth * 0.035,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
         ],
       ),
     );
@@ -571,7 +574,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         child: const Center(child: CircularProgressIndicator()),
       );
     }
-
     if (_venuesError != null) {
       return Padding(
         padding: EdgeInsets.all(screenWidth * 0.04),
@@ -590,14 +592,12 @@ class _CourtDetailsState extends State<CourtDetails> {
         ),
       );
     }
-
     if (venues.isEmpty) {
       return Padding(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: const Text('No venues available'),
       );
     }
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
       child: Column(
@@ -698,7 +698,6 @@ class _CourtDetailsState extends State<CourtDetails> {
     );
   }
 
-  AvailableSlot? selectedTimeSlot;
   Widget _schedule(double screenWidth, double screenHeight) {
     if (_isLoadingSlots) {
       return const Padding(
@@ -706,7 +705,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         child: Center(child: CircularProgressIndicator()),
       );
     }
-
     if (_slotsError != null) {
       return Padding(
         padding: const EdgeInsets.all(20),
@@ -729,7 +727,6 @@ class _CourtDetailsState extends State<CourtDetails> {
         ),
       );
     }
-
     if (_availableSlots.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20),
@@ -761,8 +758,7 @@ class _CourtDetailsState extends State<CourtDetails> {
               childAspectRatio: 2.2,
             ),
             itemBuilder: (context, index) {
-              bool isSelected =
-                  selectedTimeSlot?.id == _availableSlots[index].id;
+              bool isSelected = selectedTimeSlot == _availableSlots[index];
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -795,6 +791,18 @@ class _CourtDetailsState extends State<CourtDetails> {
               );
             },
           ),
+          if (selectedTimeSlot != null)
+            Padding(
+              padding: EdgeInsets.only(top: screenHeight * 0.01),
+              child: Text(
+                "Selected: 1 session - Total: ${courtPrice.toStringAsFixed(0)} Ks",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: screenWidth * 0.035,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -804,7 +812,6 @@ class _CourtDetailsState extends State<CourtDetails> {
     if (equipmentQuantities.isEmpty) {
       return const SizedBox.shrink();
     }
-
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: screenWidth * 0.02,
@@ -853,32 +860,6 @@ class _CourtDetailsState extends State<CourtDetails> {
               ),
             );
           }),
-          SizedBox(height: screenHeight * 0.02),
-          // Row(
-          //   children: [
-          //     Checkbox(
-          //       value: _isChecked,
-          //       onChanged: (bool? value) {
-          //         if (mounted) {
-          //           setState(() {
-          //             _isChecked = value!;
-          //           });
-          //         }
-          //       },
-          //       activeColor: Colors.red,
-          //     ),
-          //     Expanded(
-          //       child: Text(
-          //         "I agree to return all rented equipment in its original condition.",
-          //         style: TextStyle(
-          //           color: Colors.grey,
-          //           fontFamily: "Custom",
-          //           fontSize: screenWidth * 0.03,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
         ],
       ),
     );
@@ -926,14 +907,11 @@ class _CourtDetailsState extends State<CourtDetails> {
             children: [
               GestureDetector(
                 onTap: () {
-                  if (mounted) {
-                    setState(() {
-                      if (equipmentQuantities[text]! > 0) {
-                        equipmentQuantities[text] =
-                            equipmentQuantities[text]! - 1;
-                      }
-                    });
-                  }
+                  setState(() {
+                    if (equipmentQuantities[text]! > 0)
+                      equipmentQuantities[text] =
+                          equipmentQuantities[text]! - 1;
+                  });
                 },
                 child: const Icon(Icons.remove, color: Colors.white, size: 18),
               ),
@@ -949,14 +927,11 @@ class _CourtDetailsState extends State<CourtDetails> {
               SizedBox(width: screenWidth * 0.02),
               GestureDetector(
                 onTap: () {
-                  if (mounted) {
-                    setState(() {
-                      if (equipmentQuantities[text]! < maxQty) {
-                        equipmentQuantities[text] =
-                            equipmentQuantities[text]! + 1;
-                      }
-                    });
-                  }
+                  setState(() {
+                    if (equipmentQuantities[text]! < maxQty)
+                      equipmentQuantities[text] =
+                          equipmentQuantities[text]! + 1;
+                  });
                 },
                 child: const Icon(Icons.add, color: Colors.white, size: 18),
               ),
@@ -971,7 +946,7 @@ class _CourtDetailsState extends State<CourtDetails> {
     equipmentQuantities.clear();
     equipmentPrices.clear();
     equipmentMaxQty.clear();
-
+    equipmentIds.clear();
     if (widget.selectedCourt != null &&
         widget.selectedCourt!.equipment != null &&
         widget.selectedCourt!.equipment!.isNotEmpty) {
@@ -979,229 +954,9 @@ class _CourtDetailsState extends State<CourtDetails> {
         equipmentQuantities[item.productName] = 0;
         equipmentPrices[item.productName] = "${item.rentalPrice} Ks/hour";
         equipmentMaxQty[item.productName] = item.qtyTotal;
+        equipmentIds[item.productName] = item.id;
       }
     }
-  }
-
-  Widget _serviceSection(double screenWidth, double screenHeight) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Additional Services",
-            style: TextStyle(
-              color: const Color.fromARGB(255, 13, 27, 42),
-              fontFamily: "Custom",
-              fontSize: screenWidth * 0.045,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.01),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _serviceCard(
-                  Icons.wifi,
-                  "High Speed",
-                  "Free Wifi",
-                  screenWidth,
-                  screenHeight,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                _serviceCard(
-                  Icons.shower,
-                  "Free",
-                  "Shower",
-                  screenWidth,
-                  screenHeight,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                _serviceCard(
-                  Icons.door_back_door,
-                  "Locker",
-                  "Room",
-                  screenWidth,
-                  screenHeight,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                _serviceCard(
-                  Icons.car_repair,
-                  "Car",
-                  "Parking",
-                  screenWidth,
-                  screenHeight,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                _serviceCard(
-                  Icons.security,
-                  "Security",
-                  "",
-                  screenWidth,
-                  screenHeight,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                _serviceCard(
-                  Icons.room_preferences_outlined,
-                  "Changing",
-                  "Room",
-                  screenWidth,
-                  screenHeight,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _serviceCard(
-    IconData icon,
-    String line1,
-    String line2,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    return Container(
-      width: screenWidth * 0.35,
-      height: screenHeight * 0.11,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: screenWidth * 0.1),
-          SizedBox(width: screenWidth * 0.02),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                line1,
-                style: TextStyle(
-                  fontSize: screenWidth * 0.04,
-                  fontFamily: "Custom",
-                ),
-              ),
-              if (line2.isNotEmpty) ...[
-                SizedBox(height: screenHeight * 0.005),
-                Text(
-                  line2,
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.04,
-                    fontFamily: "Custom",
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _ruleAndSafe(double screenWidth, double screenHeight) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Court Rules & Safety",
-            style: TextStyle(
-              color: const Color.fromARGB(255, 13, 27, 42),
-              fontFamily: "Custom",
-              fontSize: screenWidth * 0.045,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.01),
-          _safetyWidget(
-            "Footwear",
-            "Arrive 10 minutes early. Bookings will be released if 15",
-            "minutes late.",
-            screenWidth,
-            screenHeight,
-          ),
-          SizedBox(height: screenHeight * 0.005),
-          _safetyWidget(
-            "Grace Period",
-            "Arrive 10 minutes early. Bookings will be released if 15",
-            "minutes late.",
-            screenWidth,
-            screenHeight,
-          ),
-          SizedBox(height: screenHeight * 0.005),
-          _safetyWidget(
-            "No Food/Drinks",
-            "Only bottled water is allowed. Foods and Smoking are",
-            "strictly prohibited.",
-            screenWidth,
-            screenHeight,
-          ),
-          SizedBox(height: screenHeight * 0.005),
-          _safetyWidget(
-            "Liability",
-            "Players play at their own risk. The management is not liable",
-            "for injuries.",
-            screenWidth,
-            screenHeight,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _safetyWidget(
-    String title,
-    String desc1,
-    String desc2,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(screenWidth * 0.03),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: "Custom",
-              fontSize: screenWidth * 0.04,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.005),
-          Text(
-            desc1,
-            style: TextStyle(
-              color: Colors.white70,
-              fontFamily: "Custom",
-              fontSize: screenWidth * 0.035,
-            ),
-          ),
-          Text(
-            desc2,
-            style: TextStyle(
-              color: Colors.white70,
-              fontFamily: "Custom",
-              fontSize: screenWidth * 0.035,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _valid(double screenWidth, double screenHeight) {
@@ -1212,11 +967,10 @@ class _CourtDetailsState extends State<CourtDetails> {
           Checkbox(
             value: _isChecked2,
             onChanged: (bool? value) {
-              if (mounted) {
+              if (mounted)
                 setState(() {
                   _isChecked2 = value!;
                 });
-              }
             },
             activeColor: Colors.red,
           ),
@@ -1249,10 +1003,7 @@ class _CourtDetailsState extends State<CourtDetails> {
           ),
         ),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const bookingForm()),
-          );
+          _checkLoginAndProceed();
         },
         child: Text(
           "Booking Now",
@@ -1263,6 +1014,97 @@ class _CourtDetailsState extends State<CourtDetails> {
             fontWeight: FontWeight.w700,
           ),
         ),
+      ),
+    );
+  }
+
+  void _checkLoginAndProceed() {
+    if (selectedTimeSlot == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a time slot'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    if (sessionService.isLoggedIn() && sessionService.getToken() != null) {
+      List<int> timeSlotIds = [selectedTimeSlot!.id];
+
+      // Safe handling of venueId
+      int venueId = 1; // default
+      if (widget.venueId != null) {
+        venueId = widget.venueId!;
+      } else if (widget.selectedCourt != null &&
+          widget.selectedCourt!.venueId != null) {
+        venueId = widget.selectedCourt!.venueId;
+      }
+
+      print("DEBUG CourtDetails: venueId = $venueId");
+      print("DEBUG CourtDetails: courtId = ${widget.selectedCourt?.id ?? 1}");
+
+      final bookingData = {
+        'courtName': courtName,
+        'courtPrice': courtPrice,
+        'selectedDate': selectedDate,
+        'selectedTimeSlot': selectedTimeSlot,
+        'timeSlotIds': timeSlotIds,
+        'sessionCount': 1,
+        'sessionPrice': getSessionPrice(),
+        'totalCharges': getSessionPrice(),
+        'equipmentQuantities': equipmentQuantities,
+        'equipmentPrices': equipmentPrices,
+        'equipmentIds': equipmentIds,
+        'venueId': venueId,
+        'courtId': widget.selectedCourt?.id ?? 1,
+      };
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => bookingForm(bookingData: bookingData),
+        ),
+      );
+    } else {
+      _showLoginRequiredDialog();
+    }
+  }
+
+  void _showLoginRequiredDialog() {
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    final cartService = Provider.of<CartService>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Login Required"),
+        content: const Text("Please login to continue with your booking."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(
+                    sessionService: sessionService,
+                    cartService: cartService,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Login Now"),
+          ),
+        ],
       ),
     );
   }

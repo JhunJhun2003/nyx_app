@@ -25,10 +25,13 @@ class _CourtsState extends State<Courts> {
   @override
   void initState() {
     super.initState();
+    print("DEBUG Courts: venueId = ${widget.venueId}");
+    print("DEBUG Courts: venueName = ${widget.venueName}");
     _loadCourts();
   }
 
   Future<void> _loadCourts() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -37,12 +40,14 @@ class _CourtsState extends State<Courts> {
     try {
       final result = await CourtApi.getCourtsByVenueId(widget.venueId);
 
+      if (!mounted) return;
+
       if (result['success'] == true) {
         setState(() {
           _courts = result['data'] ?? [];
           _isLoading = false;
         });
-        print(' Loaded ${_courts.length} courts for venue ${widget.venueId}');
+        print('Loaded ${_courts.length} courts for venue ${widget.venueId}');
       } else {
         setState(() {
           _error = result['message'] ?? 'Failed to load courts';
@@ -50,6 +55,7 @@ class _CourtsState extends State<Courts> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Error loading courts: $e';
         _isLoading = false;
@@ -59,7 +65,6 @@ class _CourtsState extends State<Courts> {
 
   String _formatTime(String time) {
     if (time.isEmpty) return "";
-    // Format "09:00:00" to "9:00 AM" or "09:00" to "9:00 AM"
     List<String> parts = time.split(':');
     int hour = int.parse(parts[0]);
     String minute = parts[1];
@@ -230,6 +235,10 @@ class _CourtsState extends State<Courts> {
     String openTime = _formatTime(court.openAt);
     String closeTime = _formatTime(court.closeAt);
 
+    print("DEBUG CourtCard: court.id = ${court.id}");
+    print("DEBUG CourtCard: court.venueId = ${court.venueId}");
+    print("DEBUG CourtCard: widget.venueId = ${widget.venueId}");
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.025, vertical: screenHeight * 0.01),
       decoration: BoxDecoration(
@@ -336,11 +345,16 @@ class _CourtsState extends State<Courts> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
+                          // Ensure venueId is not null
+                          int venueIdToPass = widget.venueId;
+                          print("DEBUG: Passing venueId = $venueIdToPass to CourtDetails");
+                          
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => CourtDetails(
                                 selectedCourt: court,
+                                venueId: venueIdToPass,
                               ),
                             ),
                           );

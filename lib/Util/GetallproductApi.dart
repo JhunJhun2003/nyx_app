@@ -8,7 +8,7 @@ class GetallproductApi {
   static Future<Map<String, dynamic>> getAllProducts() async {
     final Uri uri = Uri.parse("${Constant.API_URL}/homecategory/showproduct");
     
-    print("📡 Get All Products URL: $uri");
+    print(" Get All Products URL: $uri");
     
     try {
       final http.Response response = await http
@@ -40,7 +40,7 @@ class GetallproductApi {
         if (isSuccess && responseData.containsKey('result') && responseData['result'] is List) {
           final List productsList = responseData['result'];
           
-          print("✅ Found ${productsList.length} products");
+          print(" Found ${productsList.length} products");
           
           // Convert to List<Product>
           List<Product> products = productsList
@@ -53,7 +53,7 @@ class GetallproductApi {
             'message': 'Products fetched successfully',
           };
         } else {
-          print("❌ 'result' is not a List or doesn't exist");
+          print(" 'result' is not a List or doesn't exist");
           print("Type of 'result': ${responseData['result'].runtimeType}");
         }
         

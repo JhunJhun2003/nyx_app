@@ -37,7 +37,7 @@ class OrderApi {
     request.fields['delivery_address'] = deliveryAddress;
     request.fields['remark'] = remark;
     request.fields['payment_method'] = paymentMethod;
-    request.fields['items'] = jsonEncode(items); // ✅ Convert to JSON string
+    request.fields['items'] = jsonEncode(items); 
     request.fields['tax'] = tax.toString();
     request.fields['delivery_fee'] = deliveryFee.toString();
 
@@ -70,12 +70,12 @@ class OrderApi {
     String? status,
     String? token,
   }) async {
-    // ✅ Use the correct endpoint from Postman
+    //  Use the correct endpoint from Postman
     final Uri uri = Uri.parse(
       "${Constant.API_URL}/cart/orderlist?user_id=$userId",
     );
 
-    print("📡 Fetch Orders URL: $uri");
+    print(" Fetch Orders URL: $uri");
 
     final headers = <String, String>{
       'Accept': 'application/json',
@@ -95,7 +95,7 @@ class OrderApi {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
-        // ✅ Check if response has success and data fields
+        //  Check if response has success and data fields
         if (responseData['success'] == true) {
           return {
             'success': true,

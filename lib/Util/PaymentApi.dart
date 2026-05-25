@@ -31,13 +31,15 @@ class PaymentApi {
         
         if (responseData['success'] == true) {
           final List<dynamic> paymentData = responseData['data'] ?? [];
+          
+          // Convert to List<PaymentMethod>
           final List<PaymentMethod> paymentMethods = paymentData
-              .map((item) => PaymentMethod.fromJson(item))
+              .map((item) => PaymentMethod.fromJson(item as Map<String, dynamic>))
               .toList();
           
           return {
             'success': true,
-            'data': paymentMethods,
+            'data': paymentMethods,  // Returns List<PaymentMethod>
             'message': responseData['message'] ?? 'Payment methods fetched',
           };
         } else {
