@@ -42,7 +42,7 @@ class _slipPageState extends State<slipPage> {
   final GlobalKey _repaintKey = GlobalKey();
   bool _isSharing = false;
   
-  String orderNo = "#" + DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13);
+  String _orderNo = "";
   String date = DateTime.now().day.toString().padLeft(2, '0') + "/" +
       DateTime.now().month.toString().padLeft(2, '0') + "/" +
       DateTime.now().year.toString();
@@ -59,6 +59,34 @@ class _slipPageState extends State<slipPage> {
   void initState() {
     super.initState();
     _calculateTotals();
+    _getOrderNumber();
+  }
+
+  void _getOrderNumber() {
+    // Try to get order_id from orderResponse
+    if (widget.orderResponse != null) {
+      // Check different possible paths for order_id
+      if (widget.orderResponse!.containsKey('data')) {
+        final data = widget.orderResponse!['data'];
+        if (data is List && data.isNotEmpty) {
+          _orderNo = data[0]['order_id']?.toString() ?? 
+                     data[0]['id']?.toString() ?? 
+                     "#${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}";
+        } else if (data is Map<String, dynamic>) {
+          _orderNo = data['order_id']?.toString() ?? 
+                     data['id']?.toString() ?? 
+                     "#${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}";
+        }
+      } else if (widget.orderResponse!.containsKey('order_id')) {
+        _orderNo = widget.orderResponse!['order_id'].toString();
+      } else if (widget.orderResponse!.containsKey('id')) {
+        _orderNo = widget.orderResponse!['id'].toString();
+      } else {
+        _orderNo = "#${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}";
+      }
+    } else {
+      _orderNo = "#${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}";
+    }
   }
 
   void _calculateTotals() {
@@ -151,7 +179,7 @@ class _slipPageState extends State<slipPage> {
       
       await Share.shareXFiles(
         [XFile(imagePath.path)],
-        text: "Order Receipt #$orderNo\nTotal: ${total.toStringAsFixed(0)} Ks",
+        text: "Order Receipt #$_orderNo\nTotal: ${total.toStringAsFixed(0)} Ks",
         subject: "Order Receipt",
       );
       
@@ -183,38 +211,41 @@ class _slipPageState extends State<slipPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final orderNumber = widget.orderResponse?['order_number'] ?? 
-                       widget.orderResponse?['data']?[0]?['order_id']?.toString() ??
-                       orderNo;
-    final orderDate = widget.orderResponse?['order_date'] ?? 
-                      widget.orderResponse?['data']?[0]?['create_at'] != null
-                          ? _formatDate(widget.orderResponse!['data'][0]['create_at'])
-                          : date;
-    final orderTime = widget.orderResponse?['order_time'] ?? time;
+ @override
+Widget build(BuildContext context) {
+  final orderNumber = _orderNo.isNotEmpty 
+      ? _orderNo 
+      : widget.orderResponse?['order_number'] ?? 
+        widget.orderResponse?['data']?[0]?['order_id']?.toString() ??
+        "#${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}";
+        
+  final orderDate = widget.orderResponse?['order_date'] ?? 
+                    widget.orderResponse?['data']?[0]?['create_at'] != null
+                        ? _formatDate(widget.orderResponse!['data'][0]['create_at'])
+                        : date;
+  final orderTime = widget.orderResponse?['order_time'] ?? time;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _header(),
-              const SizedBox(height: 15),
-              RepaintBoundary(
-                key: _repaintKey,
-                child: _voucher(orderNumber, orderDate, orderTime),
-              ),
-              const SizedBox(height: 15),
-              _buttons(),
-              const SizedBox(height: 20),
-            ],
-          ),
+  return Scaffold(
+    body: SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _header(),
+            const SizedBox(height: 15),
+            RepaintBoundary(
+              key: _repaintKey,
+              child: _voucher(orderNumber, orderDate, orderTime),
+            ),
+            const SizedBox(height: 15),
+            _buttons(),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _header() {
     return Container(
       color: const Color.fromARGB(255, 13, 27, 42),

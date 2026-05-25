@@ -377,11 +377,7 @@ class _rentalPaymentState extends State<rentalPayment> {
               const SizedBox(height: 5),
               _paymentInfo(),
               const SizedBox(height: 10),
-              if (_showTransactionInput()) ...[
-                _input("Enter transaction number"),
-                const SizedBox(height: 10),
-                _imageUploadSection(),
-              ],
+              _imageUploadSection(),
               const SizedBox(height: 20),
               _confirm(),
               const SizedBox(height: 30),

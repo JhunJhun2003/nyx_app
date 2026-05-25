@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:nyxproject/Util/OrderApi.dart';
+import 'package:nyxproject/Util/RentelApi/BookingOrderListApi.dart';
+import 'package:nyxproject/models/BookingOrderList.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/slip.dart';
+import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
 
-class orderHistory extends StatefulWidget {
-  const orderHistory({super.key});
+class myBookingList extends StatefulWidget {
+  const myBookingList({super.key});
 
   @override
-  State<orderHistory> createState() => _orderHistoryState();
+  State<myBookingList> createState() => _myBookingListState();
 }
 
-class _orderHistoryState extends State<orderHistory> {
+class _myBookingListState extends State<myBookingList> {
   final List<String> statusFilter = [
     "All",
     "Pending",
@@ -22,18 +22,17 @@ class _orderHistoryState extends State<orderHistory> {
   ];
 
   String _selectedStatus = "All";
-  List<dynamic> _allOrders = [];
-  List<dynamic> _filteredOrders = [];
+  List<BookingOrder> _allBookings = [];
+  List<BookingOrder> _filteredBookings = [];
   bool _isLoading = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchOrders();
+    _fetchBookings();
   }
 
-  //  Redirect to login page
   void _redirectToLogin() async {
     final sessionService = Provider.of<SessionService>(context, listen: false);
     final cartService = Provider.of<CartService>(context, listen: false);
@@ -52,7 +51,9 @@ class _orderHistoryState extends State<orderHistory> {
     }
   }
 
-  Future<void> _fetchOrders() async {
+  Future<void> _fetchBookings() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -60,36 +61,31 @@ class _orderHistoryState extends State<orderHistory> {
 
     try {
       final sessionService = Provider.of<SessionService>(context, listen: false);
-      final user = sessionService.getStoredUser();
-      final userId = user?.id ?? 0;
       final token = sessionService.getToken();
 
-      if (userId == 0) {
+      if (token == null) {
         _redirectToLogin();
         return;
       }
 
-      final result = await OrderApi.fetchOrders(userId: userId, token: token);
+      final result = await BookingOrderListApi.getMobileBookings(token: token);
 
-      //  Check for unauthorized - redirect to login
-      if (result['unauthorized'] == true) {
-        _redirectToLogin();
-        return;
-      }
+      if (!mounted) return;
 
-      if (result['success']) {
+      if (result['success'] == true) {
         setState(() {
-          _allOrders = result['data'] ?? [];
+          _allBookings = result['data'] ?? [];
           _applyFilter();
           _isLoading = false;
         });
       } else {
         setState(() {
-          _errorMessage = result['message'] ?? 'Failed to load orders';
+          _errorMessage = result['message'] ?? 'Failed to load bookings';
           _isLoading = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error: $e';
         _isLoading = false;
@@ -99,12 +95,11 @@ class _orderHistoryState extends State<orderHistory> {
 
   void _applyFilter() {
     if (_selectedStatus == "All") {
-      _filteredOrders = List.from(_allOrders);
+      _filteredBookings = List.from(_allBookings);
     } else {
-      _filteredOrders = _allOrders.where((order) {
-        final orderStatus = order['order_status']?.toString().toLowerCase() ?? '';
-        return orderStatus == _selectedStatus.toLowerCase();
-      }).toList();
+      // For now, since API doesn't have status, show all or filter based on some logic
+      // You can add status field to your BookingOrder model later
+      _filteredBookings = List.from(_allBookings);
     }
     setState(() {});
   }
@@ -117,54 +112,22 @@ class _orderHistoryState extends State<orderHistory> {
   }
 
   String _formatDate(String? dateTimeString) {
-    if (dateTimeString == null) return 'N/A';
+    if (dateTimeString == null || dateTimeString.isEmpty) return 'N/A';
     try {
-      final date = DateTime.parse(dateTimeString);
-      return '${date.day}/${date.month}/${date.year}';
+      List<String> parts = dateTimeString.split(' ');
+      if (parts.isNotEmpty) {
+        return parts[0];
+      }
+      return dateTimeString;
     } catch (e) {
       return dateTimeString;
     }
   }
 
-  String _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'delivered':
-      case 'completed':
-        return 'green';
-      case 'pending':
-        return 'orange';
-      case 'cancelled':
-        return 'red';
-      default:
-        return 'grey';
-    }
+  void _navigateToBookingDetails(BookingOrder booking) {
+    _showBookingDetailsDialog(booking);
   }
 
-void _navigateToSlipPage(Map<String, dynamic> order) {
-  final paymentMethod = order['payment_method']?.toString() ?? 'Cash on Delivery';
-  final total = order['Total'] ?? 0;
-
-  final contactInfo = <String, String>{
-    'name': order['customer_name']?.toString() ?? 'N/A',
-    'phone': order['phone']?.toString() ?? 'N/A',
-    'email': order['email']?.toString() ?? 'N/A',
-    'address': order['delivery_address']?.toString() ?? 'N/A',
-    'remark': order['remark']?.toString() ?? '',
-  };
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => slipPage(
-        paymentMethod: paymentMethod,
-        transactionNumber: order['transaction_number']?.toString(),
-        totalAmount: total is int ? total.toDouble() : (total as double? ?? 0.0),
-        contactInfo: contactInfo,
-        orderResponse: order,  // This passes the entire order object
-      ),
-    ),
-  );
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,7 +154,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Loading orders...'),
+            Text('Loading bookings...'),
           ],
         ),
       );
@@ -207,7 +170,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
             Text(_errorMessage!),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _fetchOrders,
+              onPressed: _fetchBookings,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('Retry'),
             ),
@@ -216,7 +179,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
       );
     }
 
-    if (_filteredOrders.isEmpty) {
+    if (_filteredBookings.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -224,11 +187,11 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
             Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(_selectedStatus == "All" 
-                ? 'No orders found' 
-                : 'No $_selectedStatus orders found'),
+                ? 'No bookings found' 
+                : 'No $_selectedStatus bookings found'),
             const SizedBox(height: 8),
             const Text(
-              'Your order history will appear here',
+              'Your booking history will appear here',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -238,24 +201,23 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: _filteredOrders.length,
+      itemCount: _filteredBookings.length,
       itemBuilder: (context, index) {
-        final order = _filteredOrders[index];
-        final orderId = order['order_id']?.toString() ?? '#${index + 1}';
-        final date = _formatDate(order['create_at']);
-        final total = order['Total']?.toString() ?? '0';
-        final itemCount = order['items']?.length ?? 0;
-        final orderStatus = order['order_status']?.toString() ?? 'pending';
-        final statusColor = _getStatusColor(orderStatus);
+        final booking = _filteredBookings[index];
+        final bookingId = booking.id.toString();
+        final date = _formatDate(booking.date);
+        final total = booking.total.toString();
+        final itemCount = booking.items.length;
+        // Status can be added later to the model
+        final status = "Completed";
         
-        return _orderCard(
-          orderId: orderId,
+        return _bookingCard(
+          bookingId: bookingId,
           date: date,
           total: total,
           itemCount: itemCount,
-          status: orderStatus,
-          statusColor: statusColor,
-          onTap: () => _navigateToSlipPage(order),
+          status: status,
+          onTap: () => _navigateToBookingDetails(booking),
         );
       },
     );
@@ -277,7 +239,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
           ),
           const Expanded(
             child: Text(
-              "Orders History",
+              "My Bookings",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -330,31 +292,28 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
     );
   }
 
-  Widget _orderCard({
-    required String orderId,
+  Widget _bookingCard({
+    required String bookingId,
     required String date,
     required String total,
     required int itemCount,
     required String status,
-    required String statusColor,
     required VoidCallback onTap,
   }) {
-    Color color;
-    switch (statusColor) {
-      case 'green':
-        color = Colors.green;
+    Color statusColor;
+    switch (status.toLowerCase()) {
+      case 'completed':
+        statusColor = Colors.green;
         break;
-      case 'orange':
-        color = Colors.orange;
+      case 'pending':
+        statusColor = Colors.orange;
         break;
-      case 'red':
-        color = Colors.red;
+      case 'cancel':
+        statusColor = Colors.red;
         break;
       default:
-        color = Colors.grey;
+        statusColor = Colors.grey;
     }
-
-    final displayTotal = total != '0' ? total : '';
 
     return GestureDetector(
       onTap: onTap,
@@ -383,7 +342,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                 color: const Color(0xFF0D1B2A),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.receipt_long, color: Colors.white, size: 28),
+              child: const Icon(Icons.sports, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -394,7 +353,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Order #$orderId",
+                        "Booking #$bookingId",
                         style: const TextStyle(
                           fontFamily: "Custom",
                           fontWeight: FontWeight.bold,
@@ -404,14 +363,14 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.2),
+                          color: statusColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          status[0].toUpperCase() + status.substring(1),
+                          status,
                           style: TextStyle(
                             fontFamily: "Custom",
-                            color: color,
+                            color: statusColor,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -433,7 +392,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.shopping_bag, size: 12, color: Colors.grey),
+                      const Icon(Icons.sports, size: 12, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         '$itemCount items',
@@ -445,13 +404,93 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                       ),
                     ],
                   ),
-                  
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total: $total Ks',
+                    style: const TextStyle(
+                      fontFamily: "Custom",
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.red,
+                    ),
+                  ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showBookingDetailsDialog(BookingOrder booking) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Booking #${booking.id}",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _detailRow("Court", booking.courtName),
+              _detailRow("Date", booking.date),
+              _detailRow("Booked On", _formatDate(booking.createAt)),
+              _detailRow("Payment Method", booking.paymentMethod),
+              _detailRow("Customer", booking.customer),
+              const Divider(),
+              const Text("Rental Items", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...booking.items.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("${item.equipment ?? 'Item'} x ${item.quantity ?? 0}"),
+                    Text("${(item.total ?? 0).toString()} Ks"),
+                  ],
+                ),
+              )),
+              const Divider(),
+              _detailRow("Court Fee", "${booking.courtFee} Ks"),
+              _detailRow("Total", "${booking.total} Ks", isBold: true),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: isBold ? Colors.red : null,
+            ),
+          ),
+        ],
       ),
     );
   }

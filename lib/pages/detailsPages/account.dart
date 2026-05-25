@@ -5,7 +5,8 @@ import 'package:nyxproject/pages/detailsPages/accountpages/contactus.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/editprofile.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/help.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/mywishlist.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/myBookingList.dart';
+// import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
@@ -13,6 +14,7 @@ import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/account_men
 import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/account_section.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/login_prompt_card.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/logout_button.dart';
+
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
 
@@ -85,11 +87,11 @@ class _AccountPageState extends State<AccountPage> {
               
               AccountMenuItem(
                 icon: Icons.favorite,
-                title: "My Wishlist",
+                title: "My Booking List",
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const mywishlist()),
+                    MaterialPageRoute(builder: (context) => const myBookingList()),
                   );
                 },
               ),

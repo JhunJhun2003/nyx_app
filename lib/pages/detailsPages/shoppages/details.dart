@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
+import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/services/cart_service.dart';
+import 'package:nyxproject/Util/GetallproductApi.dart';
 
 class ProductDetails extends StatefulWidget {
   final Product product;
@@ -17,19 +19,20 @@ class _ProductDetailsState extends State<ProductDetails> {
   int selectedIndex = 0;
   int _quantity = 1;
   bool _isAddingToCart = false;
+  List<Product> _relatedProducts = [];
+  bool _isLoadingRelated = true;
 
-  // ✅ Check if product is in stock
+  // Check if product is in stock
   bool get _isInStock {
-    // Check total_stock field
     if (widget.product.totalStock != "0") {
       final stock = int.tryParse(widget.product.totalStock);
       if (stock != null) {
         return stock > 0;
       }
     }
-    // Check status field
-    return widget.product.status!.toLowerCase() != "out of stock";
-      // Default to true if no stock info
+    if (widget.product.status != null) {
+      return widget.product.status!.toLowerCase() != "out of stock";
+    }
     return true;
   }
 
@@ -45,6 +48,51 @@ class _ProductDetailsState extends State<ProductDetails> {
       return Colors.red;
     }
     return Colors.green;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRelatedProducts();
+  }
+
+  Future<void> _loadRelatedProducts() async {
+    setState(() {
+      _isLoadingRelated = true;
+    });
+
+    try {
+      final result = await GetallproductApi.getAllProducts();
+
+      if (result['success'] == true) {
+        List<Product> allProducts = result['data'] ?? [];
+        
+        // Filter products from the same category, excluding current product
+        List<Product> related = allProducts.where((product) {
+          return product.category == widget.product.category && 
+                 product.id != widget.product.id;
+        }).toList();
+        
+        // Limit to 4 products
+        if (related.length > 4) {
+          related = related.sublist(0, 4);
+        }
+        
+        setState(() {
+          _relatedProducts = related;
+          _isLoadingRelated = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingRelated = false;
+        });
+      }
+    } catch (e) {
+      print("Error loading related products: $e");
+      setState(() {
+        _isLoadingRelated = false;
+      });
+    }
   }
 
   @override
@@ -82,7 +130,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                     const SizedBox(height: 5),
                     _section("Related Products"),
                     const SizedBox(height: 5),
-                    _gridCards(),
+                    _relatedProductsGrid(),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -167,13 +215,6 @@ class _ProductDetailsState extends State<ProductDetails> {
                 ),
             ],
           ),
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: const Icon(
-          //     Icons.compare_rounded,
-          //     color: Colors.white,
-          //   ),
-          // ),
         ],
       ),
     );
@@ -595,7 +636,28 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
-  Widget _gridCards() {
+  Widget _relatedProductsGrid() {
+    if (_isLoadingRelated) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_relatedProducts.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text(
+            "No related products found",
+            style: TextStyle(fontFamily: "Custom", fontSize: 14),
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -606,37 +668,81 @@ class _ProductDetailsState extends State<ProductDetails> {
         crossAxisSpacing: 12,
         childAspectRatio: 0.8,
       ),
-      itemCount: 4,
+      itemCount: _relatedProducts.length,
       itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black, width: 2),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.image, size: 100),
-              Padding(
-                padding: const EdgeInsets.all(6),
-                child: Text(
-                  "Product Name",
-                  style: const TextStyle(fontSize: 12, fontFamily: 'Custom'),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const Text(
-                "35,000 Ks",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Custom',
-                ),
-              ),
-              const SizedBox(height: 6),
-            ],
+        final product = _relatedProducts[index];
+        return _relatedProductCard(product);
+      },
+    );
+  }
+
+  Widget _relatedProductCard(Product product) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetails(product: product),
           ),
         );
       },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.black, width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: product.images.isNotEmpty
+                    ? Image.network(
+                        product.images,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.image, size: 80);
+                        },
+                      )
+                    : const Icon(Icons.image, size: 80),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  Text(
+                    product.productName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Custom',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "${product.price} Ks",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Custom',
+                      fontSize: 12,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -704,18 +810,6 @@ class _ProductDetailsState extends State<ProductDetails> {
           ),
           Row(
             children: [
-              // ElevatedButton(
-              //   onPressed: _isInStock ? () {} : null,
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: Colors.red,
-              //     padding: const EdgeInsets.symmetric(horizontal: 12),
-              //   ),
-              //   child: const Text(
-              //     "Buy Now",
-              //     style: TextStyle(fontFamily: "Custom", color: Colors.white),
-              //   ),
-              // ),
-              const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _isInStock && !_isAddingToCart
                     ? () => _addToCart(cartService)
@@ -749,7 +843,6 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   void _addToCart(CartService cartService) {
-    // Check stock again before adding
     if (!_isInStock) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -765,33 +858,14 @@ class _ProductDetailsState extends State<ProductDetails> {
       _isAddingToCart = true;
     });
 
-    // Add to cart with selected quantity
     cartService.addToCart(widget.product, quantity: _quantity);
 
-    // Clear any existing snackbars
     ScaffoldMessenger.of(context).clearSnackBars();
 
-    // Show success message
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(
-    //     content: Text('Added ${_quantity} ${_quantity == 1 ? 'item' : 'items'} to cart'),
-    //     duration: const Duration(seconds: 2),
-    //     backgroundColor: Colors.green,
-    //     action: SnackBarAction(
-    //       label: 'UNDO',
-    //       onPressed: () {
-    //         cartService.removeFromCart(widget.product);
-    //       },
-    //     ),
-    //   ),
-    // );
-
-    // Reset quantity to 1
     setState(() {
       _quantity = 1;
     });
 
-    // Reset button state after delay
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
