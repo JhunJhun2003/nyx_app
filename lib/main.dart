@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/services/cart_service.dart';
-import 'pages/splash_screen.dart';  // ✅ Add this import
+import 'pages/splash_screen.dart';  // Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

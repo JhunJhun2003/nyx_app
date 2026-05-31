@@ -1,4 +1,13 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:nyxproject/Util/Constant.dart';
+import 'package:nyxproject/Util/PaymentApi.dart';
+import 'package:nyxproject/models/Payment.dart';
+import 'package:nyxproject/services/session_service.dart';
+import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/classes_slip.dart';
 
 class classesPayment extends StatefulWidget {
@@ -11,15 +20,19 @@ class classesPayment extends StatefulWidget {
 }
 
 class _classesPaymentState extends State<classesPayment> {
-  String currentOption = "";
+  String? selectedPaymentId;
   final TextEditingController input = TextEditingController();
-  
-  List<Map<String, dynamic>> _paymentMethods = [];
+  File? _paymentImage;
+  bool _isProcessing = false;
   bool _isLoadingPayments = true;
   String? _paymentsError;
+  final ImagePicker _picker = ImagePicker();
+
+  List<PaymentMethod> _paymentMethods = [];  // Changed to List<PaymentMethod>
 
   // Enrollment data
   String fullname = "";
+  String gender = "";
   String age = "";
   String address = "";
   String phone = "";
@@ -28,6 +41,8 @@ class _classesPaymentState extends State<classesPayment> {
   String trainingSchedule = "";
   String trainingTitle = "";
   int price = 0;
+  int? trainingProgramId;
+  int? trainingLevelId;
 
   @override
   void initState() {
@@ -41,7 +56,8 @@ class _classesPaymentState extends State<classesPayment> {
     
     setState(() {
       fullname = data['fullname'] ?? "N/A";
-      age = data['age'] ?? "N/A";
+      gender = data['gender'] ?? "N/A";
+      age = data['age']?.toString() ?? "N/A";
       address = data['address'] ?? "Yangon, Myanmar";
       phone = data['phone'] ?? "N/A";
       email = data['email'] ?? "N/A";
@@ -49,6 +65,8 @@ class _classesPaymentState extends State<classesPayment> {
       trainingSchedule = data['timeSlot'] ?? "8:00 - 10:00 AM";
       trainingTitle = data['trainingTitle'] ?? "Training Program";
       price = data['price'] ?? 0;
+      trainingProgramId = data['trainingId'];
+      trainingLevelId = data['levelId'];
     });
   }
 
@@ -59,25 +77,33 @@ class _classesPaymentState extends State<classesPayment> {
     });
 
     try {
-      // Simulate API call - Replace with actual API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock payment methods - Replace with actual API response
-      final mockMethods = [
-        {'id': 1, 'payment_method': 'CB Pay', 'payment_name': 'CB Bank Account', 'payment_number': '1234567890'},
-        {'id': 2, 'payment_method': 'Kpay', 'payment_name': 'Kpay Account', 'payment_number': '09987654321'},
-        {'id': 3, 'payment_method': 'WavePay', 'payment_name': 'WavePay Account', 'payment_number': '09876543210'},
-        {'id': 4, 'payment_method': 'AYA Pay', 'payment_name': 'AYA Bank Account', 'payment_number': '1122334455'},
-      ];
-      
-      setState(() {
-        _paymentMethods = mockMethods;
-        _isLoadingPayments = false;
-        if (_paymentMethods.isNotEmpty) {
-          currentOption = _paymentMethods[0]['payment_method'];
-        }
-      });
+      final sessionService = Provider.of<SessionService>(
+        context,
+        listen: false,
+      );
+      final token = sessionService.getToken();
+
+      final result = await PaymentApi.getPaymentMethods(token: token);
+
+      if (result['success']) {
+        // result['data'] is already List<PaymentMethod>
+        final List<PaymentMethod> methods = result['data'];
+        
+        setState(() {
+          _paymentMethods = methods;
+          _isLoadingPayments = false;
+          if (_paymentMethods.isNotEmpty) {
+            selectedPaymentId = _paymentMethods[0].id.toString();
+          }
+        });
+      } else {
+        setState(() {
+          _paymentsError = result['message'] ?? 'Failed to load payment methods';
+          _isLoadingPayments = false;
+        });
+      }
     } catch (e) {
+      print("Error loading payment methods: $e");
       setState(() {
         _paymentsError = 'Error loading payment methods: $e';
         _isLoadingPayments = false;
@@ -85,22 +111,197 @@ class _classesPaymentState extends State<classesPayment> {
     }
   }
 
-  String getSelectedPaymentName() {
+  PaymentMethod? get selectedPaymentMethod {
     for (var method in _paymentMethods) {
-      if (method['payment_method'] == currentOption) {
-        return method['payment_name'] ?? 'N/A';
+      if (method.id.toString() == selectedPaymentId) {
+        return method;
       }
     }
-    return 'N/A';
+    return null;
   }
 
-  String getSelectedPaymentNumber() {
-    for (var method in _paymentMethods) {
-      if (method['payment_method'] == currentOption) {
-        return method['payment_number'] ?? 'N/A';
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Upload Payment Slip',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, size: 28),
+              title: const Text('Take a Photo'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _pickImageFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, size: 28),
+              title: const Text('Choose from Gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _pickImageFromGallery();
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _paymentImage = File(image.path);
+        });
       }
+    } catch (e) {
+      print('Error picking image: $e');
     }
-    return 'N/A';
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _paymentImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  Future<void> _submitEnrollment() async {
+    if (selectedPaymentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a payment method'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_paymentImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload payment slip'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      final sessionService = Provider.of<SessionService>(
+        context,
+        listen: false,
+      );
+      final token = sessionService.getToken();
+
+      final Uri uri = Uri.parse("${Constant.API_URL}/training/addstudenttraining");
+      final request = http.MultipartRequest('POST', uri);
+
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      // Add form data fields
+      request.fields['name'] = fullname;
+      request.fields['gender'] = gender.toLowerCase();
+      request.fields['phone'] = phone;
+      request.fields['email'] = email;
+      request.fields['age'] = age;
+      request.fields['address'] = address;
+      request.fields['training_program_id'] = trainingProgramId?.toString() ?? '';
+      request.fields['training_level_id'] = trainingLevelId?.toString() ?? '';
+      request.fields['payment_id'] = selectedPaymentId!;
+
+      // Add payment image
+      request.files.add(
+        await http.MultipartFile.fromPath('payment_image', _paymentImage!.path),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      setState(() {
+        _isProcessing = false;
+      });
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => classesSlip(
+                enrollmentData: widget.enrollmentData,
+                paymentMethod: selectedPaymentMethod?.paymentMethod ?? "N/A",
+                transactionNumber: input.text.trim(),
+                responseData: responseData,
+              ),
+            ),
+          );
+        }
+      } else {
+        String errorMessage = 'Failed to submit enrollment';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
+        } catch (e) {}
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Network Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -116,6 +317,8 @@ class _classesPaymentState extends State<classesPayment> {
               _section("Registration Information"),
               const SizedBox(height: 5),
               _information("Name", fullname),
+              const SizedBox(height: 1),
+              _information("Gender", gender),
               const SizedBox(height: 1),
               _information("Age", age),
               const SizedBox(height: 1),
@@ -138,15 +341,100 @@ class _classesPaymentState extends State<classesPayment> {
               _paymentMethod(),
               const SizedBox(height: 5),
               _paymentInfo(),
+              // const SizedBox(height: 10),
+              // _input("Enter transaction number"),
               const SizedBox(height: 10),
-              _input("Enter transaction number"),
-              const SizedBox(height: 10),
+              _imageUploadSection(),
+              const SizedBox(height: 20),
               _confirm(),
               const SizedBox(height: 30),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _imageUploadSection() {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Payment Slip:",
+                style: TextStyle(
+                  fontFamily: 'Custom',
+                  color: Color.fromARGB(255, 13, 27, 42),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.upload_file, size: 18),
+                label: const Text("Upload Slip"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_paymentImage != null)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    _paymentImage!,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => _pickImage(),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text("Change"),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _paymentImage = null;
+                        });
+                      },
+                      icon: const Icon(Icons.delete, size: 18),
+                      label: const Text("Remove"),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -263,26 +551,47 @@ class _classesPaymentState extends State<classesPayment> {
       );
     }
 
+    if (_paymentMethods.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text('No payment methods available'),
+        ),
+      );
+    }
+
     return Container(
       child: Column(
         children: _paymentMethods.map((method) {
+          bool isSelected = selectedPaymentId == method.id.toString();
           return ListTile(
             title: Text(
-              method['payment_method'],
+              method.paymentMethod,
               style: const TextStyle(
                 fontFamily: 'Custom',
                 color: Color.fromARGB(255, 13, 27, 42),
               ),
             ),
             leading: Radio(
-              value: method['payment_method'],
-              groupValue: currentOption,
+              value: method.id.toString(),
+              groupValue: selectedPaymentId,
               onChanged: (value) {
                 setState(() {
-                  currentOption = value.toString();
+                  selectedPaymentId = value.toString();
+                  input.clear();
                 });
               },
             ),
+            trailing: method.paymentImageUrl.isNotEmpty
+                ? Image.network(
+                    method.paymentImageUrl,
+                    height: 30,
+                    width: 30,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.payment, size: 30);
+                    },
+                  )
+                : null,
           );
         }).toList(),
       ),
@@ -290,32 +599,53 @@ class _classesPaymentState extends State<classesPayment> {
   }
 
   Widget _paymentInfo() {
-    if (currentOption.isEmpty) {
+    final method = selectedPaymentMethod;
+    
+    if (method == null) {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
+          if (method.paymentImageUrl.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Image.network(
+                method.paymentImageUrl,
+                height: 60,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.account_balance,
+                    size: 40,
+                    color: Colors.white,
+                  );
+                },
+              ),
+            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "$currentOption Name :",
-                style: const TextStyle(
+              const Text(
+                "Account Name : ",
+                style: TextStyle(
                   fontFamily: 'Custom',
-                  color: Color.fromARGB(255, 13, 27, 42),
-                  fontSize: 17,
+                  color: Colors.white,
+                  fontSize: 15,
                 ),
               ),
-              const SizedBox(width: 50),
               Text(
-                getSelectedPaymentName(),
+                method.paymentName,
                 style: const TextStyle(
                   fontFamily: 'Custom',
-                  color: Color.fromARGB(255, 13, 27, 42),
-                  fontSize: 17,
+                  color: Colors.white,
+                  fontSize: 15,
                 ),
               ),
             ],
@@ -324,21 +654,20 @@ class _classesPaymentState extends State<classesPayment> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "$currentOption Number :",
-                style: const TextStyle(
+              const Text(
+                "Account Number : ",
+                style: TextStyle(
                   fontFamily: 'Custom',
-                  color: Color.fromARGB(255, 13, 27, 42),
-                  fontSize: 17,
+                  color: Colors.white,
+                  fontSize: 15,
                 ),
               ),
-              const SizedBox(width: 33),
               Text(
-                getSelectedPaymentNumber(),
+                method.paymentNumber,
                 style: const TextStyle(
                   fontFamily: 'Custom',
-                  color: Color.fromARGB(255, 13, 27, 42),
-                  fontSize: 17,
+                  color: Colors.white,
+                  fontSize: 15,
                 ),
               ),
             ],
@@ -379,33 +708,28 @@ class _classesPaymentState extends State<classesPayment> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
           fixedSize: const Size(200, 50),
-        ),
-        onPressed: () {
-          final paymentData = {
-            'enrollmentData': widget.enrollmentData,
-            'paymentMethod': currentOption,
-            'transactionNumber': input.text.trim(),
-            'paymentInfo': {
-              'name': getSelectedPaymentName(),
-              'number': getSelectedPaymentNumber(),
-            },
-          };
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => classesSlip(paymentData: paymentData),
-            ),
-          );
-        },
-        child: const Text(
-          "Confirm Payment",
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: "Custom",
-            fontSize: 15,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
+        onPressed: _isProcessing ? null : _submitEnrollment,
+        child: _isProcessing
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                "Confirm Payment",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Custom",
+                  fontSize: 15,
+                ),
+              ),
       ),
     );
   }

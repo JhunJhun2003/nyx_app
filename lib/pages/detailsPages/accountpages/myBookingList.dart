@@ -411,7 +411,7 @@ class _myBookingListState extends State<myBookingList> {
                       fontFamily: "Custom",
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.red,
+                      color: Colors.grey,
                     ),
                   ),
                 ],

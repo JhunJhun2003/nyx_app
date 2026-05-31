@@ -260,15 +260,15 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
             ),
           ),
-          SizedBox(
-            child: IconButton(
-              onPressed: (){}, 
-              icon: const Icon(
-                Icons.message, 
-                color: Colors.white,
-              ),
-            ),
-          ),
+          // SizedBox(
+          //   child: IconButton(
+          //     onPressed: (){}, 
+          //     icon: const Icon(
+          //       Icons.message, 
+          //       color: Colors.white,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

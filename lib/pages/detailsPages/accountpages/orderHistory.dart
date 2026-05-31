@@ -33,7 +33,6 @@ class _orderHistoryState extends State<orderHistory> {
     _fetchOrders();
   }
 
-  //  Redirect to login page
   void _redirectToLogin() async {
     final sessionService = Provider.of<SessionService>(context, listen: false);
     final cartService = Provider.of<CartService>(context, listen: false);
@@ -53,6 +52,8 @@ class _orderHistoryState extends State<orderHistory> {
   }
 
   Future<void> _fetchOrders() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -71,7 +72,8 @@ class _orderHistoryState extends State<orderHistory> {
 
       final result = await OrderApi.fetchOrders(userId: userId, token: token);
 
-      //  Check for unauthorized - redirect to login
+      if (!mounted) return;
+
       if (result['unauthorized'] == true) {
         _redirectToLogin();
         return;
@@ -90,6 +92,7 @@ class _orderHistoryState extends State<orderHistory> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error: $e';
         _isLoading = false;
@@ -119,8 +122,7 @@ class _orderHistoryState extends State<orderHistory> {
   String _formatDate(String? dateTimeString) {
     if (dateTimeString == null) return 'N/A';
     try {
-      final date = DateTime.parse(dateTimeString);
-      return '${date.day}/${date.month}/${date.year}';
+      return dateTimeString;
     } catch (e) {
       return dateTimeString;
     }
@@ -128,43 +130,44 @@ class _orderHistoryState extends State<orderHistory> {
 
   String _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'delivered':
       case 'completed':
         return 'green';
       case 'pending':
         return 'orange';
       case 'cancelled':
+      case 'cancel':
         return 'red';
       default:
         return 'grey';
     }
   }
 
-void _navigateToSlipPage(Map<String, dynamic> order) {
-  final paymentMethod = order['payment_method']?.toString() ?? 'Cash on Delivery';
-  final total = order['Total'] ?? 0;
+  void _navigateToSlipPage(Map<String, dynamic> order) {
+    final paymentMethod = order['payment_method']?.toString() ?? 'Cash on Delivery';
+    final total = order['Total'] ?? 0;
 
-  final contactInfo = <String, String>{
-    'name': order['customer_name']?.toString() ?? 'N/A',
-    'phone': order['phone']?.toString() ?? 'N/A',
-    'email': order['email']?.toString() ?? 'N/A',
-    'address': order['delivery_address']?.toString() ?? 'N/A',
-    'remark': order['remark']?.toString() ?? '',
-  };
+    final contactInfo = <String, String>{
+      'name': order['customer_name']?.toString() ?? 'N/A',
+      'phone': order['phone']?.toString() ?? 'N/A',
+      'email': order['email']?.toString() ?? 'N/A',
+      'address': order['delivery_address']?.toString() ?? 'N/A',
+      'remark': order['remark']?.toString() ?? '',
+    };
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => slipPage(
-        paymentMethod: paymentMethod,
-        transactionNumber: order['transaction_number']?.toString(),
-        totalAmount: total is int ? total.toDouble() : (total as double? ?? 0.0),
-        contactInfo: contactInfo,
-        orderResponse: order,  // This passes the entire order object
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => slipPage(
+          paymentMethod: paymentMethod,
+          transactionNumber: order['transaction_number']?.toString(),
+          totalAmount: total is int ? total.toDouble() : (total as double? ?? 0.0),
+          contactInfo: contactInfo,
+          orderResponse: order,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,7 +245,7 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
       itemBuilder: (context, index) {
         final order = _filteredOrders[index];
         final orderId = order['order_id']?.toString() ?? '#${index + 1}';
-        final date = _formatDate(order['create_at']);
+        final date = _formatDate(order['Date']);
         final total = order['Total']?.toString() ?? '0';
         final itemCount = order['items']?.length ?? 0;
         final orderStatus = order['order_status']?.toString() ?? 'pending';
@@ -354,8 +357,6 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
         color = Colors.grey;
     }
 
-    final displayTotal = total != '0' ? total : '';
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -445,7 +446,16 @@ void _navigateToSlipPage(Map<String, dynamic> order) {
                       ),
                     ],
                   ),
-                  
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total: $total Ks',
+                    style: const TextStyle(
+                      fontFamily: "Custom",
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ],
               ),
             ),
