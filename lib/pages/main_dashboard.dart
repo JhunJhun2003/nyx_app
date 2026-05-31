@@ -25,22 +25,26 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int currentPageIndex = 0;
   String? language;
+  late final List<Widget> _pages;
 
-  List<Widget> get pages => [
-        DashBoard(
-          sessionService: widget.sessionService,
-          cartService: widget.cartService,
-        ),
-        ShopPage(
-          cartService: widget.cartService,
-        ),
-        const Services(),
-        CartPage(
-        ),
-        AccountPage(
-          sessionService: widget.sessionService,
-        ),
-      ];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashBoard(
+        sessionService: widget.sessionService,
+        cartService: widget.cartService,
+      ),
+      ShopPage(
+        cartService: widget.cartService,
+      ),
+      const Services(),
+      const CartPage(),
+      AccountPage(
+        sessionService: widget.sessionService,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +55,10 @@ class _MainDashboardState extends State<MainDashboard> {
             _header(),
             const SizedBox(height: 0),
             Expanded(
-              child: pages[currentPageIndex],
+              child: IndexedStack(
+                index: currentPageIndex,
+                children: _pages,
+              ),
             ),
           ],
         ),

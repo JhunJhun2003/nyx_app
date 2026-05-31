@@ -2,63 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/Training.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/class_details.dart';
-import 'package:nyxproject/Util/ClassApi/TrainingApi.dart';
 
-class TrainingsWidget extends StatefulWidget {
-  const TrainingsWidget({super.key});
+class TrainingsWidget extends StatelessWidget {
+  final List<Training> trainings;
+  final bool isLoading;
+  final String? error;
+  final VoidCallback onRetry;
 
-  @override
-  State<TrainingsWidget> createState() => _TrainingsWidgetState();
-}
-
-class _TrainingsWidgetState extends State<TrainingsWidget> {
-  List<Training> _trainings = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTrainings();
-  }
-
-  Future<void> _loadTrainings() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final result = await TrainingApi.getAllTrainings();
-
-      if (!mounted) return;
-
-      if (result['success'] == true) {
-        setState(() {
-          _trainings = result['data'] ?? [];
-          _isLoading = false;
-        });
-        print('✅ Loaded ${_trainings.length} trainings');
-      } else {
-        setState(() {
-          _error = result['message'] ?? 'Failed to load trainings';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Error loading trainings: $e';
-        _isLoading = false;
-      });
-    }
-  }
+  const TrainingsWidget({
+    super.key,
+    required this.trainings,
+    required this.isLoading,
+    this.error,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (isLoading) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -67,20 +28,20 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
       );
     }
 
-    if (_error != null) {
+    if (error != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               Text(
-                _error!,
+                error!,
                 style: const TextStyle(color: Colors.red),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: _loadTrainings,
+                onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),
@@ -92,7 +53,7 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
       );
     }
 
-    if (_trainings.isEmpty) {
+    if (trainings.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -101,24 +62,30 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
       );
     }
 
+    final cacheWidth = (MediaQuery.sizeOf(context).width *
+            MediaQuery.devicePixelRatioOf(context))
+        .round();
+
     return Center(
+      key: const ValueKey("training"),
       child: Column(
-        children: _trainings.map((training) {
+        children: List.generate(trainings.length, (index) {
+          final training = trainings[index];
           return _buildTrainingCard(
             context,
             training.mainProgramBannerImageUrl,
-            training.id,  // Pass only the training ID
+            training.id,
+            cacheWidth,
             () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ClassDetails(
-                  trainingId: training.id,  // Pass only the ID
+                  trainingId: training.id,
                 ),
               ),
             ),
           );
-        }).toList(),
-        key: const ValueKey("training"),
+        }),
       ),
     );
   }
@@ -127,28 +94,50 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
     BuildContext context,
     String imageUrl,
     int trainingId,
+    int cacheWidth,
     VoidCallback onTap,
   ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 180,
-        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              spreadRadius: 5,
-              blurRadius: 5,
-              offset: const Offset(7, 5),
-            ),
-          ],
-          image: DecorationImage(
-            image: imageUrl.isNotEmpty
-                ? NetworkImage(imageUrl) as ImageProvider
-                : const AssetImage("assets/classes/Badminton.png"),
-            fit: BoxFit.fill,
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 180,
+          margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                spreadRadius: 5,
+                blurRadius: 5,
+                offset: const Offset(7, 5),
+              ),
+            ],
+          ),
+          child: ClipRect(
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.fill,
+                    width: double.infinity,
+                    height: 180,
+                    cacheWidth: cacheWidth,
+                    gaplessPlayback: true,
+                    filterQuality: FilterQuality.medium,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        "assets/classes/Badminton.png",
+                        fit: BoxFit.fill,
+                        width: double.infinity,
+                        height: 180,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    "assets/classes/Badminton.png",
+                    fit: BoxFit.fill,
+                    width: double.infinity,
+                    height: 180,
+                  ),
           ),
         ),
       ),

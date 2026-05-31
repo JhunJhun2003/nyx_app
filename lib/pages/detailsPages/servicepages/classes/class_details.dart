@@ -19,7 +19,8 @@ class _ClassDetailsState extends State<ClassDetails> {
   TrainingDetail? _trainingDetail;
   bool _isLoading = true;
   String? _error;
-  int _selectedLevelIndex = 0;
+  final ValueNotifier<int> _selectedLevelIndex = ValueNotifier(0);
+  Map<int, List<Schedule>> _schedulesByLevelId = {};
 
   @override
   void initState() {
@@ -29,7 +30,23 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   @override
   void dispose() {
+    _selectedLevelIndex.dispose();
     super.dispose();
+  }
+
+  int _cacheWidth(BuildContext context, {double factor = 1.0}) {
+    return (MediaQuery.sizeOf(context).width *
+            factor *
+            MediaQuery.devicePixelRatioOf(context))
+        .round();
+  }
+
+  void _buildScheduleIndex(TrainingDetail detail) {
+    final indexed = <int, List<Schedule>>{};
+    for (final schedule in detail.schedules) {
+      indexed.putIfAbsent(schedule.trainingLevelId, () => []).add(schedule);
+    }
+    _schedulesByLevelId = indexed;
   }
 
   Future<void> _loadTrainingDetail() async {
@@ -46,8 +63,11 @@ class _ClassDetailsState extends State<ClassDetails> {
       if (!mounted) return;
 
       if (result['success'] == true) {
+        final detail = result['data'] as TrainingDetail;
+        _buildScheduleIndex(detail);
+        _selectedLevelIndex.value = 0;
         setState(() {
-          _trainingDetail = result['data'];
+          _trainingDetail = detail;
           _isLoading = false;
         });
       } else {
@@ -80,10 +100,7 @@ class _ClassDetailsState extends State<ClassDetails> {
   }
 
   List<Schedule> _getSchedulesForLevel(int levelId) {
-    if (_trainingDetail == null) return [];
-    return _trainingDetail!.schedules
-        .where((schedule) => schedule.trainingLevelId == levelId)
-        .toList();
+    return _schedulesByLevelId[levelId] ?? const [];
   }
 
   @override
@@ -156,11 +173,19 @@ class _ClassDetailsState extends State<ClassDetails> {
                   const SizedBox(height: 5),
                   _section("Training Level"),
                   const SizedBox(height: 5),
-                  _buildLevelCards(),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _buildLevelCards(selectedIndex),
+                  ),
                   const SizedBox(height: 5),
                   _section("Training Schedules"),
                   const SizedBox(height: 5),
-                  _timeTable(),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _timeTable(selectedIndex),
+                  ),
                   const SizedBox(height: 5),
                   _section("What You'll Learn"),
                   const SizedBox(height: 5),
@@ -174,7 +199,11 @@ class _ClassDetailsState extends State<ClassDetails> {
                   const SizedBox(height: 5),
                   _offer(),
                   const SizedBox(height: 5),
-                  _enroll(),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _enroll(selectedIndex),
+                  ),
                   const SizedBox(height: 15),
                 ],
               ),
@@ -246,6 +275,9 @@ class _ClassDetailsState extends State<ClassDetails> {
                   _trainingDetail!.categoryCardImageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
+                  cacheWidth: _cacheWidth(context),
+                  gaplessPlayback: true,
+                  filterQuality: FilterQuality.medium,
                   errorBuilder: (context, error, stackTrace) {
                     return Image.asset(
                       "assets/classes/Badminton.png",
@@ -286,9 +318,9 @@ class _ClassDetailsState extends State<ClassDetails> {
     );
   }
 
-  Widget _buildLevelCards() {
+  Widget _buildLevelCards(int selectedIndex) {
     final levels = _trainingDetail?.levels ?? [];
-    
+
     if (levels.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -300,10 +332,11 @@ class _ClassDetailsState extends State<ClassDetails> {
       height: 260,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        cacheExtent: 200,
         itemCount: levels.length,
         itemBuilder: (context, index) {
           final level = levels[index];
-          final isSelected = _selectedLevelIndex == index;
+          final isSelected = selectedIndex == index;
           return Padding(
             padding: const EdgeInsets.only(left: 10, right: 5),
             child: _trainingCard(
@@ -311,9 +344,9 @@ class _ClassDetailsState extends State<ClassDetails> {
               price: level.price,
               isSelected: isSelected,
               onTap: () {
-                setState(() {
-                  _selectedLevelIndex = index;
-                });
+                if (_selectedLevelIndex.value != index) {
+                  _selectedLevelIndex.value = index;
+                }
               },
             ),
           );
@@ -395,9 +428,10 @@ class _ClassDetailsState extends State<ClassDetails> {
     );
   }
 
-  Widget _timeTable() {
-    final selectedLevel = _trainingDetail?.levels.isNotEmpty == true
-        ? _trainingDetail!.levels[_selectedLevelIndex]
+  Widget _timeTable(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    final selectedLevel = levels.isNotEmpty && selectedIndex < levels.length
+        ? levels[selectedIndex]
         : null;
     
     final schedules = selectedLevel != null
@@ -500,6 +534,10 @@ class _ClassDetailsState extends State<ClassDetails> {
                 _trainingDetail?.learningImageUrl ?? "",
                 height: 120,
                 fit: BoxFit.cover,
+                cacheWidth: _cacheWidth(context, factor: 0.35),
+                cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context)).round(),
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     height: 120,
@@ -560,6 +598,10 @@ class _ClassDetailsState extends State<ClassDetails> {
               height: 100,
               width: 100,
               fit: BoxFit.cover,
+              cacheWidth: (100 * MediaQuery.devicePixelRatioOf(context)).round(),
+              cacheHeight: (100 * MediaQuery.devicePixelRatioOf(context)).round(),
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: 100,
@@ -654,9 +696,10 @@ class _ClassDetailsState extends State<ClassDetails> {
     );
   }
 
-  Widget _enroll() {
-    final selectedLevel = _trainingDetail?.levels.isNotEmpty == true
-        ? _trainingDetail!.levels[_selectedLevelIndex]
+  Widget _enroll(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    final selectedLevel = levels.isNotEmpty && selectedIndex < levels.length
+        ? levels[selectedIndex]
         : null;
 
     return Padding(

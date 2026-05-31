@@ -86,8 +86,7 @@ class SessionService extends ChangeNotifier {
   
   User? getStoredUser() {
     final userData = _prefs?.getString(_keyUserData);
-    print(" Retrieving user data: $userData");
-    
+
     if (userData != null && userData.isNotEmpty) {
       try {
         final jsonData = jsonDecode(userData);
