@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class classesSlip extends StatefulWidget {
-  const classesSlip({super.key});
+
+  final paymentData;
+  const classesSlip({super.key, required this.paymentData});
 
   @override
   State<classesSlip> createState() => _classesSlipState();

@@ -107,9 +107,14 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
           return _buildTrainingCard(
             context,
             training.mainProgramBannerImageUrl,
+            training.id,  // Pass only the training ID
             () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ClassDetails()),
+              MaterialPageRoute(
+                builder: (context) => ClassDetails(
+                  trainingId: training.id,  // Pass only the ID
+                ),
+              ),
             ),
           );
         }).toList(),
@@ -121,6 +126,7 @@ class _TrainingsWidgetState extends State<TrainingsWidget> {
   Widget _buildTrainingCard(
     BuildContext context,
     String imageUrl,
+    int trainingId,
     VoidCallback onTap,
   ) {
     return GestureDetector(

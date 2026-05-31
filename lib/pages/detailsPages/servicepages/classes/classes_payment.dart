@@ -2,17 +2,107 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/classes_slip.dart';
 
 class classesPayment extends StatefulWidget {
-  const classesPayment({super.key});
+  final Map<String, dynamic>? enrollmentData;
+
+  const classesPayment({super.key, this.enrollmentData});
 
   @override
   State<classesPayment> createState() => _classesPaymentState();
 }
 
-List<String> options = ["CB Pay","Kpay","WavePay","AYA Pay"];
-
 class _classesPaymentState extends State<classesPayment> {
-  String currentOption = options[0];
+  String currentOption = "";
   final TextEditingController input = TextEditingController();
+  
+  List<Map<String, dynamic>> _paymentMethods = [];
+  bool _isLoadingPayments = true;
+  String? _paymentsError;
+
+  // Enrollment data
+  String fullname = "";
+  String age = "";
+  String address = "";
+  String phone = "";
+  String email = "";
+  String trainingLevel = "";
+  String trainingSchedule = "";
+  String trainingTitle = "";
+  int price = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPaymentMethods();
+    _loadEnrollmentData();
+  }
+
+  void _loadEnrollmentData() {
+    final data = widget.enrollmentData ?? {};
+    
+    setState(() {
+      fullname = data['fullname'] ?? "N/A";
+      age = data['age'] ?? "N/A";
+      address = data['address'] ?? "Yangon, Myanmar";
+      phone = data['phone'] ?? "N/A";
+      email = data['email'] ?? "N/A";
+      trainingLevel = data['levelName'] ?? "Beginner Level";
+      trainingSchedule = data['timeSlot'] ?? "8:00 - 10:00 AM";
+      trainingTitle = data['trainingTitle'] ?? "Training Program";
+      price = data['price'] ?? 0;
+    });
+  }
+
+  Future<void> _loadPaymentMethods() async {
+    setState(() {
+      _isLoadingPayments = true;
+      _paymentsError = null;
+    });
+
+    try {
+      // Simulate API call - Replace with actual API call
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock payment methods - Replace with actual API response
+      final mockMethods = [
+        {'id': 1, 'payment_method': 'CB Pay', 'payment_name': 'CB Bank Account', 'payment_number': '1234567890'},
+        {'id': 2, 'payment_method': 'Kpay', 'payment_name': 'Kpay Account', 'payment_number': '09987654321'},
+        {'id': 3, 'payment_method': 'WavePay', 'payment_name': 'WavePay Account', 'payment_number': '09876543210'},
+        {'id': 4, 'payment_method': 'AYA Pay', 'payment_name': 'AYA Bank Account', 'payment_number': '1122334455'},
+      ];
+      
+      setState(() {
+        _paymentMethods = mockMethods;
+        _isLoadingPayments = false;
+        if (_paymentMethods.isNotEmpty) {
+          currentOption = _paymentMethods[0]['payment_method'];
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _paymentsError = 'Error loading payment methods: $e';
+        _isLoadingPayments = false;
+      });
+    }
+  }
+
+  String getSelectedPaymentName() {
+    for (var method in _paymentMethods) {
+      if (method['payment_method'] == currentOption) {
+        return method['payment_name'] ?? 'N/A';
+      }
+    }
+    return 'N/A';
+  }
+
+  String getSelectedPaymentNumber() {
+    for (var method in _paymentMethods) {
+      if (method['payment_method'] == currentOption) {
+        return method['payment_number'] ?? 'N/A';
+      }
+    }
+    return 'N/A';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,33 +112,37 @@ class _classesPaymentState extends State<classesPayment> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _section("Registration Information"),
-              SizedBox(height: 5),
-              _information("Name","xxxxxxxxxx"),
-              SizedBox(height: 1),
-              _information("Age","xx"),
-              SizedBox(height: 1),
-              _information("Address","Yangon, Myanmar"),
-              SizedBox(height: 1),
-              _information("Phone Number","09 xxx xxx xxx"),
-              SizedBox(height: 1),
-              _information("Email","example@gmail.com"),
-              SizedBox(height: 1),
-              _information("Training Level","Beginner Level"),
-              SizedBox(height: 1),
-              _information("Training Schedule","8:00 - 10:00 AM"),
-              SizedBox(height: 10),
+              const SizedBox(height: 5),
+              _information("Name", fullname),
+              const SizedBox(height: 1),
+              _information("Age", age),
+              const SizedBox(height: 1),
+              _information("Address", address),
+              const SizedBox(height: 1),
+              _information("Phone Number", phone),
+              const SizedBox(height: 1),
+              _information("Email", email),
+              const SizedBox(height: 1),
+              _information("Training Program", trainingTitle),
+              const SizedBox(height: 1),
+              _information("Training Level", trainingLevel),
+              const SizedBox(height: 1),
+              _information("Training Schedule", trainingSchedule),
+              const SizedBox(height: 1),
+              _information("Price", "$price Ks/month"),
+              const SizedBox(height: 10),
               _section("Select Payment Method"),
-               SizedBox(height: 5),
+              const SizedBox(height: 5),
               _paymentMethod(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _paymentInfo(),
-              SizedBox(height: 10),
-              _input("Enter transation number"),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
+              _input("Enter transaction number"),
+              const SizedBox(height: 10),
               _confirm(),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -137,14 +231,51 @@ class _classesPaymentState extends State<classesPayment> {
     );
   }
 
-  Widget _paymentMethod(){
+  Widget _paymentMethod() {
+    if (_isLoadingPayments) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_paymentsError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Text(
+                _paymentsError!,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _loadPaymentMethods,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       child: Column(
-        children: [
-          ListTile(
-            title: Text("CB Pay",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),),),
+        children: _paymentMethods.map((method) {
+          return ListTile(
+            title: Text(
+              method['payment_method'],
+              style: const TextStyle(
+                fontFamily: 'Custom',
+                color: Color.fromARGB(255, 13, 27, 42),
+              ),
+            ),
             leading: Radio(
-              value: options[0],
+              value: method['payment_method'],
               groupValue: currentOption,
               onChanged: (value) {
                 setState(() {
@@ -152,115 +283,123 @@ class _classesPaymentState extends State<classesPayment> {
                 });
               },
             ),
-          ),
-          ListTile(
-            title: Text("Kpay",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),),),
-            leading: Radio(
-              value: options[1],
-              groupValue: currentOption,
-              onChanged: (value) {
-                setState(() {
-                  currentOption = value.toString();
-                });
-              },
-            ),
-          ),
-          ListTile(
-            title: Text("WavePay",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),),),
-            leading: Radio(
-              value: options[2],
-              groupValue: currentOption,
-              onChanged: (value) {
-                setState(() {
-                  currentOption = value.toString();
-                });
-              },
-            ),
-          ),
-          ListTile(
-            title: Text("AYA Pay",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),),),
-            leading: Radio(
-              value: options[3],
-              groupValue: currentOption,
-              onChanged: (value) {
-                setState(() {
-                  currentOption = value.toString();
-                });
-              },
-            ),
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _paymentInfo(){
+  Widget _paymentInfo() {
+    if (currentOption.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
-      padding: EdgeInsetsGeometry.symmetric(horizontal: 10,vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Kpay Name :",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),fontSize: 17),),
-              SizedBox(width: 50,),
-              Text("Admin Name",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),fontSize: 17),),
+              Text(
+                "$currentOption Name :",
+                style: const TextStyle(
+                  fontFamily: 'Custom',
+                  color: Color.fromARGB(255, 13, 27, 42),
+                  fontSize: 17,
+                ),
+              ),
+              const SizedBox(width: 50),
+              Text(
+                getSelectedPaymentName(),
+                style: const TextStyle(
+                  fontFamily: 'Custom',
+                  color: Color.fromARGB(255, 13, 27, 42),
+                  fontSize: 17,
+                ),
+              ),
             ],
           ),
-          SizedBox(height: 10,),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Kpay Number :",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),fontSize: 17),),
-              SizedBox(width: 33,),
-              Text("09 xxx xxx xxx",style: TextStyle(fontFamily: 'Custom',color: Color.fromARGB(255, 13, 27, 42),fontSize: 17),),
+              Text(
+                "$currentOption Number :",
+                style: const TextStyle(
+                  fontFamily: 'Custom',
+                  color: Color.fromARGB(255, 13, 27, 42),
+                  fontSize: 17,
+                ),
+              ),
+              const SizedBox(width: 33),
+              Text(
+                getSelectedPaymentNumber(),
+                style: const TextStyle(
+                  fontFamily: 'Custom',
+                  color: Color.fromARGB(255, 13, 27, 42),
+                  fontSize: 17,
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _input(String text){
+  Widget _input(String text) {
     return Center(
       child: Container(
         height: 50,
         width: 300,
-        margin: EdgeInsets.symmetric(horizontal: 5),
+        margin: const EdgeInsets.symmetric(horizontal: 5),
         child: TextFormField(
           controller: input,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: "Custom",
             color: Color.fromARGB(255, 255, 255, 255),
           ),
           decoration: InputDecoration(
             hintText: text,
             filled: true,
-            fillColor: Color.fromARGB(255, 13, 27, 42),
+            fillColor: const Color.fromARGB(255, 13, 27, 42),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15)
+              borderRadius: BorderRadius.circular(15),
             ),
           ),
-        )
+        ),
       ),
     );
   }
 
-  Widget _confirm(){
+  Widget _confirm() {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
-          fixedSize: const Size(200, 50)
+          fixedSize: const Size(200, 50),
         ),
-        onPressed: (){
+        onPressed: () {
+          final paymentData = {
+            'enrollmentData': widget.enrollmentData,
+            'paymentMethod': currentOption,
+            'transactionNumber': input.text.trim(),
+            'paymentInfo': {
+              'name': getSelectedPaymentName(),
+              'number': getSelectedPaymentNumber(),
+            },
+          };
+          
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => classesSlip()),
+            MaterialPageRoute(
+              builder: (context) => classesSlip(paymentData: paymentData),
+            ),
           );
-        }, 
-        child: Text(
-          "Comfirm Payment",
+        },
+        child: const Text(
+          "Confirm Payment",
           style: TextStyle(
             color: Colors.white,
             fontFamily: "Custom",

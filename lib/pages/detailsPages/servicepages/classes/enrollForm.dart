@@ -2,7 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/classes_payment.dart';
 
 class enrollForm extends StatefulWidget {
-  const enrollForm({super.key});
+  final int? trainingId;
+  final String? trainingTitle;
+  final int? levelId;
+  final String? levelName;
+  final int? price;
+
+  const enrollForm({
+    super.key,
+    this.trainingId,
+    this.trainingTitle,
+    this.levelId,
+    this.levelName,
+    this.price,
+  });
 
   @override
   State<enrollForm> createState() => _enrollFormState();
@@ -20,6 +33,18 @@ class _enrollFormState extends State<enrollForm> {
   String? course;
   String? level;
   String? time;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill course and level from passed data
+    if (widget.trainingTitle != null) {
+      course = widget.trainingTitle;
+    }
+    if (widget.levelName != null) {
+      level = widget.levelName;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,96 +84,13 @@ class _enrollFormState extends State<enrollForm> {
               const SizedBox(height: 5),
               _input("Emergency Contact Number", emergencyController),
               const SizedBox(height: 15),
-              _section1("Choose"),
+              _section1("Training Details"),
               const SizedBox(height: 5),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // On small screens, use column layout
-                  if (constraints.maxWidth < 600) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _selection2("Course Selection:"),
-                        const SizedBox(height: 5),
-                        CustomDropdownField(
-                          hint: "Course",
-                          value: course,
-                          items: const ["Badminton", "Futsals", "Tennis"],
-                          onChanged: (val) => setState(() => course = val),
-                        ),
-                        const SizedBox(height: 10),
-                        _selection2("Training Level:"),
-                        const SizedBox(height: 5),
-                        CustomDropdownField(
-                          hint: "Training Level",
-                          value: level,
-                          items: const ["Beginner", "Intermediate", "Advanced"],
-                          onChanged: (val) => setState(() => level = val),
-                        ),
-                        const SizedBox(height: 10),
-                        _selection2("Training Schedule:"),
-                        const SizedBox(height: 5),
-                        CustomDropdownField(
-                          hint: "Time Slot",
-                          value: time,
-                          items: const ["7AM - 9AM", "4PM - 6PM", "6PM - 8PM", "8PM - 10PM"],
-                          onChanged: (val) => setState(() => time = val),
-                        ),
-                      ],
-                    );
-                  } else {
-                    // On wider screens, use row layout
-                    return Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _selection2("Course Selection:"),
-                            Expanded(
-                              child: CustomDropdownField(
-                                hint: "Course",
-                                value: course,
-                                items: const ["Badminton", "Futsals", "Tennis"],
-                                onChanged: (val) => setState(() => course = val),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _selection2("Training Level:"),
-                            Expanded(
-                              child: CustomDropdownField(
-                                hint: "Training Level",
-                                value: level,
-                                items: const ["Beginner", "Intermediate", "Advanced"],
-                                onChanged: (val) => setState(() => level = val),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _selection2("Training Schedule:"),
-                            Expanded(
-                              child: CustomDropdownField(
-                                hint: "Time Slot",
-                                value: time,
-                                items: const ["7AM - 9AM", "4PM - 6PM", "6PM - 8PM", "8PM - 10PM"],
-                                onChanged: (val) => setState(() => time = val),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  }
-                },
-              ),
+              _displayTrainingDetails(),
+              const SizedBox(height: 15),
+              _section1("Choose Schedule"),
+              const SizedBox(height: 5),
+              _scheduleSelection(),
               const SizedBox(height: 15),
               _confirm(),
               const SizedBox(height: 15),
@@ -157,6 +99,68 @@ class _enrollFormState extends State<enrollForm> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _displayTrainingDetails() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        children: [
+          _infoRow("Training Program:", widget.trainingTitle ?? "Not selected"),
+          const SizedBox(height: 8),
+          _infoRow("Training Level:", widget.levelName ?? "Not selected"),
+          const SizedBox(height: 8),
+          _infoRow("Price:", widget.price != null ? "${widget.price} Ks/month" : "N/A"),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: "Custom",
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: "Custom",
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _scheduleSelection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 5),
+      child: CustomDropdownField(
+        hint: "Select Time Slot",
+        value: time,
+        items: const [
+          "7AM - 9AM",
+          "4PM - 6PM",
+          "6PM - 8PM",
+          "8PM - 10PM"
+        ],
+        onChanged: (val) => setState(() => time = val),
       ),
     );
   }
@@ -182,7 +186,7 @@ class _enrollFormState extends State<enrollForm> {
           Expanded(
             child: Text(
               "Enrollment Form",
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
                 fontSize: 18,
@@ -257,27 +261,34 @@ class _enrollFormState extends State<enrollForm> {
     );
   }
 
-  Widget _selection2(String main) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: Text(
-        main,
-        style: const TextStyle(
-          fontFamily: "Custom",
-          color: Color.fromARGB(255, 13, 27, 42),
-          fontSize: 17,
-        ),
-      ),
-    );
-  }
-
   Widget _confirm() {
     return Center(
       child: ElevatedButton.icon(
         onPressed: () {
+          // Prepare enrollment data
+          final enrollmentData = {
+            'trainingId': widget.trainingId,
+            'trainingTitle': widget.trainingTitle,
+            'levelId': widget.levelId,
+            'levelName': widget.levelName,
+            'price': widget.price,
+            'fullname': fullnameController.text,
+            'gender': selectedOption,
+            'phone': phoneController.text,
+            'email': emailController.text,
+            'age': ageController.text,
+            'address': addressController.text,
+            'emergencyContact': emergencyController.text,
+            'timeSlot': time,
+          };
+          
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const classesPayment()),
+            MaterialPageRoute(
+              builder: (context) => classesPayment(
+                enrollmentData: enrollmentData,
+              ),
+            ),
           );
         },
         label: const Text(
