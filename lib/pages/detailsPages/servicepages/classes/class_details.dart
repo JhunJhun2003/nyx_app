@@ -6,10 +6,7 @@ import 'package:nyxproject/Util/ClassApi/TrainingDetailApi.dart';
 class ClassDetails extends StatefulWidget {
   final int trainingId;
 
-  const ClassDetails({
-    super.key,
-    required this.trainingId,
-  });
+  const ClassDetails({super.key, required this.trainingId});
 
   @override
   State<ClassDetails> createState() => _ClassDetailsState();
@@ -58,7 +55,9 @@ class _ClassDetailsState extends State<ClassDetails> {
     });
 
     try {
-      final result = await TrainingDetailApi.getTrainingDetail(widget.trainingId);
+      final result = await TrainingDetailApi.getTrainingDetail(
+        widget.trainingId,
+      );
 
       if (!mounted) return;
 
@@ -151,89 +150,29 @@ class _ClassDetailsState extends State<ClassDetails> {
     if (_trainingDetail == null) {
       return const Scaffold(
         body: SafeArea(
-          child: Center(
-            child: Text('No training data available'),
-          ),
+          child: Center(child: Text('No training data available')),
         ),
       );
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _header(),
-                  const SizedBox(height: 5),
-                  _imageSpace(),
-                  const SizedBox(height: 5),
-                  _section("Training Level"),
-                  const SizedBox(height: 5),
-                  ValueListenableBuilder<int>(
-                    valueListenable: _selectedLevelIndex,
-                    builder: (context, selectedIndex, _) =>
-                        _buildLevelCards(selectedIndex),
-                  ),
-                  const SizedBox(height: 5),
-                  _section("Training Schedules"),
-                  const SizedBox(height: 5),
-                  ValueListenableBuilder<int>(
-                    valueListenable: _selectedLevelIndex,
-                    builder: (context, selectedIndex, _) =>
-                        _timeTable(selectedIndex),
-                  ),
-                  const SizedBox(height: 5),
-                  _section("What You'll Learn"),
-                  const SizedBox(height: 5),
-                  _learning(),
-                  const SizedBox(height: 5),
-                  _section("Meet Your Coach"),
-                  const SizedBox(height: 5),
-                  _coach(),
-                  const SizedBox(height: 5),
-                  _section("Exclusive Opening Offer"),
-                  const SizedBox(height: 5),
-                  _offer(),
-                  const SizedBox(height: 5),
-                  ValueListenableBuilder<int>(
-                    valueListenable: _selectedLevelIndex,
-                    builder: (context, selectedIndex, _) =>
-                        _enroll(selectedIndex),
-                  ),
-                  const SizedBox(height: 15),
-                ],
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // Sticky Header - stays at top when scrolling
+          SliverAppBar(
+            pinned: true, // This makes the header stick to the top
+            backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _bottomBar(),
-    );
-  }
-
-  Widget _header() {
-    return Container(
-      color: const Color.fromARGB(255, 13, 27, 42),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
-          ),
-          Expanded(
-            child: Text(
+            title: Text(
               _trainingDetail?.courseName ?? "Training Details",
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -244,16 +183,66 @@ class _ClassDetailsState extends State<ClassDetails> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  Icons.bookmark,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+            elevation: 0,
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.bookmark,
-              color: Colors.white,
+          
+          // Scrollable Content
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 5),
+                _imageSpace(),
+                const SizedBox(height: 5),
+                _section("Training Level"),
+                const SizedBox(height: 5),
+                ValueListenableBuilder<int>(
+                  valueListenable: _selectedLevelIndex,
+                  builder: (context, selectedIndex, _) =>
+                      _buildLevelCards(selectedIndex),
+                ),
+                const SizedBox(height: 5),
+                _section("Training Schedules"),
+                const SizedBox(height: 5),
+                ValueListenableBuilder<int>(
+                  valueListenable: _selectedLevelIndex,
+                  builder: (context, selectedIndex, _) =>
+                      _timeTable(selectedIndex),
+                ),
+                const SizedBox(height: 5),
+                _section("What You'll Learn"),
+                const SizedBox(height: 5),
+                _learning(),
+                const SizedBox(height: 5),
+                _section("Meet Your Coach"),
+                const SizedBox(height: 5),
+                _coach(),
+                const SizedBox(height: 5),
+                _section("Exclusive Opening Offer"),
+                const SizedBox(height: 5),
+                _offer(),
+                const SizedBox(height: 5),
+                ValueListenableBuilder<int>(
+                  valueListenable: _selectedLevelIndex,
+                  builder: (context, selectedIndex, _) =>
+                      _enroll(selectedIndex),
+                ),
+                const SizedBox(height: 15),
+              ],
             ),
           ),
         ],
       ),
+      bottomNavigationBar: _bottomBar(),
     );
   }
 
@@ -286,10 +275,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                   },
                 ),
               )
-            : Image.asset(
-                "assets/classes/Badminton.png",
-                fit: BoxFit.cover,
-              ),
+            : Image.asset("assets/classes/Badminton.png", fit: BoxFit.cover),
       ),
     );
   }
@@ -297,12 +283,7 @@ class _ClassDetailsState extends State<ClassDetails> {
   Widget _section(String title) {
     return Container(
       decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            width: 10,
-            color: Colors.red,
-          ),
-        ),
+        border: Border(left: BorderSide(width: 10, color: Colors.red)),
       ),
       margin: const EdgeInsets.all(10),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -380,9 +361,11 @@ class _ClassDetailsState extends State<ClassDetails> {
                 color: Colors.green,
               ),
               child: Icon(
-                title.toLowerCase().contains('beginner') ? Icons.sports :
-                title.toLowerCase().contains('intermediate') ? Icons.flash_on :
-                Icons.emoji_events,
+                title.toLowerCase().contains('beginner')
+                    ? Icons.sports
+                    : title.toLowerCase().contains('intermediate')
+                    ? Icons.flash_on
+                    : Icons.emoji_events,
                 color: Colors.black,
                 size: 28,
               ),
@@ -401,10 +384,7 @@ class _ClassDetailsState extends State<ClassDetails> {
             const Text(
               "Comprehensive training",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.white70),
             ),
             const SizedBox(height: 8),
             Container(
@@ -433,7 +413,7 @@ class _ClassDetailsState extends State<ClassDetails> {
     final selectedLevel = levels.isNotEmpty && selectedIndex < levels.length
         ? levels[selectedIndex]
         : null;
-    
+
     final schedules = selectedLevel != null
         ? _getSchedulesForLevel(selectedLevel.id)
         : [];
@@ -476,10 +456,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 Expanded(
                   child: Text(
                     "${_formatTime(schedule.startTime)} - ${_formatTime(schedule.endTime)}",
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ),
               ],
@@ -492,14 +469,22 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   String _getDayName(String day) {
     switch (day.toLowerCase()) {
-      case 'mon': return 'Monday';
-      case 'tue': return 'Tuesday';
-      case 'wed': return 'Wednesday';
-      case 'thu': return 'Thursday';
-      case 'fri': return 'Friday';
-      case 'sat': return 'Saturday';
-      case 'sun': return 'Sunday';
-      default: return day;
+      case 'mon':
+        return 'Monday';
+      case 'tue':
+        return 'Tuesday';
+      case 'wed':
+        return 'Wednesday';
+      case 'thu':
+        return 'Thursday';
+      case 'fri':
+        return 'Friday';
+      case 'sat':
+        return 'Saturday';
+      case 'sun':
+        return 'Sunday';
+      default:
+        return day;
     }
   }
 
@@ -515,13 +500,20 @@ class _ClassDetailsState extends State<ClassDetails> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _trainingDetail?.learningDescription ?? "Technical Mastery: Precision in every shot.",
-                  style: const TextStyle(fontFamily: "Custom", fontSize: 13, fontWeight: FontWeight.w500),
+                  _trainingDetail?.learningDescription ??
+                      "Technical Mastery: Precision in every shot.",
+                  style: const TextStyle(
+                    fontFamily: "Custom",
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _bulletText("Agility Drills: Mastering the 6-point footwork."),
                 _bulletText("Game Intelligence: Reading opponent movements."),
-                _bulletText("Physical Conditioning: Strength and explosive power."),
+                _bulletText(
+                  "Physical Conditioning: Strength and explosive power.",
+                ),
               ],
             ),
           ),
@@ -535,7 +527,8 @@ class _ClassDetailsState extends State<ClassDetails> {
                 height: 120,
                 fit: BoxFit.cover,
                 cacheWidth: _cacheWidth(context, factor: 0.35),
-                cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context)).round(),
+                cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
                 gaplessPlayback: true,
                 filterQuality: FilterQuality.medium,
                 errorBuilder: (context, error, stackTrace) {
@@ -576,7 +569,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Widget _coach() {
     final coaches = _trainingDetail?.coaches ?? [];
-    
+
     if (coaches.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -585,7 +578,7 @@ class _ClassDetailsState extends State<ClassDetails> {
     }
 
     final coach = coaches[0];
-    
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -598,8 +591,10 @@ class _ClassDetailsState extends State<ClassDetails> {
               height: 100,
               width: 100,
               fit: BoxFit.cover,
-              cacheWidth: (100 * MediaQuery.devicePixelRatioOf(context)).round(),
-              cacheHeight: (100 * MediaQuery.devicePixelRatioOf(context)).round(),
+              cacheWidth: (100 * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
+              cacheHeight: (100 * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
               gaplessPlayback: true,
               filterQuality: FilterQuality.medium,
               errorBuilder: (context, error, stackTrace) {
@@ -628,10 +623,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 const SizedBox(height: 4),
                 Text(
                   coach.biography,
-                  style: const TextStyle(
-                    fontFamily: "Custom",
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontFamily: "Custom", fontSize: 12),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -683,10 +675,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 const SizedBox(height: 4),
                 const Text(
                   "50% discount on your first month's registration!",
-                  style: TextStyle(
-                    fontFamily: "Custom",
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(fontFamily: "Custom", fontSize: 11),
                 ),
               ],
             ),
@@ -722,7 +711,11 @@ class _ClassDetailsState extends State<ClassDetails> {
         icon: const Icon(Icons.event),
         label: const Text(
           "Enroll Now",
-          style: TextStyle(color: Colors.white, fontFamily: 'Custom', fontSize: 16),
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Custom',
+            fontSize: 16,
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,

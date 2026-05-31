@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/classes_payment.dart';
+import 'package:nyxproject/services/session_service.dart';
+import 'package:nyxproject/services/cart_service.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/login.dart';
+import 'package:provider/provider.dart';
 
 class enrollForm extends StatefulWidget {
   final int? trainingId;
@@ -33,6 +37,7 @@ class _enrollFormState extends State<enrollForm> {
   String? course;
   String? level;
   String? time;
+  bool _isLoggedIn = false;
 
   @override
   void initState() {
@@ -44,6 +49,91 @@ class _enrollFormState extends State<enrollForm> {
     if (widget.levelName != null) {
       level = widget.levelName;
     }
+    _checkLoginStatus();
+  }
+
+  @override
+  void dispose() {
+    fullnameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    ageController.dispose();
+    addressController.dispose();
+    emergencyController.dispose();
+    super.dispose();
+  }
+
+  void _checkLoginStatus() {
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    _isLoggedIn = sessionService.isLoggedIn() && sessionService.getToken() != null;
+    
+    if (_isLoggedIn) {
+      _loadUserData();
+    }
+  }
+
+  void _loadUserData() {
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    final user = sessionService.getStoredUser();
+    
+    if (user != null) {
+      fullnameController.text = user.name ?? '';
+      phoneController.text = user.phone ?? '';
+      emailController.text = user.email ?? '';
+    }
+  }
+
+  void _showLoginRequiredDialog() {
+    final sessionService = Provider.of<SessionService>(context, listen: false);
+    final cartService = Provider.of<CartService>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          "Login Required",
+          style: TextStyle(fontFamily: "Custom", fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "Please login to continue with your enrollment.",
+          style: TextStyle(fontFamily: "Custom", fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Go back to previous page
+            },
+            child: const Text(
+              "Cancel",
+              style: TextStyle(fontFamily: "Custom"),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(
+                    sessionService: sessionService,
+                    cartService: cartService,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text(
+              "Login Now",
+              style: TextStyle(fontFamily: "Custom", color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -87,10 +177,6 @@ class _enrollFormState extends State<enrollForm> {
               _section1("Training Details"),
               const SizedBox(height: 5),
               _displayTrainingDetails(),
-              const SizedBox(height: 15),
-              _section1("Choose Schedule"),
-              const SizedBox(height: 5),
-              _scheduleSelection(),
               const SizedBox(height: 15),
               _confirm(),
               const SizedBox(height: 15),
@@ -145,23 +231,6 @@ class _enrollFormState extends State<enrollForm> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _scheduleSelection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      child: CustomDropdownField(
-        hint: "Select Time Slot",
-        value: time,
-        items: const [
-          "7AM - 9AM",
-          "4PM - 6PM",
-          "6PM - 8PM",
-          "8PM - 10PM"
-        ],
-        onChanged: (val) => setState(() => time = val),
-      ),
     );
   }
 
@@ -265,6 +334,35 @@ class _enrollFormState extends State<enrollForm> {
     return Center(
       child: ElevatedButton.icon(
         onPressed: () {
+          // Check if user is logged in
+          final sessionService = Provider.of<SessionService>(context, listen: false);
+          final isLoggedIn = sessionService.isLoggedIn() && sessionService.getToken() != null;
+          
+          if (!isLoggedIn) {
+            _showLoginRequiredDialog();
+            return;
+          }
+          
+          // Validate required fields
+          if (fullnameController.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter your full name'), backgroundColor: Colors.red),
+            );
+            return;
+          }
+          if (phoneController.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter your phone number'), backgroundColor: Colors.red),
+            );
+            return;
+          }
+          if (emailController.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter your email address'), backgroundColor: Colors.red),
+            );
+            return;
+          }
+          
           // Prepare enrollment data
           final enrollmentData = {
             'trainingId': widget.trainingId,
@@ -316,51 +414,6 @@ class _enrollFormState extends State<enrollForm> {
           fontFamily: "Custom",
           fontSize: 15,
           color: const Color.fromARGB(255, 13, 27, 42),
-        ),
-      ),
-    );
-  }
-}
-
-class CustomDropdownField extends StatelessWidget {
-  final String hint;
-  final String? value;
-  final List<String> items;
-  final Function(String?) onChanged;
-
-  const CustomDropdownField({
-    super.key,
-    required this.hint,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 13, 27, 42),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          hint: Text(hint, style: const TextStyle(color: Colors.white70)),
-          value: value,
-          dropdownColor: const Color(0xFF0F1E2E),
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-          style: const TextStyle(color: Colors.white),
-          isExpanded: true,
-          onChanged: onChanged,
-          items: items.map((item) {
-            return DropdownMenuItem(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
         ),
       ),
     );
