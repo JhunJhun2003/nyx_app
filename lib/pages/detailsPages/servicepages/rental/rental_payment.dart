@@ -9,7 +9,7 @@ import 'package:nyxproject/models/Payment.dart';
 import 'package:nyxproject/models/RentalBooking.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:provider/provider.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/rental_slip.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/rental/rental_slip.dart';
 
 class rentalPayment extends StatefulWidget {
   final Map<String, dynamic>? bookingData;

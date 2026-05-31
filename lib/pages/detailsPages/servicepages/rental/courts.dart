@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/Util/RentelApi/CourtApi.dart';
 import 'package:nyxproject/models/Court.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/court_details.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/rental/court_details.dart';
 
 class Courts extends StatefulWidget {
   final int venueId;

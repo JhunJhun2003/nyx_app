@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/rental_payment.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/rental/rental_payment.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:provider/provider.dart';
 

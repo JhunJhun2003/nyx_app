@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/classes/classes_slip.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/classes/classes_slip.dart';
 
 class classesPayment extends StatefulWidget {
   const classesPayment({super.key});

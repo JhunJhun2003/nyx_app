@@ -7,7 +7,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:nyxproject/Util/RentelApi/AvaiSlotTimeApi.dart';
 import 'package:nyxproject/Util/RentelApi/VenueApi.dart';
 import 'package:nyxproject/models/AvaiSlotTime.dart';
-import 'package:nyxproject/pages/detailsPages/classespages/rental/booking_form.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/rental/booking_form.dart';
 import 'package:nyxproject/models/Venue.dart';
 import 'package:nyxproject/models/Court.dart';
 

@@ -100,50 +100,50 @@ class _MainDashboardState extends State<MainDashboard> {
           ),
           Row(
             children: [
-              GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    builder: (context) {
-                      List<String> languages = [
-                        "English",
-                        "Myanmar",
-                        "Chinese",
-                      ];
-                      return Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: languages.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: Icon(Icons.language),
-                              title: Text(languages[index]),
-                              onTap: () {
-                                Navigator.pop(context);
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: Icon(
-                  Icons.language,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                onPressed: () {}, 
-                icon: const Icon(Icons.notifications_none, color: Colors.white),
-              ),
+              // GestureDetector(
+              //   onTap: () {
+              //     showModalBottomSheet(
+              //       context: context,
+              //       backgroundColor: Colors.white,
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.vertical(
+              //           top: Radius.circular(20),
+              //         ),
+              //       ),
+              //       builder: (context) {
+              //         List<String> languages = [
+              //           "English",
+              //           "Myanmar",
+              //           "Chinese",
+              //         ];
+              //         return Padding(
+              //           padding: const EdgeInsets.all(20),
+              //           child: ListView.builder(
+              //             shrinkWrap: true,
+              //             itemCount: languages.length,
+              //             itemBuilder: (context, index) {
+              //               return ListTile(
+              //                 leading: Icon(Icons.language),
+              //                 title: Text(languages[index]),
+              //                 onTap: () {
+              //                   Navigator.pop(context);
+              //                 },
+              //               );
+              //             },
+              //           ),
+              //         );
+              //       },
+              //     );
+              //   },
+              //   child: Icon(
+              //     Icons.language,
+              //     color: Colors.white,
+              //   ),
+              // ),
+              // IconButton(
+              //   onPressed: () {}, 
+              //   icon: const Icon(Icons.notifications_none, color: Colors.white),
+              // ),
               Stack(
                 children: [
                   IconButton(

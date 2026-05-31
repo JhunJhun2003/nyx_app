@@ -53,8 +53,8 @@ class _SplashScreenState extends State<SplashScreen> {
             // Logo Image
             Image.asset(
               'assets/images/logo1.png',
-              width: 170,
-              height: 170,
+              width: 190,
+              height: 190,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image not found

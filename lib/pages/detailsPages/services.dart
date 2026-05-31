@@ -62,7 +62,7 @@ class _ClassesPageState extends State<Services> {
           _canteenItems = result['data'] ?? [];
           _isLoadingCanteen = false;
         });
-        print('✅ Loaded ${_canteenItems.length} canteen items');
+        print(' Loaded ${_canteenItems.length} canteen items');
       } else {
         setState(() {
           _canteenError = result['message'] ?? 'Failed to load canteen items';
