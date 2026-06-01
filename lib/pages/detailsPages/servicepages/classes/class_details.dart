@@ -183,15 +183,15 @@ class _ClassDetailsState extends State<ClassDetails> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.bookmark,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+            // actions: [
+            //   IconButton(
+            //     onPressed: () {},
+            //     icon: const Icon(
+            //       Icons.bookmark,
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            // ],
             elevation: 0,
           ),
           
@@ -254,12 +254,12 @@ class _ClassDetailsState extends State<ClassDetails> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.black, width: 2),
+          // borderRadius: BorderRadius.circular(12),
+          // border: Border.all(color: Colors.black, width: 2),
         ),
         child: _trainingDetail?.categoryCardImageUrl.isNotEmpty == true
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                // borderRadius: BorderRadius.circular(10),
                 child: Image.network(
                   _trainingDetail!.categoryCardImageUrl,
                   fit: BoxFit.cover,
@@ -283,7 +283,7 @@ class _ClassDetailsState extends State<ClassDetails> {
   Widget _section(String title) {
     return Container(
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(width: 10, color: Colors.red)),
+        border: Border(left: BorderSide(width: 10, color: Colors.black)),
       ),
       margin: const EdgeInsets.all(10),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -348,9 +348,9 @@ class _ClassDetailsState extends State<ClassDetails> {
         width: 170,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.red : const Color(0xFF0D1B2A),
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected ? Border.all(color: Colors.red, width: 2) : null,
+          color: isSelected ? const Color.fromARGB(133, 9, 9, 9) : const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(5),
+          // border: isSelected ? Border.all(color: Colors.red, width: 2) : null,
         ),
         child: Column(
           children: [
@@ -434,7 +434,7 @@ class _ClassDetailsState extends State<ClassDetails> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF0D1B2A),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Column(
         children: schedules.map((schedule) {
@@ -521,7 +521,7 @@ class _ClassDetailsState extends State<ClassDetails> {
           Expanded(
             flex: 1,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(5),
               child: Image.network(
                 _trainingDetail?.learningImageUrl ?? "",
                 height: 120,
@@ -585,7 +585,7 @@ class _ClassDetailsState extends State<ClassDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(5),
             child: Image.network(
               coach.coachImageUrl,
               height: 100,
@@ -641,7 +641,7 @@ class _ClassDetailsState extends State<ClassDetails> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
         children: [
@@ -652,7 +652,7 @@ class _ClassDetailsState extends State<ClassDetails> {
               style: TextStyle(
                 fontFamily: "Custom",
                 fontSize: 28,
-                color: Colors.red,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -708,7 +708,7 @@ class _ClassDetailsState extends State<ClassDetails> {
             ),
           );
         },
-        icon: const Icon(Icons.event),
+        // icon: const Icon(Icons.event),
         label: const Text(
           "Enroll Now",
           style: TextStyle(
@@ -721,7 +721,7 @@ class _ClassDetailsState extends State<ClassDetails> {
           backgroundColor: Colors.red,
           minimumSize: const Size(double.infinity, 50),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(5),
           ),
         ),
       ),
