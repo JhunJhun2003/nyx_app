@@ -108,20 +108,20 @@ class _AccountPageState extends State<AccountPage> {
               ),
               
               const Divider(),
-              const AccountSection(title: "Settings"),
+              // const AccountSection(title: "Settings"),
               
-              AccountMenuItem(
-                icon: Icons.settings,
-                title: "Setting & Preferences",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Setting()),
-                  );
-                },
-              ),
+              // AccountMenuItem(
+              //   icon: Icons.settings,
+              //   title: "Setting & Preferences",
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => const Setting()),
+              //     );
+              //   },
+              // ),
               
-              const Divider(),
+              // const Divider(),
               const AccountSection(title: "Others"),
               
               AccountMenuItem(
@@ -135,27 +135,27 @@ class _AccountPageState extends State<AccountPage> {
                 },
               ),
               
-              AccountMenuItem(
-                icon: Icons.phone,
-                title: "Contact Us",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ContactUs()),
-                  );
-                },
-              ),
+              // AccountMenuItem(
+              //   icon: Icons.phone,
+              //   title: "Contact Us",
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => const ContactUs()),
+              //     );
+              //   },
+              // ),
               
-              AccountMenuItem(
-                icon: Icons.help_outline,
-                title: "Help Center",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const helpPage()),
-                  );
-                },
-              ),
+              // AccountMenuItem(
+              //   icon: Icons.help_outline,
+              //   title: "Help Center",
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => const helpPage()),
+              //     );
+              //   },
+              // ),
               
               AccountMenuItem(
                 icon: Icons.policy,

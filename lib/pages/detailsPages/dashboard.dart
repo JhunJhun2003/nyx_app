@@ -85,7 +85,7 @@ class _DashBoardState extends State<DashBoard> {
           _categoriesList = result['data'] ?? [];
           _isLoadingCategories = false;
         });
-        print('✅ Loaded ${_categoriesList.length} categories');
+        print(' Loaded ${_categoriesList.length} categories');
       } else {
         setState(() {
           _categoriesError = result['message'] ?? 'Failed to load categories';
@@ -119,7 +119,7 @@ class _DashBoardState extends State<DashBoard> {
           _allProducts = result['data'] ?? [];
           _isLoadingProducts = false;
         });
-        print('✅ Loaded ${_allProducts.length} products');
+        print(' Loaded ${_allProducts.length} products');
       } else {
         setState(() {
           _productsError = result['message'] ?? 'Failed to load products';

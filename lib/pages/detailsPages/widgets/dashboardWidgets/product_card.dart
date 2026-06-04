@@ -15,27 +15,35 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final hasDiscount = product.cost > product.price && product.cost > 0;
 
+    final textPrimary = colorScheme.onSurface;
+    final textSecondary = colorScheme.onSurfaceVariant;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: GestureDetector(
-        onTap: onTap ?? () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductDetails(product: product),
-            ),
-          );
-        },
+        onTap: onTap ??
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetails(product: product),
+                ),
+              );
+            },
         child: Card(
-          color: Colors.white,
-          elevation: 2,
+          color: colorScheme.surface,
+          elevation: 3,
+          shadowColor: colorScheme.shadow.withOpacity(0.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -45,12 +53,12 @@ class ProductCard extends StatelessWidget {
                   height: 120,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: product.images.isNotEmpty
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                           child: Image.network(
                             product.images,
                             width: double.infinity,
@@ -58,58 +66,71 @@ class ProductCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
-                                Icons.image,
+                                Icons.broken_image_outlined,
                                 size: 40,
-                                color: Colors.grey[400],
+                                color: textSecondary,
                               );
                             },
                           ),
                         )
-                      : Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                      : Icon(
+                          Icons.image_outlined,
+                          size: 40,
+                          color: textSecondary,
+                        ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 10),
+
                 // Product Name
                 Text(
                   product.productName,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                    fontFamily: 'Custom',
+                    color: textPrimary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+
                 const SizedBox(height: 4),
-                // Price
+
+                // Category
+                Text(
+                  product.category,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 8),
+
+                // Price Section
                 if (hasDiscount) ...[
                   Text(
-                    "${product.cost.toString()} Ks",
-                    style: TextStyle(
-                      fontSize: 10,
+                    "${product.cost} Ks",
+                    style: theme.textTheme.bodySmall?.copyWith(
                       decoration: TextDecoration.lineThrough,
-                      color: Colors.grey[600],
-                      fontFamily: 'Custom',
+                      color: textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
+                    "${product.price} Ks",
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
+                      color: colorScheme.primary,
                     ),
                   ),
                 ] else ...[
                   Text(
-                    "${product.price.toString()} Ks",
-                    style: const TextStyle(
-                      fontSize: 13,
+                    "${product.price} Ks",
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontFamily: 'Custom',
+                      color: colorScheme.primary,
                     ),
                   ),
                 ],

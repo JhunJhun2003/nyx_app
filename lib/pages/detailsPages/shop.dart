@@ -15,15 +15,15 @@ class ShopPage extends StatefulWidget {
 class _ShopPageState extends State<ShopPage> {
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
-  
+
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   List<String> _brands = ["All"];
   String _selectedBrand = "All";
   String _searchQuery = "";
   String _selectedSort = "None";
-  
+
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -40,7 +40,7 @@ class _ShopPageState extends State<ShopPage> {
 
   Future<void> _loadProducts() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -49,21 +49,21 @@ class _ShopPageState extends State<ShopPage> {
     try {
       print("🔄 Loading products...");
       final result = await GetallproductApi.getAllProducts();
-      
-      if (!mounted) return;  // ✅ Check before using setState
-      
+
+      if (!mounted) return; // ✅ Check before using setState
+
       print("📊 Result success: ${result['success']}");
-      
+
       if (result['success'] == true) {
         final products = result['data'] as List<Product>;
         print("✅ Loaded ${products.length} products");
-        
+
         setState(() {
           _allProducts = products;
           _filteredProducts = products;
           _isLoading = false;
         });
-        
+
         _extractBrands();
         _applyFilters();
       } else {
@@ -75,7 +75,7 @@ class _ShopPageState extends State<ShopPage> {
       }
     } catch (e) {
       print("❌ Exception: $e");
-      if (!mounted) return;  // ✅ Check before using setState
+      if (!mounted) return; // ✅ Check before using setState
       setState(() {
         _errorMessage = 'Error loading products: $e';
         _isLoading = false;
@@ -85,7 +85,7 @@ class _ShopPageState extends State<ShopPage> {
 
   void _extractBrands() {
     if (!mounted) return;
-    
+
     Set<String> brandSet = {"All"};
     for (var product in _allProducts) {
       if (product.brand.isNotEmpty) {
@@ -100,7 +100,7 @@ class _ShopPageState extends State<ShopPage> {
 
   void _clearSearch() {
     if (!mounted) return;
-    
+
     _controller.clear();
     setState(() {
       _searchQuery = "";
@@ -154,15 +154,15 @@ class _ShopPageState extends State<ShopPage> {
   void _applyFilters() {
     if (!mounted) return;
     if (_allProducts.isEmpty) return;
-    
+
     List<Product> results = List.from(_allProducts);
 
     // Filter by search query
     if (_searchQuery.trim().isNotEmpty) {
       results = results.where((product) {
-        return product.productName
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase());
+        return product.productName.toLowerCase().contains(
+          _searchQuery.toLowerCase(),
+        );
       }).toList();
     }
 
@@ -185,7 +185,7 @@ class _ShopPageState extends State<ShopPage> {
     setState(() {
       _filteredProducts = results;
     });
-    
+
     print("📊 Filtered products: ${_filteredProducts.length}");
   }
 
@@ -207,14 +207,17 @@ class _ShopPageState extends State<ShopPage> {
   }
 
   Widget _buildContent() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading products...'),
+            CircularProgressIndicator(color: colorScheme.primary),
+            const SizedBox(height: 16),
+            Text('Loading products...', style: theme.textTheme.bodyMedium),
           ],
         ),
       );
@@ -225,12 +228,12 @@ class _ShopPageState extends State<ShopPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
-              style: const TextStyle(color: Colors.red),
               textAlign: TextAlign.center,
+              style: TextStyle(color: colorScheme.error),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -243,17 +246,23 @@ class _ShopPageState extends State<ShopPage> {
     }
 
     if (_filteredProducts.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No products found'),
-            SizedBox(height: 8),
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 64,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text('No products found', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 6),
             Text(
               'Try adjusting your filters',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -261,6 +270,7 @@ class _ShopPageState extends State<ShopPage> {
     }
 
     return RefreshIndicator(
+      color: colorScheme.primary,
       onRefresh: _loadProducts,
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -273,117 +283,135 @@ class _ShopPageState extends State<ShopPage> {
         itemCount: _filteredProducts.length,
         itemBuilder: (context, index) {
           final product = _filteredProducts[index];
+          final hasDiscount = product.cost > product.price && product.cost > 0;
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProductDetails(product: product),
+                  builder: (_) => ProductDetails(product: product),
                 ),
               );
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black12),
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product Image
+                  /// IMAGE
                   Expanded(
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(11),
+                        top: Radius.circular(14),
                       ),
                       child: product.images.isNotEmpty
                           ? Image.network(
                               product.images,
                               width: double.infinity,
                               fit: BoxFit.cover,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                  ),
-                                );
-                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value:
+                                            loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    );
+                                  },
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: Icon(Icons.image, size: 50, color: Colors.grey),
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    size: 50,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 );
                               },
                             )
                           : Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(Icons.image, size: 50, color: Colors.grey),
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Icon(
+                                Icons.image_outlined,
+                                size: 50,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                     ),
                   ),
-                  // Product Info
+
+                  /// INFO
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           product.productName,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+
                         const SizedBox(height: 4),
+
                         Text(
                           product.brand,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 4),
+
+                        const SizedBox(height: 6),
+
+                        /// PRICE
                         Text(
-                          '${product.price.toString()} Ks',
-                          style: const TextStyle(
+                          "${product.price} Ks",
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.red,
+                            color: colorScheme.primary,
                           ),
                         ),
-                        // Discount badge if cost > price
-                        if (product.cost > product.price)
+
+                        /// DISCOUNT
+                        if (hasDiscount)
                           Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(4),
+                            margin: const EdgeInsets.only(top: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
                             ),
+                            // decoration: BoxDecoration(
+                            //   color: colorScheme.error,
+                            //   borderRadius: BorderRadius.circular(6),
+                            // ),
                             child: Text(
-                              'Save ${(product.cost - product.price).toString()} Ks',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
+                              "${(product.cost - product.price)} Ks",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ),
