@@ -38,31 +38,32 @@ class Api {
         };
       }
 
-      if (responseData is Map<String, dynamic>) {
-        // Check for success field
-        bool isSuccess = false;
-        if (responseData["success"] is bool) {
-          isSuccess = responseData["success"];
-        } else if (responseData["success"] is String) {
-          isSuccess = responseData["success"].toLowerCase() == "true";
-        } else if (response.statusCode >= 200 && response.statusCode < 300) {
-          isSuccess = true;
-        }
+      // Get token
+      final String token = responseData['token']?.toString() ?? '';
 
-        return {
-          'success': isSuccess,
-          'data': responseData,
-          'message':
-              responseData['message'] ??
-              (isSuccess ? 'Login successful' : 'Login failed'),
-        };
+      // Check for invalid password response
+      if (token == "Invalid password") {
+        return {'success': false, 'message': 'Invalid email or password'};
+      }
+
+      // Check for success
+      bool isSuccess = false;
+      if (responseData["success"] is bool && responseData["success"] == true) {
+        isSuccess = true;
+      } else if (responseData["status"] == "success" && token.isNotEmpty) {
+        isSuccess = true;
+      } else if (response.statusCode >= 200 &&
+          response.statusCode < 300 &&
+          token.isNotEmpty) {
+        isSuccess = true;
       }
 
       return {
-        'success': response.statusCode >= 200 && response.statusCode < 300,
+        'success': isSuccess,
         'data': responseData,
         'message':
-            'Login ${response.statusCode >= 200 && response.statusCode < 300 ? "successful" : "failed"}',
+            responseData['message'] ??
+            (isSuccess ? 'Login successful' : 'Invalid credentials'),
       };
     } catch (e) {
       return {'success': false, 'message': 'Error: $e'};
@@ -265,7 +266,6 @@ class Api {
       return <String, dynamic>{'success': false, 'message': 'Error: $e'};
     }
   }
-
 
   static Future<Map<String, dynamic>> getMyProfile({
     required String token,

@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -178,6 +179,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  bool _isValidToken(String token) {
+    if (token.isEmpty) return false;
+    if (token == "Invalid password") return false;
+    // Check if token is a valid JWT format (has 3 parts separated by dots)
+    final parts = token.split('.');
+    if (parts.length != 3) return false;
+    return true;
+  }
+
   Widget _login() {
     return Center(
       child: ElevatedButton(
@@ -185,113 +195,175 @@ class _LoginPageState extends State<LoginPage> {
           minimumSize: const Size(350, 50),
           backgroundColor: Colors.red,
         ),
-        onPressed: () async {
-          if (!_formKey.currentState!.validate()) return;
-
-          final email = emailController.text.trim();
-          final password = passwordController.text;
-
-          final Map<String, dynamic> loginResult = await Api.loginUser(
-            emailOrphone: email,
-            password: password,
-          );
-          final bool success = loginResult['success'] == true;
-
-          if (!mounted) return;
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                success
-                    ? "Login success"
-                    : (loginResult['message']?.toString() ?? "Invalid login"),
-              ),
-            ),
-          );
-
-          if (success) {
-            final dynamic rawData = loginResult['data'];
-            Map<String, dynamic> responseMap = <String, dynamic>{};
-            if (rawData is Map<String, dynamic>) {
-              responseMap = rawData;
-            }
-
-            final String token = responseMap['token']?.toString() ?? '';
-
-            final profileResult = await Api.getMyProfile(token: token);
-
-            User user;
-
-            if (profileResult['success'] == true) {
-              final userData = profileResult['data'] as Map<String, dynamic>;
-              print("Profile data: $userData");
-
-              user = User(
-                id: userData['id'] != null
-                    ? int.tryParse(userData['id'].toString())
-                    : null,
-                name: userData['name']?.toString(),
-                email: userData['email']?.toString() ?? email,
-                phone: userData['phone']?.toString(),
-                imageUrl: userData['image_url']?.toString(),
-                dateOfBirth: userData['dateOfBirth']?.toString(),
-                address: userData['address']?.toString(),
-              );
-            } else {
-              final dynamic rawUser = responseMap['user'];
-              Map<String, dynamic> userJson = {};
-
-              if (rawUser is Map<String, dynamic>) {
-                userJson = rawUser;
-              } else {
-                userJson = responseMap;
-              }
-
-              print("Login response user data: $userJson");
-
-              user = User(
-                id: userJson['id'] != null
-                    ? int.tryParse(userJson['id'].toString())
-                    : null,
-                name: userJson['name']?.toString(),
-                email: userJson['email']?.toString() ?? email,
-                phone: userJson['phone']?.toString(),
-                imageUrl: userJson['image_url']?.toString(),
-                dateOfBirth: userJson['dateOfBirth']?.toString(),
-                address: userJson['address']?.toString(),
-              );
-            }
-
-            print("User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}");
-
-            await widget.sessionService.saveSession(user, token);
-
-            final savedUser = widget.sessionService.getStoredUser();
-            print("Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}");
-
-            if (!mounted) return;
-
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MainDashboard(
-                  sessionService: widget.sessionService,
-                  cartService: widget.cartService,
+        onPressed: _isLoading ? null : _handleLogin,
+        child: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                "LOGIN",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  fontSize: 15,
+                  color: Colors.white,
                 ),
               ),
-            );
-          }
-        },
-        child: const Text(
-          "LOGIN",
-          style: TextStyle(
-            fontFamily: "Custom",
-            fontSize: 15,
-            color: Colors.white,
-          ),
-        ),
       ),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    try {
+      final Map<String, dynamic> loginResult = await Api.loginUser(
+        emailOrphone: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      final bool success = loginResult['success'] == true;
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loginResult['message']?.toString() ?? "Invalid email or password"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final dynamic rawData = loginResult['data'];
+      Map<String, dynamic> responseMap = <String, dynamic>{};
+      if (rawData is Map<String, dynamic>) {
+        responseMap = rawData;
+      }
+
+      final String token = responseMap['token']?.toString() ?? '';
+
+      // Validate token
+      if (!_isValidToken(token)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid response from server. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch user profile
+      final profileResult = await Api.getMyProfile(token: token);
+
+      User user;
+
+      if (profileResult['success'] == true) {
+        final userData = profileResult['data'] as Map<String, dynamic>;
+        print("Profile data: $userData");
+
+        user = User(
+          id: userData['id'] != null ? int.tryParse(userData['id'].toString()) : null,
+          name: userData['name']?.toString(),
+          email: userData['email']?.toString() ?? email,
+          phone: userData['phone']?.toString(),
+          imageUrl: userData['image_url']?.toString(),
+          dateOfBirth: userData['dateOfBirth']?.toString(),
+          address: userData['address']?.toString(),
+        );
+      } else {
+        final dynamic rawUser = responseMap['user'];
+        Map<String, dynamic> userJson = {};
+
+        if (rawUser is Map<String, dynamic>) {
+          userJson = rawUser;
+        } else {
+          userJson = responseMap;
+        }
+
+        print("Login response user data: $userJson");
+
+        user = User(
+          id: userJson['id'] != null ? int.tryParse(userJson['id'].toString()) : null,
+          name: userJson['name']?.toString(),
+          email: userJson['email']?.toString() ?? email,
+          phone: userJson['phone']?.toString(),
+          imageUrl: userJson['image_url']?.toString(),
+          dateOfBirth: userJson['dateOfBirth']?.toString(),
+          address: userJson['address']?.toString(),
+        );
+      }
+
+      // Validate user has an ID
+      if (user.id == null || user.id == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid user data received'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      print("User to save - ID: ${user.id}, Name: ${user.name}, Email: ${user.email}");
+
+      await widget.sessionService.saveSession(user, token);
+
+      final savedUser = widget.sessionService.getStoredUser();
+      print("Verified saved user - ID: ${savedUser?.id}, Name: ${savedUser?.name}");
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login successful'),
+          backgroundColor: Colors.grey,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MainDashboard(
+            sessionService: widget.sessionService,
+            cartService: widget.cartService,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Widget _continuewith(String title) {
