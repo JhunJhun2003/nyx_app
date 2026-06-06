@@ -15,11 +15,12 @@ class Services extends StatefulWidget {
   const Services({super.key});
 
   @override
-  State<Services> createState() => _ClassesPageState();
+  State<Services> createState() => _ServicesState();
 }
 
-class _ClassesPageState extends State<Services> {
+class _ServicesState extends State<Services> {
   int selectedIndex = 0;
+  bool _isRefreshing = false;
 
   List<Training> _trainings = [];
   bool _isLoadingTrainings = true;
@@ -36,9 +37,29 @@ class _ClassesPageState extends State<Services> {
   @override
   void initState() {
     super.initState();
-    _loadTrainings();
-    _loadCanteenItems();
-    _loadVenues();
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    await Future.wait([
+      _loadTrainings(),
+      _loadCanteenItems(),
+      _loadVenues(),
+    ]);
+  }
+
+  Future<void> _refreshData() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    await _loadAllData();
+
+    setState(() {
+      _isRefreshing = false;
+    });
   }
 
   Future<void> _loadTrainings() async {
@@ -146,80 +167,86 @@ class _ClassesPageState extends State<Services> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TabWidget(
-                    title: "TRAININGS",
-                    index: 0,
-                    selectedIndex: selectedIndex,
-                    onTap: () {
-                      if (mounted) {
-                        setState(() => selectedIndex = 0);
-                      }
-                    },
-                  ),
-                  TabWidget(
-                    title: "RENTALS",
-                    index: 1,
-                    selectedIndex: selectedIndex,
-                    onTap: () {
-                      if (mounted) {
-                        setState(() => selectedIndex = 1);
-                      }
-                    },
-                  ),
-                  TabWidget(
-                    title: "CANTEEN",
-                    index: 2,
-                    selectedIndex: selectedIndex,
-                    onTap: () {
-                      if (mounted) {
-                        setState(() => selectedIndex = 2);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              Offstage(
-                offstage: selectedIndex != 0,
-                child: TrainingsWidget(
-                  trainings: _trainings,
-                  isLoading: _isLoadingTrainings,
-                  error: _trainingsError,
-                  onRetry: _loadTrainings,
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: Colors.red,
+        backgroundColor: Colors.white,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TabWidget(
+                      title: "TRAININGS",
+                      index: 0,
+                      selectedIndex: selectedIndex,
+                      onTap: () {
+                        if (mounted) {
+                          setState(() => selectedIndex = 0);
+                        }
+                      },
+                    ),
+                    TabWidget(
+                      title: "RENTALS",
+                      index: 1,
+                      selectedIndex: selectedIndex,
+                      onTap: () {
+                        if (mounted) {
+                          setState(() => selectedIndex = 1);
+                        }
+                      },
+                    ),
+                    TabWidget(
+                      title: "CANTEEN",
+                      index: 2,
+                      selectedIndex: selectedIndex,
+                      onTap: () {
+                        if (mounted) {
+                          setState(() => selectedIndex = 2);
+                        }
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              Offstage(
-                offstage: selectedIndex != 1,
-                child: RentalsWidget(
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                  venues: _venues,
-                  isLoadingVenues: _isLoadingVenues,
-                  venuesError: _venuesError,
-                  onRetryVenues: _loadVenues,
+                const SizedBox(height: 15),
+                Offstage(
+                  offstage: selectedIndex != 0,
+                  child: TrainingsWidget(
+                    trainings: _trainings,
+                    isLoading: _isLoadingTrainings && !_isRefreshing,
+                    error: _trainingsError,
+                    onRetry: _loadTrainings,
+                  ),
                 ),
-              ),
-              Offstage(
-                offstage: selectedIndex != 2,
-                child: CanteenWidget(
-                  items: _canteenItems,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                  isLoading: _isLoadingCanteen,
-                  error: _canteenError,
-                  onRetry: _loadCanteenItems,
+                Offstage(
+                  offstage: selectedIndex != 1,
+                  child: RentalsWidget(
+                    screenWidth: screenWidth,
+                    screenHeight: screenHeight,
+                    venues: _venues,
+                    isLoadingVenues: _isLoadingVenues && !_isRefreshing,
+                    venuesError: _venuesError,
+                    onRetryVenues: _loadVenues,
+                  ),
                 ),
-              ),
-            ],
+                Offstage(
+                  offstage: selectedIndex != 2,
+                  child: CanteenWidget(
+                    items: _canteenItems,
+                    screenWidth: screenWidth,
+                    screenHeight: screenHeight,
+                    isLoading: _isLoadingCanteen && !_isRefreshing,
+                    error: _canteenError,
+                    onRetry: _loadCanteenItems,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

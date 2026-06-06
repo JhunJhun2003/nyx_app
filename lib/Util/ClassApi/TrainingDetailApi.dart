@@ -1,3 +1,4 @@
+// lib/Util/ClassApi/TrainingDetailApi.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nyxproject/models/TrainingDetail.dart';
@@ -16,6 +17,7 @@ class TrainingDetailApi {
       ).timeout(const Duration(seconds: 30));
 
       print("Training Detail Response Status: ${response.statusCode}");
+      print("Training Detail Response Body: ${response.body}");
 
       if (response.body.isEmpty) {
         return {'success': false, 'message': 'Empty response from server'};

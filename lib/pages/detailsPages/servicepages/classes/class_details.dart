@@ -15,6 +15,7 @@ class ClassDetails extends StatefulWidget {
 class _ClassDetailsState extends State<ClassDetails> {
   TrainingDetail? _trainingDetail;
   bool _isLoading = true;
+  bool _isRefreshing = false;
   String? _error;
   final ValueNotifier<int> _selectedLevelIndex = ValueNotifier(0);
   Map<int, List<Schedule>> _schedulesByLevelId = {};
@@ -46,6 +47,20 @@ class _ClassDetailsState extends State<ClassDetails> {
     _schedulesByLevelId = indexed;
   }
 
+  Future<void> _refreshData() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    await _loadTrainingDetail();
+
+    setState(() {
+      _isRefreshing = false;
+    });
+  }
+
   Future<void> _loadTrainingDetail() async {
     if (!mounted) return;
 
@@ -55,9 +70,7 @@ class _ClassDetailsState extends State<ClassDetails> {
     });
 
     try {
-      final result = await TrainingDetailApi.getTrainingDetail(
-        widget.trainingId,
-      );
+      final result = await TrainingDetailApi.getTrainingDetail(widget.trainingId);
 
       if (!mounted) return;
 
@@ -104,43 +117,39 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading && !_isRefreshing) {
       return const Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
-            ),
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: CircularProgressIndicator(),
           ),
         ),
       );
     }
 
-    if (_error != null) {
+    if (_error != null && _trainingDetail == null) {
       return Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _loadTrainingDetail,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadTrainingDetail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
           ),
         ),
@@ -149,104 +158,119 @@ class _ClassDetailsState extends State<ClassDetails> {
 
     if (_trainingDetail == null) {
       return const Scaffold(
-        body: SafeArea(
-          child: Center(child: Text('No training data available')),
-        ),
+        body: Center(child: Text('No training data available')),
       );
     }
 
     return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // Sticky Header - stays at top when scrolling
-          SliverAppBar(
-            pinned: true, // This makes the header stick to the top
-            backgroundColor: const Color.fromARGB(255, 13, 27, 42),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: Colors.red,
+        backgroundColor: Colors.white,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: const Color.fromARGB(255, 13, 27, 42),
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              title: Text(
+                _trainingDetail?.courseName ?? "Training Details",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              elevation: 0,
+            ),
+            
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _imageSpace(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  _section("Training Level"),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _buildLevelCards(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  _section("Training Schedules"),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _timeTable(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  _section("What You'll Learn"),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _learning(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  _section("Meet Your Coach"),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _coach(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  _section("Exclusive Opening Offer"),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _offer(selectedIndex),
+                  ),
+                  const SizedBox(height: 5),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _selectedLevelIndex,
+                    builder: (context, selectedIndex, _) =>
+                        _enroll(selectedIndex),
+                  ),
+                  const SizedBox(height: 15),
+                ],
               ),
             ),
-            title: Text(
-              _trainingDetail?.courseName ?? "Training Details",
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: "Custom",
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            // actions: [
-            //   IconButton(
-            //     onPressed: () {},
-            //     icon: const Icon(
-            //       Icons.bookmark,
-            //       color: Colors.white,
-            //     ),
-            //   ),
-            // ],
-            elevation: 0,
-          ),
-          
-          // Scrollable Content
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 5),
-                _imageSpace(),
-                const SizedBox(height: 5),
-                _section("Training Level"),
-                const SizedBox(height: 5),
-                ValueListenableBuilder<int>(
-                  valueListenable: _selectedLevelIndex,
-                  builder: (context, selectedIndex, _) =>
-                      _buildLevelCards(selectedIndex),
-                ),
-                const SizedBox(height: 5),
-                _section("Training Schedules"),
-                const SizedBox(height: 5),
-                ValueListenableBuilder<int>(
-                  valueListenable: _selectedLevelIndex,
-                  builder: (context, selectedIndex, _) =>
-                      _timeTable(selectedIndex),
-                ),
-                const SizedBox(height: 5),
-                _section("What You'll Learn"),
-                const SizedBox(height: 5),
-                _learning(),
-                const SizedBox(height: 5),
-                _section("Meet Your Coach"),
-                const SizedBox(height: 5),
-                _coach(),
-                const SizedBox(height: 5),
-                _section("Exclusive Opening Offer"),
-                const SizedBox(height: 5),
-                _offer(),
-                const SizedBox(height: 5),
-                ValueListenableBuilder<int>(
-                  valueListenable: _selectedLevelIndex,
-                  builder: (context, selectedIndex, _) =>
-                      _enroll(selectedIndex),
-                ),
-                const SizedBox(height: 15),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: _bottomBar(),
     );
   }
 
-  Widget _imageSpace() {
+  Widget _imageSpace(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    final selectedLevel = selectedIndex < levels.length
+        ? levels[selectedIndex]
+        : null;
+    
+    final imageUrl = selectedLevel?.categoryCardImageUrl ?? "";
+    
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -254,26 +278,21 @@ class _ClassDetailsState extends State<ClassDetails> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
-          // borderRadius: BorderRadius.circular(12),
-          // border: Border.all(color: Colors.black, width: 2),
         ),
-        child: _trainingDetail?.categoryCardImageUrl.isNotEmpty == true
-            ? ClipRRect(
-                // borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  _trainingDetail!.categoryCardImageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  cacheWidth: _cacheWidth(context),
-                  gaplessPlayback: true,
-                  filterQuality: FilterQuality.medium,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(
-                      "assets/classes/Badminton.png",
-                      fit: BoxFit.cover,
-                    );
-                  },
-                ),
+        child: imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                cacheWidth: _cacheWidth(context),
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset(
+                    "assets/classes/Badminton.png",
+                    fit: BoxFit.cover,
+                  );
+                },
               )
             : Image.asset("assets/classes/Badminton.png", fit: BoxFit.cover),
       ),
@@ -350,7 +369,6 @@ class _ClassDetailsState extends State<ClassDetails> {
         decoration: BoxDecoration(
           color: isSelected ? const Color.fromARGB(133, 9, 9, 9) : const Color(0xFF0D1B2A),
           borderRadius: BorderRadius.circular(5),
-          // border: isSelected ? Border.all(color: Colors.red, width: 2) : null,
         ),
         child: Column(
           children: [
@@ -488,7 +506,25 @@ class _ClassDetailsState extends State<ClassDetails> {
     }
   }
 
-  Widget _learning() {
+  Widget _learning(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    final selectedLevel = selectedIndex < levels.length
+        ? levels[selectedIndex]
+        : null;
+
+    final learningDescription = selectedLevel?.learningDescription ?? "";
+    
+    final learningPoints = learningDescription
+        .split('\n')
+        .where((point) => point.trim().isNotEmpty)
+        .toList();
+
+    if (learningPoints.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final learningImageUrl = selectedLevel?.learningImageUrl ?? "";
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -498,23 +534,26 @@ class _ClassDetailsState extends State<ClassDetails> {
             flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _trainingDetail?.learningDescription ??
-                      "Technical Mastery: Precision in every shot.",
-                  style: const TextStyle(
-                    fontFamily: "Custom",
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+              children: learningPoints.map((point) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "• ",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      Expanded(
+                        child: Text(
+                          point.trim(),
+                          style: const TextStyle(fontFamily: "Custom", fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                _bulletText("Agility Drills: Mastering the 6-point footwork."),
-                _bulletText("Game Intelligence: Reading opponent movements."),
-                _bulletText(
-                  "Physical Conditioning: Strength and explosive power.",
-                ),
-              ],
+                );
+              }).toList(),
             ),
           ),
           const SizedBox(width: 10),
@@ -522,23 +561,29 @@ class _ClassDetailsState extends State<ClassDetails> {
             flex: 1,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(5),
-              child: Image.network(
-                _trainingDetail?.learningImageUrl ?? "",
-                height: 120,
-                fit: BoxFit.cover,
-                cacheWidth: _cacheWidth(context, factor: 0.35),
-                cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context))
-                    .round(),
-                gaplessPlayback: true,
-                filterQuality: FilterQuality.medium,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 120,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image, size: 40),
-                  );
-                },
-              ),
+              child: learningImageUrl.isNotEmpty
+                  ? Image.network(
+                      learningImageUrl,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      cacheWidth: _cacheWidth(context, factor: 0.35),
+                      cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context))
+                          .round(),
+                      gaplessPlayback: true,
+                      filterQuality: FilterQuality.medium,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 120,
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.image, size: 40),
+                        );
+                      },
+                    )
+                  : Container(
+                      height: 120,
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.image, size: 40),
+                    ),
             ),
           ),
         ],
@@ -546,38 +591,34 @@ class _ClassDetailsState extends State<ClassDetails> {
     );
   }
 
-  Widget _bulletText(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "• ",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontFamily: "Custom", fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _coach() {
-    final coaches = _trainingDetail?.coaches ?? [];
-
-    if (coaches.isEmpty) {
+  Widget _coach(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    
+    if (levels.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
         child: Text('No coach information available'),
       );
     }
 
-    final coach = coaches[0];
+    final selectedLevel = selectedIndex < levels.length
+        ? levels[selectedIndex]
+        : null;
+
+    if (selectedLevel == null) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('No coach information available for this level'),
+      );
+    }
+
+    final coachImageUrl = selectedLevel.coachImageUrl ?? "";
+    final instructorName = selectedLevel.instsuctorName ?? "";
+    final biography = selectedLevel.biography ?? "";
+
+    if (instructorName.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -586,26 +627,33 @@ class _ClassDetailsState extends State<ClassDetails> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(5),
-            child: Image.network(
-              coach.coachImageUrl,
-              height: 100,
-              width: 100,
-              fit: BoxFit.cover,
-              cacheWidth: (100 * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              cacheHeight: (100 * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              gaplessPlayback: true,
-              filterQuality: FilterQuality.medium,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 100,
-                  width: 100,
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.person, size: 40),
-                );
-              },
-            ),
+            child: coachImageUrl.isNotEmpty
+                ? Image.network(
+                    coachImageUrl,
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.cover,
+                    cacheWidth: (100 * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
+                    cacheHeight: (100 * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
+                    gaplessPlayback: true,
+                    filterQuality: FilterQuality.medium,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 100,
+                        width: 100,
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.person, size: 40),
+                      );
+                    },
+                  )
+                : Container(
+                    height: 100,
+                    width: 100,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.person, size: 40),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -613,7 +661,7 @@ class _ClassDetailsState extends State<ClassDetails> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  coach.instructorName,
+                  instructorName,
                   style: const TextStyle(
                     fontFamily: "Custom",
                     fontSize: 16,
@@ -622,7 +670,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  coach.biography,
+                  biography.isNotEmpty ? biography : "Experienced coach dedicated to your success.",
                   style: const TextStyle(fontFamily: "Custom", fontSize: 12),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
@@ -635,7 +683,32 @@ class _ClassDetailsState extends State<ClassDetails> {
     );
   }
 
-  Widget _offer() {
+  Widget _offer(int selectedIndex) {
+    final levels = _trainingDetail?.levels ?? [];
+    
+    if (levels.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final selectedLevel = selectedIndex < levels.length
+        ? levels[selectedIndex]
+        : null;
+
+    if (selectedLevel == null) {
+      return const SizedBox.shrink();
+    }
+
+    final aboutTitle = selectedLevel.aboutTitle ?? "";
+    final mainTitle = selectedLevel.mainTitle ?? "";
+    final title = selectedLevel.title ?? "";
+    final details = selectedLevel.details ?? "";
+
+    final hasOffer = aboutTitle.isNotEmpty || mainTitle.isNotEmpty || title.isNotEmpty || details.isNotEmpty;
+
+    if (!hasOffer) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
@@ -645,11 +718,11 @@ class _ClassDetailsState extends State<ClassDetails> {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 1,
             child: Text(
-              "50% OFF",
-              style: TextStyle(
+              aboutTitle.isNotEmpty ? aboutTitle : "50% OFF",
+              style: const TextStyle(
                 fontFamily: "Custom",
                 fontSize: 28,
                 color: Colors.black,
@@ -664,19 +737,26 @@ class _ClassDetailsState extends State<ClassDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Early Bird Special",
-                  style: TextStyle(
+                Text(
+                  mainTitle.isNotEmpty ? mainTitle : "Early Bird Special",
+                  style: const TextStyle(
                     fontFamily: "Custom",
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  "50% discount on your first month's registration!",
-                  style: TextStyle(fontFamily: "Custom", fontSize: 11),
+                Text(
+                  title.isNotEmpty ? title : "50% discount on your first month's registration!",
+                  style: const TextStyle(fontFamily: "Custom", fontSize: 11),
                 ),
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    details,
+                    style: const TextStyle(fontFamily: "Custom", fontSize: 10, color: Colors.grey),
+                  ),
+                ],
               ],
             ),
           ),
@@ -693,7 +773,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: () {
           Navigator.push(
             context,
@@ -708,20 +788,19 @@ class _ClassDetailsState extends State<ClassDetails> {
             ),
           );
         },
-        // icon: const Icon(Icons.event),
-        label: const Text(
-          "Enroll Now",
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Custom',
-            fontSize: 16,
-          ),
-        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
           minimumSize: const Size(double.infinity, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+        child: const Text(
+          "Enroll Now",
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Custom',
+            fontSize: 16,
           ),
         ),
       ),
