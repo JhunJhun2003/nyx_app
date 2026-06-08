@@ -216,7 +216,7 @@ class _CourtDetailsState extends State<CourtDetails> {
             children: [
               _header(screenWidth, screenHeight),
               _banner(screenWidth, screenHeight),
-              _location(screenWidth, screenHeight),
+              // _location(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
               _bookDate(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),

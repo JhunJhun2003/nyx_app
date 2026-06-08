@@ -2,7 +2,8 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:nyxproject/models/User.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/forgetpassword.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/signup.dart';// Add this import
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:nyxproject/util/Api.dart';
@@ -48,13 +49,15 @@ class _LoginPageState extends State<LoginPage> {
               const Divider(),
               _inputform(),
               const SizedBox(height: 10),
+              _forgotPassword(), // Forgot Password link
+              const SizedBox(height: 10),
               _login(),
               const SizedBox(height: 10),
               _toSignUp(),
               const SizedBox(height: 10),
-              _continuewith("--- or Continue With ---"),
-              const SizedBox(height: 15),
-              _choice(),
+              // _continuewith("--- or Continue With ---"),
+              // const SizedBox(height: 15),
+              // _choice(),
               const SizedBox(height: 15),
               const Divider(),
             ],
@@ -174,6 +177,40 @@ class _LoginPageState extends State<LoginPage> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Forgot Password Widget - Navigates to ForgetPassword page
+  Widget _forgotPassword() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: GestureDetector(
+          onTap: () {
+            final email = emailController.text.trim();
+            
+            // Navigate to ForgetPassword page with email
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ForgetPassword(
+                  email: email.isNotEmpty ? email : '', // Pass email if entered, else empty
+                ),
+              ),
+            );
+          },
+          child: const Text(
+            "Forgot Password?",
+            style: TextStyle(
+              fontFamily: "Custom",
+              fontSize: 13,
+              color: Colors.red,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );

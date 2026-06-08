@@ -170,7 +170,7 @@ class _DashBoardState extends State<DashBoard> {
                 onPageChanged: (index) {},
               ),
               const SizedBox(height: 3),
-              const Divider(thickness: 1, height: 2),
+              // const Divider(thickness: 1, height: 2),
               SectionHeader(
                 title: "Categories",
                 onSeeAll: () {
@@ -188,7 +188,7 @@ class _DashBoardState extends State<DashBoard> {
                 error: _categoriesError,
                 onRetry: _loadCategories,
               ),
-              const Divider(thickness: 1, height: 1),
+              // const Divider(thickness: 1, height: 1),
               _buildProductSections(),
             ],
           ),
