@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nyxproject/Util/ContactusApi.dart';
+import 'package:nyxproject/models/Contactus.dart';
 import 'package:nyxproject/models/TrainingDetail.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/classes/enrollForm.dart';
 import 'package:nyxproject/Util/ClassApi/TrainingDetailApi.dart';
@@ -112,7 +114,7 @@ class _ClassDetailsState extends State<ClassDetails> {
   }
 
   List<Schedule> _getSchedulesForLevel(int levelId) {
-    return _schedulesByLevelId[levelId] ?? const [];
+    return _schedulesByLevelId[levelId] ?? [];
   }
 
   @override
@@ -341,6 +343,7 @@ class _ClassDetailsState extends State<ClassDetails> {
             padding: const EdgeInsets.only(left: 10, right: 5),
             child: _trainingCard(
               title: level.titleLevel,
+              description: level.description,  // Added description
               price: level.price,
               isSelected: isSelected,
               onTap: () {
@@ -357,6 +360,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Widget _trainingCard({
     required String title,
+    String? description,  // Added description parameter
     required int price,
     required bool isSelected,
     required VoidCallback onTap,
@@ -399,12 +403,29 @@ class _ClassDetailsState extends State<ClassDetails> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              "Comprehensive training",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: Colors.white70),
-            ),
-            const SizedBox(height: 8),
+            // Added description here - between title_level and price
+            if (description != null && description.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  description,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11, 
+                    color: Colors.white70,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if (description != null && description.isNotEmpty)
+              const SizedBox(height: 8),
+            // const Text(
+            //   "Comprehensive training",
+            //   textAlign: TextAlign.center,
+            //   style: TextStyle(fontSize: 11, color: Colors.white70),
+            // ),
+            // const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
               decoration: BoxDecoration(
@@ -613,7 +634,7 @@ class _ClassDetailsState extends State<ClassDetails> {
     }
 
     final coachImageUrl = selectedLevel.coachImageUrl ?? "";
-    final instructorName = selectedLevel.instsuctorName ?? "";
+    final instructorName = selectedLevel.instructorName ?? "";
     final biography = selectedLevel.biography ?? "";
 
     if (instructorName.isEmpty) {
@@ -806,51 +827,81 @@ class _ClassDetailsState extends State<ClassDetails> {
       ),
     );
   }
-
-  Widget _bottomBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      color: const Color.fromARGB(255, 13, 27, 42),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "Ready to Master the Court?",
-            style: TextStyle(
-              fontFamily: "Custom",
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 67, 251, 74),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "Contact us to book your free trial session.",
-            style: TextStyle(
-              fontFamily: "Custom",
-              fontSize: 11,
-              color: Colors.white70,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.phone, size: 14, color: Colors.white70),
-              const SizedBox(width: 4),
-              const Text(
-                "09 123 456 789",
-                style: TextStyle(
-                  fontFamily: "Custom",
-                  fontSize: 11,
-                  color: Colors.white70,
-                ),
+Widget _bottomBar() {
+  return FutureBuilder<ContactUsData?>(
+    future: _fetchContactInfo(),
+    builder: (context, snapshot) {
+      final contactInfo = snapshot.data;
+      final phoneNumber = contactInfo?.contactInfo ?? "09 123 456 789";
+      
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        color: const Color.fromARGB(255, 13, 27, 42),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Ready to Master the Court?",
+              style: TextStyle(
+                fontFamily: "Custom",
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 67, 251, 74),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              "Contact us to book your free trial session.",
+              style: TextStyle(
+                fontFamily: "Custom",
+                fontSize: 11,
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () {
+                // Optionally add phone call functionality
+                print("Contact number tapped: $phoneNumber");
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.phone, size: 14, color: Colors.white70),
+                  const SizedBox(width: 4),
+                  Text(
+                    phoneNumber,
+                    style: const TextStyle(
+                      fontFamily: "Custom",
+                      fontSize: 11,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+// Add this method to fetch contact info
+Future<ContactUsData?> _fetchContactInfo() async {
+  try {
+    final result = await ContactusApi.getGeneralInfo();
+    if (result['success'] == true) {
+      return result['data'] as ContactUsData;
+    }
+    return null;
+  } catch (e) {
+    print("Error fetching contact info: $e");
+    return null;
   }
+}
+
+
+
 }

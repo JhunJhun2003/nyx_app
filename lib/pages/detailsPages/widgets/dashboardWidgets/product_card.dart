@@ -38,7 +38,7 @@ class ProductCard extends StatelessWidget {
         child: Card(
           color: colorScheme.surface,
           elevation: 3,
-          shadowColor: colorScheme.shadow.withOpacity(0.2),
+          shadowColor: colorScheme.shadow.withOpacity(0.8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
