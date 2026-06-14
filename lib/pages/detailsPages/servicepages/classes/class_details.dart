@@ -51,7 +51,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Future<void> _refreshData() async {
     if (_isRefreshing) return;
-    
+
     setState(() {
       _isRefreshing = true;
     });
@@ -72,7 +72,9 @@ class _ClassDetailsState extends State<ClassDetails> {
     });
 
     try {
-      final result = await TrainingDetailApi.getTrainingDetail(widget.trainingId);
+      final result = await TrainingDetailApi.getTrainingDetail(
+        widget.trainingId,
+      );
 
       if (!mounted) return;
 
@@ -146,9 +148,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _loadTrainingDetail,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: const Text('Retry'),
                 ),
               ],
@@ -197,7 +197,7 @@ class _ClassDetailsState extends State<ClassDetails> {
               ),
               elevation: 0,
             ),
-            
+
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,17 +270,15 @@ class _ClassDetailsState extends State<ClassDetails> {
     final selectedLevel = selectedIndex < levels.length
         ? levels[selectedIndex]
         : null;
-    
+
     final imageUrl = selectedLevel?.categoryCardImageUrl ?? "";
-    
+
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5),
         height: 200,
         width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-        ),
+        decoration: BoxDecoration(color: Colors.white),
         child: imageUrl.isNotEmpty
             ? Image.network(
                 imageUrl,
@@ -343,7 +341,7 @@ class _ClassDetailsState extends State<ClassDetails> {
             padding: const EdgeInsets.only(left: 10, right: 5),
             child: _trainingCard(
               title: level.titleLevel,
-              description: level.description,  // Added description
+              description: level.description, // Added description
               price: level.price,
               isSelected: isSelected,
               onTap: () {
@@ -360,7 +358,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Widget _trainingCard({
     required String title,
-    String? description,  // Added description parameter
+    String? description, // Added description parameter
     required int price,
     required bool isSelected,
     required VoidCallback onTap,
@@ -371,7 +369,9 @@ class _ClassDetailsState extends State<ClassDetails> {
         width: 170,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color.fromARGB(133, 9, 9, 9) : const Color(0xFF0D1B2A),
+          color: isSelected
+              ? const Color.fromARGB(133, 9, 9, 9)
+              : const Color(0xFF0D1B2A),
           borderRadius: BorderRadius.circular(5),
         ),
         child: Column(
@@ -410,10 +410,7 @@ class _ClassDetailsState extends State<ClassDetails> {
                 child: Text(
                   description,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 11, 
-                    color: Colors.white70,
-                  ),
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -534,7 +531,7 @@ class _ClassDetailsState extends State<ClassDetails> {
         : null;
 
     final learningDescription = selectedLevel?.learningDescription ?? "";
-    
+
     final learningPoints = learningDescription
         .split('\n')
         .where((point) => point.trim().isNotEmpty)
@@ -563,12 +560,18 @@ class _ClassDetailsState extends State<ClassDetails> {
                     children: [
                       const Text(
                         "• ",
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Expanded(
                         child: Text(
                           point.trim(),
-                          style: const TextStyle(fontFamily: "Custom", fontSize: 13),
+                          style: const TextStyle(
+                            fontFamily: "Custom",
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -588,8 +591,9 @@ class _ClassDetailsState extends State<ClassDetails> {
                       height: 120,
                       fit: BoxFit.cover,
                       cacheWidth: _cacheWidth(context, factor: 0.35),
-                      cacheHeight: (120 * MediaQuery.devicePixelRatioOf(context))
-                          .round(),
+                      cacheHeight:
+                          (120 * MediaQuery.devicePixelRatioOf(context))
+                              .round(),
                       gaplessPlayback: true,
                       filterQuality: FilterQuality.medium,
                       errorBuilder: (context, error, stackTrace) {
@@ -614,7 +618,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Widget _coach(int selectedIndex) {
     final levels = _trainingDetail?.levels ?? [];
-    
+
     if (levels.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -691,7 +695,9 @@ class _ClassDetailsState extends State<ClassDetails> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  biography.isNotEmpty ? biography : "Experienced coach dedicated to your success.",
+                  biography.isNotEmpty
+                      ? biography
+                      : "Experienced coach dedicated to your success.",
                   style: const TextStyle(fontFamily: "Custom", fontSize: 12),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
@@ -706,7 +712,7 @@ class _ClassDetailsState extends State<ClassDetails> {
 
   Widget _offer(int selectedIndex) {
     final levels = _trainingDetail?.levels ?? [];
-    
+
     if (levels.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -724,7 +730,11 @@ class _ClassDetailsState extends State<ClassDetails> {
     final title = selectedLevel.title ?? "";
     final details = selectedLevel.details ?? "";
 
-    final hasOffer = aboutTitle.isNotEmpty || mainTitle.isNotEmpty || title.isNotEmpty || details.isNotEmpty;
+    final hasOffer =
+        aboutTitle.isNotEmpty ||
+        mainTitle.isNotEmpty ||
+        title.isNotEmpty ||
+        details.isNotEmpty;
 
     if (!hasOffer) {
       return const SizedBox.shrink();
@@ -768,14 +778,20 @@ class _ClassDetailsState extends State<ClassDetails> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  title.isNotEmpty ? title : "50% discount on your first month's registration!",
+                  title.isNotEmpty
+                      ? title
+                      : "50% discount on your first month's registration!",
                   style: const TextStyle(fontFamily: "Custom", fontSize: 11),
                 ),
                 if (details.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
                     details,
-                    style: const TextStyle(fontFamily: "Custom", fontSize: 10, color: Colors.grey),
+                    style: const TextStyle(
+                      fontFamily: "Custom",
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ],
@@ -796,25 +812,39 @@ class _ClassDetailsState extends State<ClassDetails> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => enrollForm(
-                trainingId: widget.trainingId,
-                trainingTitle: _trainingDetail?.courseName,
-                levelId: selectedLevel?.id,
-                levelName: selectedLevel?.titleLevel,
-                price: selectedLevel?.price,
+          if (selectedLevel != null) {
+            print("Selected Level ID: ${selectedLevel.id}");
+            print("Selected Level Title: ${selectedLevel.titleLevel}");
+            print("Selected Level Price: ${selectedLevel.price}");
+            print("Selected Level Description: ${selectedLevel.description}");
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => enrollForm(
+                  trainingId: widget.trainingId,
+                  trainingTitle: _trainingDetail?.courseName,
+                  levelId: selectedLevel.id, // Pass the selected level's ID
+                  levelName: selectedLevel
+                      .titleLevel, // Pass the selected level's name
+                  price: selectedLevel.price, // Pass the selected level's price
+                  // If you need to pass more data, add them here
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No level selected'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
           minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
         child: const Text(
           "Enroll Now",
@@ -827,81 +857,79 @@ class _ClassDetailsState extends State<ClassDetails> {
       ),
     );
   }
-Widget _bottomBar() {
-  return FutureBuilder<ContactUsData?>(
-    future: _fetchContactInfo(),
-    builder: (context, snapshot) {
-      final contactInfo = snapshot.data;
-      final phoneNumber = contactInfo?.contactInfo ?? "09 123 456 789";
-      
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        color: const Color.fromARGB(255, 13, 27, 42),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Ready to Master the Court?",
-              style: TextStyle(
-                fontFamily: "Custom",
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 67, 251, 74),
+
+  Widget _bottomBar() {
+    return FutureBuilder<ContactUsData?>(
+      future: _fetchContactInfo(),
+      builder: (context, snapshot) {
+        final contactInfo = snapshot.data;
+        final phoneNumber = contactInfo?.contactInfo ?? "09 123 456 789";
+
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          color: const Color.fromARGB(255, 13, 27, 42),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Ready to Master the Court?",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 67, 251, 74),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              "Contact us to book your free trial session.",
-              style: TextStyle(
-                fontFamily: "Custom",
-                fontSize: 11,
-                color: Colors.white70,
+              const SizedBox(height: 4),
+              const Text(
+                "Contact us to book your free trial session.",
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  fontSize: 11,
+                  color: Colors.white70,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () {
-                // Optionally add phone call functionality
-                print("Contact number tapped: $phoneNumber");
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.phone, size: 14, color: Colors.white70),
-                  const SizedBox(width: 4),
-                  Text(
-                    phoneNumber,
-                    style: const TextStyle(
-                      fontFamily: "Custom",
-                      fontSize: 11,
-                      color: Colors.white70,
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () {
+                  // Optionally add phone call functionality
+                  print("Contact number tapped: $phoneNumber");
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.phone, size: 14, color: Colors.white70),
+                    const SizedBox(width: 4),
+                    Text(
+                      phoneNumber,
+                      style: const TextStyle(
+                        fontFamily: "Custom",
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-// Add this method to fetch contact info
-Future<ContactUsData?> _fetchContactInfo() async {
-  try {
-    final result = await ContactusApi.getGeneralInfo();
-    if (result['success'] == true) {
-      return result['data'] as ContactUsData;
-    }
-    return null;
-  } catch (e) {
-    print("Error fetching contact info: $e");
-    return null;
+            ],
+          ),
+        );
+      },
+    );
   }
-}
 
-
-
+  // Add this method to fetch contact info
+  Future<ContactUsData?> _fetchContactInfo() async {
+    try {
+      final result = await ContactusApi.getGeneralInfo();
+      if (result['success'] == true) {
+        return result['data'] as ContactUsData;
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching contact info: $e");
+      return null;
+    }
+  }
 }

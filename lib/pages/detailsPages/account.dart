@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/changepassword.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/contactus.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/deleteaccount.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/editprofile.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/help.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
@@ -143,7 +144,9 @@ class _AccountPageState extends State<AccountPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Changepassword()),
+                    MaterialPageRoute(
+                      builder: (context) => const Changepassword(),
+                    ),
                   );
                 },
               ),
@@ -158,6 +161,20 @@ class _AccountPageState extends State<AccountPage> {
               //     );
               //   },
               // ),
+              if (isLoggedIn)
+                AccountMenuItem(
+                  icon: Icons.delete,
+                  title: "Delete Account",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DeleteAccount(sessionService: widget.sessionService),
+                      ),
+                    );
+                  },
+                ),
               AccountMenuItem(
                 icon: Icons.policy,
                 title: "Terms & Policies",

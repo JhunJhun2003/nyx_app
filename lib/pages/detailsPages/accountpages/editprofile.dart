@@ -38,6 +38,8 @@ class _EditProfileState extends State<EditProfile> {
   File? _selectedImage;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
+  String? _warning;  // Add warning variable
+  bool _showWarning = false;  // Add this
 
   @override
   void initState() {
@@ -55,7 +57,7 @@ class _EditProfileState extends State<EditProfile> {
     super.dispose();
   }
 
-  // ✅ Show session expired dialog
+  //  Show session expired dialog
   void _showSessionExpiredDialog() {
     showDialog(
       context: context,
@@ -90,7 +92,7 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-  // ✅ Check token validity
+  //  Check token validity
   bool _isTokenValid() {
     if (widget.sessionService.isTokenExpired()) {
       _showSessionExpiredDialog();
@@ -107,12 +109,13 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _loadUserProfile() async {
     if (!mounted) return;
     
-    // ✅ Check token first
+    //  Check token first
     if (!_isTokenValid()) return;
     
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _showWarning = false;
     });
 
     try {
@@ -131,7 +134,7 @@ class _EditProfileState extends State<EditProfile> {
 
       final result = await Api.getMyProfile(token: token);
 
-      // ✅ Check for unauthorized/token expired
+      // Check for unauthorized/token expired
       if (result['unauthorized'] == true || result['success'] == false && result['message']?.contains('expired') == true) {
         await widget.sessionService.logout();
         _showSessionExpiredDialog();
@@ -143,6 +146,8 @@ class _EditProfileState extends State<EditProfile> {
           if (result['success']) {
             _originalUserData = result['data'];
             _populateForm(_originalUserData!);
+            _warning = result['warning'];
+            _showWarning = _warning == 'true';
             _errorMessage = null;
           } else {
             _errorMessage = result['message'];
@@ -215,7 +220,7 @@ class _EditProfileState extends State<EditProfile> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Image selected. Click Save Changes to upload.'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.grey,
           ),
         );
       }
@@ -241,7 +246,7 @@ class _EditProfileState extends State<EditProfile> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Photo taken. Click Save Changes to upload.'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.grey,
           ),
         );
       }
@@ -292,7 +297,7 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _updateProfile() async {
-    // ✅ Check token before updating
+    //  Check token before updating
     if (!_isTokenValid()) return;
     
     setState(() {
@@ -316,7 +321,7 @@ class _EditProfileState extends State<EditProfile> {
 
       final response = await _updateProfileWithImage(token);
 
-      // ✅ Check for unauthorized
+      //  Check for unauthorized
       if (response['unauthorized'] == true) {
         await widget.sessionService.logout();
         _showSessionExpiredDialog();
@@ -331,7 +336,7 @@ class _EditProfileState extends State<EditProfile> {
         
         if (newToken != null && newToken.isNotEmpty) {
           await widget.sessionService.saveToken(newToken);
-          print('✅ New token saved');
+          print(' New token saved');
         }
 
         if (mounted) {
@@ -394,8 +399,8 @@ class _EditProfileState extends State<EditProfile> {
       );
     }
     
-    print("📡 Update URL: $uri");
-    print("📦 Fields: ${request.fields}");
+    print(" Update URL: $uri");
+    print(" Fields: ${request.fields}");
     
     try {
       final streamedResponse = await request.send();
@@ -429,6 +434,41 @@ class _EditProfileState extends State<EditProfile> {
       print("Update Profile Error: $e");
       return {'status': 'error', 'message': 'Network error: $e'};
     }
+  }
+
+  // Warning Banner Widget
+  Widget _warningBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Warning!!!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.orange,
+                  ),
+                ),
+               
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -467,6 +507,7 @@ class _EditProfileState extends State<EditProfile> {
                     _AccPhoto(),
                     const SizedBox(height: 5),
                     _edit(),
+                    if (_showWarning) _warningBanner(),  // Add warning banner
                     const SizedBox(height: 10),
                     _buildTextField("Name", _nameController),
                     _buildTextField("Date of Birth", _dobController, isDate: true),
@@ -582,7 +623,7 @@ class _EditProfileState extends State<EditProfile> {
       child: ElevatedButton(
         onPressed: _isUpdating ? null : _updateProfile,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.grey[800],
           minimumSize: const Size(200, 45),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
@@ -594,7 +635,7 @@ class _EditProfileState extends State<EditProfile> {
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
-            : const Text('Save Changes', style: TextStyle(fontSize: 16)),
+            : const Text('Save Changes', style: TextStyle(fontSize: 16 , color: Colors.white)),
       ),
     );
   }

@@ -267,115 +267,116 @@ class Api {
     }
   }
 
-  static Future<Map<String, dynamic>> getMyProfile({
-    required String token,
-  }) async {
-    final Uri uri = Uri.parse("${Constant.API_URL}/myprofile/showprofile");
+ static Future<Map<String, dynamic>> getMyProfile({
+  required String token,
+}) async {
+  final Uri uri = Uri.parse("${Constant.API_URL}/myprofile/showprofile");
 
-    try {
-      final Map<String, String> authHeaders = {
-        ...Constant.headers,
-        'Authorization': 'Bearer $token',
+  try {
+    final Map<String, String> authHeaders = {
+      ...Constant.headers,
+      'Authorization': 'Bearer $token',
+    };
+
+    final http.Response response = await http
+        .get(uri, headers: authHeaders)
+        .timeout(const Duration(seconds: 30));
+
+    print("Profile Response Status: ${response.statusCode}");
+    print("Profile Response Body: ${response.body}");
+
+    // Check for 401 Unauthorized
+    if (response.statusCode == 401) {
+      return {
+        'success': false,
+        'unauthorized': true,
+        'message': 'Session expired. Please login again.',
       };
-
-      final http.Response response = await http
-          .get(uri, headers: authHeaders)
-          .timeout(const Duration(seconds: 30));
-
-      print("Profile Response Status: ${response.statusCode}");
-      print("Profile Response Body: ${response.body}");
-
-      // ✅ Check for 401 Unauthorized
-      if (response.statusCode == 401) {
-        return {
-          'success': false,
-          'unauthorized': true,
-          'message': 'Session expired. Please login again.',
-        };
-      }
-
-      // ✅ Check for 500 error with token expired message
-      if (response.statusCode == 500 &&
-          response.body.contains('TokenExpiredError')) {
-        return {
-          'success': false,
-          'unauthorized': true,
-          'message': 'Session expired. Please login again.',
-        };
-      }
-
-      // ✅ Check if response is HTML instead of JSON
-      if (response.body.trim().startsWith('<!DOCTYPE') ||
-          response.body.trim().startsWith('<html')) {
-        // Check if it's a token expired error
-        if (response.body.contains('TokenExpiredError')) {
-          return {
-            'success': false,
-            'unauthorized': true,
-            'message': 'Session expired. Please login again.',
-          };
-        }
-        return {
-          'success': false,
-          'message': 'Server error: Invalid response format',
-        };
-      }
-
-      if (response.body.isEmpty) {
-        return {'success': false, 'message': 'Empty response from server'};
-      }
-
-      dynamic responseData;
-      try {
-        responseData = jsonDecode(response.body);
-      } catch (e) {
-        // If JSON parsing fails, check if it's an HTML error page
-        if (response.body.contains('TokenExpiredError')) {
-          return {
-            'success': false,
-            'unauthorized': true,
-            'message': 'Session expired. Please login again.',
-          };
-        }
-        return {
-          'success': false,
-          'message': 'Invalid response format from server',
-        };
-      }
-
-      if (responseData is Map<String, dynamic>) {
-        bool isSuccess = responseData['status'] == 'success';
-
-        if (isSuccess &&
-            responseData['result'] != null &&
-            responseData['result'] is List) {
-          final List resultList = responseData['result'];
-          if (resultList.isNotEmpty) {
-            final userData = resultList[0];
-
-            return {
-              'success': true,
-              'data': userData,
-              'message': 'Profile fetched successfully',
-            };
-          } else {
-            return {'success': false, 'message': 'No user data found'};
-          }
-        }
-
-        return {
-          'success': false,
-          'message': responseData['message'] ?? 'Failed to fetch profile',
-        };
-      }
-
-      return {'success': false, 'message': 'Invalid response format'};
-    } catch (e) {
-      print("Get Profile Error: $e");
-      return {'success': false, 'message': 'Network error: $e'};
     }
-  }
 
+    // Check for 500 error with token expired message
+    if (response.statusCode == 500 &&
+        response.body.contains('TokenExpiredError')) {
+      return {
+        'success': false,
+        'unauthorized': true,
+        'message': 'Session expired. Please login again.',
+      };
+    }
+
+    // Check if response is HTML instead of JSON
+    if (response.body.trim().startsWith('<!DOCTYPE') ||
+        response.body.trim().startsWith('<html')) {
+      if (response.body.contains('TokenExpiredError')) {
+        return {
+          'success': false,
+          'unauthorized': true,
+          'message': 'Session expired. Please login again.',
+        };
+      }
+      return {
+        'success': false,
+        'message': 'Server error: Invalid response format',
+      };
+    }
+
+    if (response.body.isEmpty) {
+      return {'success': false, 'message': 'Empty response from server'};
+    }
+
+    dynamic responseData;
+    try {
+      responseData = jsonDecode(response.body);
+    } catch (e) {
+      if (response.body.contains('TokenExpiredError')) {
+        return {
+          'success': false,
+          'unauthorized': true,
+          'message': 'Session expired. Please login again.',
+        };
+      }
+      return {
+        'success': false,
+        'message': 'Invalid response format from server',
+      };
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      bool isSuccess = responseData['status'] == 'success';
+
+      if (isSuccess &&
+          responseData['result'] != null &&
+          responseData['result'] is List) {
+        final List resultList = responseData['result'];
+        if (resultList.isNotEmpty) {
+          final userData = resultList[0];
+          
+          // Extract warning field from response
+          final warning = userData['warning']?.toString() ?? 'false';
+
+          return {
+            'success': true,
+            'data': userData,
+            'warning': warning,  // Add warning to response
+            'message': 'Profile fetched successfully',
+          };
+        } else {
+          return {'success': false, 'message': 'No user data found'};
+        }
+      }
+
+      return {
+        'success': false,
+        'message': responseData['message'] ?? 'Failed to fetch profile',
+      };
+    }
+
+    return {'success': false, 'message': 'Invalid response format'};
+  } catch (e) {
+    print("Get Profile Error: $e");
+    return {'success': false, 'message': 'Network error: $e'};
+  }
+}
   // Update profile
   static Future<Map<String, dynamic>> updateProfile({
     required String token,

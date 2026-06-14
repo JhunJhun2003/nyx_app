@@ -31,6 +31,46 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
 
+  // Myanmar phone number validation function
+  String? _validateMyanmarPhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Please enter phone number";
+    }
+    
+    // Remove any spaces, dashes, or special characters
+    String cleanedNumber = value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
+    
+    // Myanmar phone number patterns
+    // Telenor, Ooredoo, MPT, Mytel, and other operators
+    final RegExp myanmarPhoneRegex = RegExp(
+      r'^(09|\+959|\+?959)[0-9]{7,9}$',
+    );
+    
+    // Specific patterns for different operators (optional - for more strict validation)
+    final RegExp mptRegex = RegExp(r'^(09|\\+959)(2[0-9]{7}|5[0-9]{7}|7[0-9]{7}|8[0-9]{7})$');
+    final RegExp telenorRegex = RegExp(r'^(09|\\+959)(9[0-9]{7}|4[0-9]{7})$');
+    final RegExp ooredooRegex = RegExp(r'^(09|\\+959)(6[0-9]{7}|3[0-9]{7})$');
+    final RegExp mytelRegex = RegExp(r'^(09|\\+959)(1[0-9]{7}|2[0-9]{7})$');
+    
+    // Check if number matches any Myanmar phone pattern
+    if (!myanmarPhoneRegex.hasMatch(cleanedNumber)) {
+      return "Please enter a valid Myanmar phone number (e.g., 09XXXXXXXXX or 959XXXXXXXX)";
+    }
+    
+    // Check length (Myanmar phone numbers are usually 9-11 digits including 09)
+    if (cleanedNumber.startsWith('09')) {
+      if (cleanedNumber.length != 10 && cleanedNumber.length != 11) {
+        return "Myanmar phone number must be 10-11 digits including '09'";
+      }
+    } else if (cleanedNumber.startsWith('959')) {
+      if (cleanedNumber.length != 11 && cleanedNumber.length != 12) {
+        return "Myanmar phone number must be 11-12 digits including '959'";
+      }
+    }
+    
+    return null;
+  }
+
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -172,7 +212,7 @@ class _SignupPageState extends State<SignupPage> {
                 color: Color.fromARGB(255, 255, 255, 255),
               ),
               decoration: InputDecoration(
-                hintText: "Phone Number* (11 digits)",
+                hintText: "Phone Number (09XXXXXXXXX)",
                 hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: const Color.fromARGB(255, 13, 27, 42),
@@ -181,21 +221,11 @@ class _SignupPageState extends State<SignupPage> {
                   borderSide: BorderSide.none,
                 ),
                 prefixIcon: const Icon(Icons.phone, color: Colors.white70),
+                helperText: "Example: 0971234567 or 95971234567",
+                helperStyle: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
               keyboardType: TextInputType.phone,
-              maxLength: 11,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Please enter phone number";
-                }
-                if (value.length != 11) {
-                  return "Phone number must be exactly 11 digits";
-                }
-                if (!RegExp(r'^[0-9]{11}$').hasMatch(value)) {
-                  return "Phone number must contain only numbers";
-                }
-                return null;
-              },
+              validator: _validateMyanmarPhoneNumber,
             ),
             const SizedBox(height: 10),
             TextFormField(

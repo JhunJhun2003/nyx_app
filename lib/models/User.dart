@@ -9,6 +9,7 @@ class User {
   final String? address;
   final String? createdAt;
   final String? updatedAt;
+  final String? warning;  // Add warning field
 
   User({
     this.id,
@@ -20,6 +21,7 @@ class User {
     this.address,
     this.createdAt,
     this.updatedAt,
+    this.warning,  // Add this
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class User {
       address: json['address']?.toString(),
       createdAt: json['created_at']?.toString(),
       updatedAt: json['updated_at']?.toString(),
+      warning: json['warning']?.toString(),  // Add this
     );
   }
 
@@ -49,6 +52,7 @@ class User {
       'address': address,
       'created_at': createdAt,
       'updated_at': updatedAt,
+      'warning': warning,  // Add this
     };
   }
 }
