@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:nyxproject/models/Contactus.dart';
 
 class ContactusApi {
-  static const String baseUrl = 'http://38.60.216.25:5001/api';
+  static const String baseUrl = 'http://130.94.23.58:5001/api';
   
   static Future<Map<String, dynamic>> getGeneralInfo() async {
     try {
