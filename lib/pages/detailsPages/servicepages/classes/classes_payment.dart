@@ -232,6 +232,17 @@ class _classesPaymentState extends State<classesPayment> {
       final token = sessionService.getToken();
 
       final Uri uri = Uri.parse("${Constant.API_URL}/training/addstudenttraining");
+      // Validate training IDs before sending
+      if ((trainingProgramId == null || trainingProgramId == 0) || (trainingLevelId == null || trainingLevelId == 0)) {
+        setState(() {
+          _isProcessing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid training program or level selected'), backgroundColor: Colors.red),
+        );
+        print('Enrollment aborted: trainingProgramId=$trainingProgramId, trainingLevelId=$trainingLevelId');
+        return;
+      }
       final request = http.MultipartRequest('POST', uri);
 
       if (token != null && token.isNotEmpty) {
@@ -245,9 +256,13 @@ class _classesPaymentState extends State<classesPayment> {
       request.fields['email'] = email;
       request.fields['age'] = age;
       request.fields['address'] = address;
-      request.fields['training_program_id'] = trainingProgramId?.toString() ?? '';
-      request.fields['training_level_id'] = trainingLevelId?.toString() ?? '';
+      request.fields['training_program_id'] = trainingProgramId!.toString();
+      request.fields['training_level_id'] = trainingLevelId!.toString();
       request.fields['payment_id'] = selectedPaymentId!;
+
+      // Debug: print assembled fields to console to aid server-side debugging
+      print('Submitting enrollment with fields: ');
+      request.fields.forEach((k, v) => print('  $k: $v'));
 
       // Add payment image
       request.files.add(
