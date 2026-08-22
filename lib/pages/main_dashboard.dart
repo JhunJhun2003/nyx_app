@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; 
+import 'package:nyxproject/pages/detailsPages/servicepages/walkin.dart';
+import 'package:provider/provider.dart';
 import 'package:nyxproject/pages/detailsPages/dashboard.dart';
 import 'package:nyxproject/pages/detailsPages/services.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
@@ -11,11 +12,11 @@ import 'package:nyxproject/services/cart_service.dart';
 class MainDashboard extends StatefulWidget {
   final SessionService sessionService;
   final CartService? cartService;
-  
+
   const MainDashboard({
-    super.key, 
-    required this.sessionService, 
-     this.cartService,
+    super.key,
+    required this.sessionService,
+    this.cartService,
   });
 
   @override
@@ -35,14 +36,10 @@ class _MainDashboardState extends State<MainDashboard> {
         sessionService: widget.sessionService,
         cartService: widget.cartService,
       ),
-      ShopPage(
-        cartService: widget.cartService,
-      ),
+      ShopPage(cartService: widget.cartService),
       const Services(),
-      const CartPage(),
-      AccountPage(
-        sessionService: widget.sessionService,
-      ),
+      const WalkInScreen(),
+      AccountPage(sessionService: widget.sessionService),
     ];
   }
 
@@ -55,10 +52,7 @@ class _MainDashboardState extends State<MainDashboard> {
             _header(),
             const SizedBox(height: 0),
             Expanded(
-              child: IndexedStack(
-                index: currentPageIndex,
-                children: _pages,
-              ),
+              child: IndexedStack(index: currentPageIndex, children: _pages),
             ),
           ],
         ),
@@ -78,7 +72,10 @@ class _MainDashboardState extends State<MainDashboard> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: "Shop"),
           BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Services"),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.directions_walk_outlined),
+            label: "Walk-In",
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
         ],
       ),
@@ -148,7 +145,7 @@ class _MainDashboardState extends State<MainDashboard> {
               //   ),
               // ),
               // IconButton(
-              //   onPressed: () {}, 
+              //   onPressed: () {},
               //   icon: const Icon(Icons.notifications_none, color: Colors.white),
               // ),
               Stack(
@@ -159,8 +156,11 @@ class _MainDashboardState extends State<MainDashboard> {
                       setState(() {
                         currentPageIndex = 3; // Cart page index
                       });
-                    }, 
-                    icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                    },
+                    icon: const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                    ),
                   ),
                   // Cart badge
                   Consumer<CartService>(
