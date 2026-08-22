@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nyxproject/pages/detailsPages/cart.dart';
-import 'package:nyxproject/pages/detailsPages/shoppages/details.dart';
 import 'package:provider/provider.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/services/cart_service.dart';
@@ -22,18 +21,27 @@ class _ProductDetailsState extends State<ProductDetails> {
   List<Product> _relatedProducts = [];
   bool _isLoadingRelated = true;
 
-  // Check if product is in stock
+  int? get _availableStock => int.tryParse(widget.product.totalStock.trim());
+
   bool get _isInStock {
-    if (widget.product.totalStock != "0") {
-      final stock = int.tryParse(widget.product.totalStock);
-      if (stock != null) {
-        return stock > 0;
-      }
+    final stock = _availableStock;
+    if (stock != null) {
+      return stock > 0;
     }
-    if (widget.product.status != null) {
-      return widget.product.status!.toLowerCase() != "out of stock";
-    }
-    return true;
+    return widget.product.status.toLowerCase() != "out of stock";
+  }
+
+  int get _quantityInCart {
+    final cart = Provider.of<CartService>(context, listen: false);
+    final itemIndex = cart.items.indexWhere(
+      (item) => item.product.id == widget.product.id,
+    );
+    return itemIndex == -1 ? 0 : cart.items[itemIndex].quantity;
+  }
+
+  int get _remainingStock {
+    final stock = _availableStock;
+    return stock == null ? 0 : stock - _quantityInCart;
   }
 
   String get _stockStatusText {
@@ -260,7 +268,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                   ),
                 ),
                 IconButton(
-                  onPressed: _isInStock
+                  onPressed: _isInStock && _quantity < _remainingStock
                       ? () {
                           setState(() {
                             _quantity++;
@@ -419,6 +427,14 @@ class _ProductDetailsState extends State<ProductDetails> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              if (_availableStock != null)
+                Text(
+                  " (${_availableStock} available)",
+                  style: const TextStyle(
+                    fontFamily: "Custom",
+                    color: Colors.white,
+                  ),
+                ),
             ],
           ),
         ],
@@ -811,7 +827,7 @@ class _ProductDetailsState extends State<ProductDetails> {
           Row(
             children: [
               ElevatedButton(
-                onPressed: _isInStock && !_isAddingToCart
+                onPressed: _isInStock && _remainingStock > 0 && !_isAddingToCart
                     ? () => _addToCart(cartService)
                     : null,
                 style: ElevatedButton.styleFrom(
@@ -843,10 +859,10 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   void _addToCart(CartService cartService) {
-    if (!_isInStock) {
+    if (!_isInStock || (_availableStock != null && _quantity > _remainingStock)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('This product is out of stock!'),
+          content: Text('This quantity exceeds the available stock.'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),

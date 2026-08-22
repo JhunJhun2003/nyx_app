@@ -11,12 +11,24 @@ class CartService extends ChangeNotifier {
   double get totalPrice => _items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
   
   void addToCart(Product product, {int quantity = 1}) {
+    final stock = int.tryParse(product.totalStock.trim());
+    if (quantity <= 0 || (stock != null && stock <= 0)) {
+      return;
+    }
+
     final existingIndex = _items.indexWhere((item) => item.product.id == product.id);
-    
+    final currentQuantity = existingIndex == -1 ? 0 : _items[existingIndex].quantity;
+    final allowedQuantity = stock == null
+        ? quantity
+        : (stock - currentQuantity).clamp(0, quantity);
+    if (allowedQuantity == 0) {
+      return;
+    }
+
     if (existingIndex != -1) {
-      _items[existingIndex].quantity += quantity;
+      _items[existingIndex].quantity += allowedQuantity;
     } else {
-      _items.add(CartItem(product: product, quantity: quantity));
+      _items.add(CartItem(product: product, quantity: allowedQuantity));
     }
     
     notifyListeners();
@@ -33,7 +45,8 @@ class CartService extends ChangeNotifier {
       if (quantity <= 0) {
         _items.removeAt(index);
       } else {
-        _items[index].quantity = quantity;
+        final stock = int.tryParse(_items[index].product.totalStock.trim());
+        _items[index].quantity = stock == null ? quantity : quantity.clamp(1, stock);
       }
       notifyListeners();
     }
