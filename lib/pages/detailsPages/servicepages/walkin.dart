@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // import 'package:nyxproject/pages/detailsPages/servicepages/rental/court_details.dart';
-import 'package:nyxproject/pages/detailsPages/servicepages/walkinCourt.dart';
+import 'package:nyxproject/pages/detailsPages/servicepages/walkin_courtNumber.dart';
 // import 'package:nyxproject/models/Venue.dart';
 import 'package:path/path.dart';
 
@@ -12,6 +12,8 @@ class WalkInScreen extends StatefulWidget {
 }
 
 class _WalkInScreenState extends State<WalkInScreen> {
+  final name = "Court One";
+  final price = "25,000 Ks";
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -110,7 +112,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
         // );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => WalkInCourt()),
+          MaterialPageRoute(builder: (context) => WalkInCourts()),
         );
       },
       child: Container(
@@ -155,7 +157,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
               left: screenWidth * 0.025,
               bottom: screenHeight * 0.08,
               child: Text(
-                "Court One",
+                name,
                 style: TextStyle(
                   fontSize: screenWidth * 0.045,
                   fontFamily: "Custom",
@@ -168,7 +170,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
               right: screenWidth * 0.025,
               bottom: screenHeight * 0.08,
               child: Text(
-                "25,000 Ks",
+                price,
                 style: TextStyle(
                   fontSize: screenWidth * 0.04,
                   fontFamily: "Custom",
