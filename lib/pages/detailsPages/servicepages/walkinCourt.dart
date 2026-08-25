@@ -1,9 +1,11 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:nyxproject/models/WalkInCourt.dart' as model;
 import 'package:nyxproject/pages/detailsPages/servicepages/walkinbooking_form.dart';
 
 class WalkInCourt extends StatefulWidget {
-  WalkInCourt({super.key});
+  final model.WalkInCourt court;
+
+  const WalkInCourt({super.key, required this.court});
 
   @override
   State<WalkInCourt> createState() => _WalkInCourtState();
@@ -13,15 +15,29 @@ class _WalkInCourtState extends State<WalkInCourt> {
   DateTime selectedDate = DateTime.now();
   int currentIndex = 0;
   bool _isChecked2 = false;
+  late final Map<String, int> equipmentQuantities;
+  late final Map<String, String> equipmentPrices;
+  late final Map<String, int> equipmentMaxQty;
+  late final Map<String, int> equipmentIds;
 
-  final _availableSlots = [
-    "6:00 - 7:00",
-    "7:30 - 8:30",
-    "9:00 - 10:00",
-    "16:00 - 17:00",
-    "17:30 - 18:30",
-    "19:00 - 20:00",
-  ];
+  @override
+  void initState() {
+    super.initState();
+    equipmentQuantities = {
+      for (final item in widget.court.equipment) item.name: 0,
+    };
+    equipmentPrices = {
+      for (final item in widget.court.equipment)
+        item.name: '${item.price} Ks/hour',
+    };
+    equipmentMaxQty = {
+      for (final item in widget.court.equipment) item.name: item.maxQuantity,
+    };
+    equipmentIds = {
+      for (final item in widget.court.equipment)
+        if (item.id != null) item.name: item.id!,
+    };
+  }
 
   List<DateTime> getAvailableDates() {
     List<DateTime> dates = [];
@@ -29,13 +45,6 @@ class _WalkInCourtState extends State<WalkInCourt> {
       dates.add(DateTime.now().add(Duration(days: i)));
     }
     return dates;
-  }
-
-  String _formatTime(String time) {
-    if (time.isEmpty) return "";
-    List<String> parts = time.split(':');
-    int hour = int.parse(parts[0]);
-    return "$hour:${parts[1]}";
   }
 
   @override
@@ -53,11 +62,13 @@ class _WalkInCourtState extends State<WalkInCourt> {
               SizedBox(height: screenHeight * 0.01),
               _location(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
+              _courtDetails(screenWidth),
+              SizedBox(height: screenHeight * 0.01),
               _bookDate(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
               _timeSchedule(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
-              _schedule(screenWidth, screenHeight),
+              _rentalSection(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
               _valid(screenWidth, screenHeight),
               _confirm(screenWidth, screenHeight),
@@ -95,7 +106,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Badminton Court",
+                widget.court.courtName,
                 style: TextStyle(
                   fontFamily: "Custom",
                   color: Colors.white,
@@ -104,7 +115,9 @@ class _WalkInCourtState extends State<WalkInCourt> {
                 ),
               ),
               Text(
-                "25,000 Ks / hour",
+                widget.court.walkInPrice == null
+                    ? "Walk-in price unavailable"
+                    : "${widget.court.walkInPrice} Ks / hour",
                 style: TextStyle(
                   fontFamily: "Custom",
                   color: Colors.white70,
@@ -135,7 +148,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
           SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Text(
-              "No.(111), Hlaing Township, Yangon.",
+              widget.court.venueName,
               style: TextStyle(
                 fontFamily: "Custom",
                 fontSize: screenWidth * 0.04,
@@ -156,13 +169,69 @@ class _WalkInCourtState extends State<WalkInCourt> {
       decoration: BoxDecoration(),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          "assets/images/badminton_court.jpg",
+        child: widget.court.courtImages.isNotEmpty
+            ? Image.network(
+          widget.court.courtImages.first,
           fit: BoxFit.cover,
           height: screenHeight * 0.25,
           width: screenWidth,
+          errorBuilder: (context, error, stackTrace) => _fallbackImage(
+            screenWidth,
+            screenHeight,
+          ),
+        )
+            : _fallbackImage(screenWidth, screenHeight),
+      ),
+    );
+  }
+
+  Widget _courtDetails(double screenWidth) {
+    final court = widget.court;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              _detailRow('Status', court.status),
+              _detailRow('Court ID', court.courtId?.toString()),
+              _detailRow('Walk-in ID', court.walkInId?.toString()),
+              _detailRow(
+                'Opening hours',
+                court.openAt != null && court.closeAt != null
+                    ? '${court.openAt} - ${court.closeAt}'
+                    : null,
+              ),
+              _detailRow('Capacity', court.capacity?.toString()),
+              _detailRow('Booked', court.bookedCount?.toString()),
+              _detailRow('Remaining', court.remainingCapacity?.toString()),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _detailRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value ?? 'Not available'),
+        ],
+      ),
+    );
+  }
+
+  Widget _fallbackImage(double screenWidth, double screenHeight) {
+    return Image.asset(
+      "assets/images/badminton_court.jpg",
+      fit: BoxFit.cover,
+      height: screenHeight * 0.25,
+      width: screenWidth,
     );
   }
 
@@ -305,34 +374,101 @@ class _WalkInCourtState extends State<WalkInCourt> {
         vertical: screenHeight * 0.01,
         horizontal: screenWidth * 0.03,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+);
+  }
+
+  Widget _rentalSection(double screenWidth, double screenHeight) {
+    if (equipmentQuantities.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+      padding: EdgeInsets.all(screenWidth * 0.03),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 13, 27, 42),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.timer,
-            color: const Color.fromARGB(255, 71, 250, 77),
-            size: screenWidth * 0.07,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Equipment Rental',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Custom',
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'Optional',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: screenWidth * 0.03),
-          Expanded(
-            child: Text(
-              "Select Time Slot",
-              style: TextStyle(
-                fontFamily: "Custom",
-                fontSize: screenWidth * 0.04,
-                fontWeight: FontWeight.w500,
+          SizedBox(height: screenHeight * 0.015),
+          ...equipmentQuantities.keys.map(
+            (equipment) => Padding(
+              padding: EdgeInsets.only(bottom: screenHeight * 0.01),
+              child: _equipmentRow(
+                equipment,
+                equipmentPrices[equipment]!,
+                equipmentMaxQty[equipment]!,
+                screenWidth,
               ),
             ),
           ),
-          // if (selectedTimeSlot != null)
-          //   Text(
-          //     "1 selected",
-          //     style: TextStyle(
-          //       color: Colors.red,
-          //       fontSize: screenWidth * 0.035,
-          //       fontWeight: FontWeight.w500,
-          //     ),
-          //   ),
+        ],
+      ),
+    );
+  }
+
+  Widget _equipmentRow(
+    String name,
+    String price,
+    int maxQuantity,
+    double screenWidth,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.035),
+            ),
+          ),
+          Text(price, style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.035)),
+          IconButton(
+            onPressed: equipmentQuantities[name]! > 0
+                ? () => setState(
+                    () => equipmentQuantities[name] = equipmentQuantities[name]! - 1,
+                  )
+                : null,
+            icon: const Icon(Icons.remove, color: Colors.white, size: 18),
+          ),
+          Text(
+            '${equipmentQuantities[name]}',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            onPressed: equipmentQuantities[name]! < maxQuantity
+                ? () => setState(() => equipmentQuantities[name] = equipmentQuantities[name]! + 1)
+                : null,
+            icon: const Icon(Icons.add, color: Colors.white, size: 18),
+          ),
         ],
       ),
     );
@@ -353,10 +489,23 @@ class _WalkInCourtState extends State<WalkInCourt> {
           ),
         ),
         onPressed: () {
-          // _checkLoginAndProceed();
+          final bookingData = {
+            'courtName': widget.court.courtName,
+            'courtPrice': double.tryParse(widget.court.walkInPrice ?? '0') ?? 0,
+            'selectedDate': selectedDate,
+            'equipmentQuantities': equipmentQuantities,
+            'equipmentPrices': equipmentPrices,
+            'equipmentIds': equipmentIds,
+            'venueId': widget.court.venueId,
+            'courtId': widget.court.courtId,
+          };
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => WalkInBookingForm()),
+            MaterialPageRoute(
+              builder: (context) => WalkInBookingForm(
+                bookingData: bookingData,
+              ),
+            ),
           );
         },
         child: Text(
@@ -402,113 +551,4 @@ class _WalkInCourtState extends State<WalkInCourt> {
     );
   }
 
-  Widget _schedule(double screenWidth, double screenHeight) {
-    // if (_isLoadingSlots) {
-    //   return const Padding(
-    //     padding: EdgeInsets.all(20),
-    //     child: Center(child: CircularProgressIndicator()),
-    //   );
-    // }
-    // if (_slotsError != null) {
-    //   return Padding(
-    //     padding: const EdgeInsets.all(20),
-    //     child: Center(
-    //       child: Column(
-    //         children: [
-    //           Text(
-    //             "Error!",
-    //             style: const TextStyle(color: Colors.red),
-    //             textAlign: TextAlign.center,
-    //           ),
-    //           const SizedBox(height: 10),
-    //           ElevatedButton(
-    //             onPressed: () {},
-    //             style: ElevatedButton.styleFrom(
-    //               backgroundColor: Colors.red,
-    //               foregroundColor: Colors.white,
-    //             ),
-    //             child: const Text('Retry'),
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //   );
-    // }
-    // if (_availableSlots.isEmpty) {
-    //   return const Padding(
-    //     padding: EdgeInsets.all(20),
-    //     child: Center(
-    //       child: Text(
-    //         "No available time slots for selected date",
-    //         style: TextStyle(color: Colors.red),
-    //       ),
-    //     ),
-    //   );
-    // }
-
-    // List<String> formattedSlots = _availableSlots.map((slot) {
-    //   return "${_formatTime(slot.startTime)} - ${_formatTime(slot.endTime)}";
-    // }).toList();
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-      child: Column(
-        children: [
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _availableSlots.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: screenWidth * 0.02,
-              mainAxisSpacing: screenHeight * 0.01,
-              childAspectRatio: 2.2,
-            ),
-            itemBuilder: (context, index) {
-              // bool isSelected = selectedTimeSlot == _availableSlots[index];
-              return GestureDetector(
-                onTap: () {
-                  // setState(() {
-                  //   selectedTimeSlot = _availableSlots[index];
-                  // });
-                },
-                child: Container(
-                  margin: EdgeInsets.all(screenWidth * 0.01),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade400, width: 2),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _availableSlots[index],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.035,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: "Custom",
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          // if (selectedTimeSlot != null)
-          //   Padding(
-          //     padding: EdgeInsets.only(top: screenHeight * 0.01),
-          //     child: Text(
-          //       "Selected: 1 session - Total: ${courtPrice.toStringAsFixed(0)} Ks",
-          //       style: TextStyle(
-          //         color: Colors.red,
-          //         fontSize: screenWidth * 0.035,
-          //         fontWeight: FontWeight.w500,
-          //       ),
-          //     ),
-          //   ),
-        ],
-      ),
-    );
-  }
 }
