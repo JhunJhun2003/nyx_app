@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/Util/RentelApi/CourtApi.dart';
 import 'package:nyxproject/models/Court.dart';
-import 'package:nyxproject/pages/detailsPages/servicepages/rental/court_details.dart';
-import 'package:nyxproject/pages/detailsPages/servicepages/walkinCourt.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/walkinbooking_form.dart';
 
 class WalkInCourts extends StatefulWidget {
@@ -328,16 +325,11 @@ class _WalkInCourtsState extends State<WalkInCourts> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          // _showCourtDetailsDialog(
-                          //   context,
-                          //   court,
-                          //   screenWidth,
-                          //   screenHeight,
-                          // );
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WalkInCourt(),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Court details are not available on this screen',
+                              ),
                             ),
                           );
                         },

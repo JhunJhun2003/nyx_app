@@ -294,13 +294,9 @@ class _WalkInCourtState extends State<WalkInCourt> {
                     selectedDate.year == dates[index].year;
                 return GestureDetector(
                   onTap: () {
-                    // if (mounted) {
-                    //   setState(() {
-                    //     selectedDate = dates[index];
-                    //     selectedTimeSlot = null;
-                    //   });
-                    //   _loadAvailableSlots();
-                    // }
+                    setState(() {
+                      selectedDate = dates[index];
+                    });
                   },
                   child: Container(
                     width: screenWidth * 0.17,
@@ -491,13 +487,18 @@ class _WalkInCourtState extends State<WalkInCourt> {
         onPressed: () {
           final bookingData = {
             'courtName': widget.court.courtName,
+            'walk_in_price': widget.court.walkInPrice,
             'courtPrice': double.tryParse(widget.court.walkInPrice ?? '0') ?? 0,
             'selectedDate': selectedDate,
+            'venue_name': widget.court.venueName,
+            'open_at': widget.court.openAt,
+            'close_at': widget.court.closeAt,
             'equipmentQuantities': equipmentQuantities,
             'equipmentPrices': equipmentPrices,
             'equipmentIds': equipmentIds,
             'venueId': widget.court.venueId,
             'courtId': widget.court.courtId,
+            'walkInId': widget.court.walkInId,
           };
           Navigator.push(
             context,

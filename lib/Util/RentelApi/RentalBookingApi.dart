@@ -20,7 +20,6 @@ class RentalBookingApi {
     required String token,
   }) async {
     try {
-      // Use the correct endpoint (single 'l')
       final Uri uri = Uri.parse("${Constant.API_URL}/rental/addmobilerentalbooking");
       final request = http.MultipartRequest('POST', uri);
 

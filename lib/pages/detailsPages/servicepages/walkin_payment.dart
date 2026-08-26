@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nyxproject/Util/Constant.dart';
 import 'package:nyxproject/Util/PaymentApi.dart';
-import 'package:nyxproject/Util/RentelApi/RentalBookingApi.dart';
+import 'package:nyxproject/Util/RentelApi/WalkinBookinApi.dart';
 import 'package:nyxproject/models/Payment.dart';
-import 'package:nyxproject/models/RentalBooking.dart';
+import 'package:nyxproject/models/WalkinBookin.dart';
 import 'package:nyxproject/pages/detailsPages/servicepages/walkin_slip.dart';
 import 'package:nyxproject/services/session_service.dart';
 import 'package:provider/provider.dart';
-import 'package:nyxproject/pages/detailsPages/servicepages/rental/rental_slip.dart';
 
 class WalkinPayment extends StatefulWidget {
   final Map<String, dynamic>? bookingData;
@@ -74,17 +73,25 @@ class _WalkinPaymentState extends State<WalkinPayment> {
         bookingDate = bookingData['date'] ?? "N/A";
       }
 
-      // Get time slot
-      timeSlot =
-          bookingData['timeSlot'] ??
-          (bookingData['selectedTimeSlot'] != null
-              ? "${_formatTime(bookingData['selectedTimeSlot'].startTime)} - ${_formatTime(bookingData['selectedTimeSlot'].endTime)}"
-              : "N/A");
+      final openAt = bookingData['open_at']?.toString();
+      final closeAt = bookingData['close_at']?.toString();
+      if (openAt != null && openAt.isNotEmpty &&
+          closeAt != null && closeAt.isNotEmpty) {
+        timeSlot = "${_formatTime(openAt)} - ${_formatTime(closeAt)}";
+      } else {
+        timeSlot =
+            bookingData['timeSlot'] ??
+            (bookingData['selectedTimeSlot'] != null
+                ? "${_formatTime(bookingData['selectedTimeSlot'].startTime)} - ${_formatTime(bookingData['selectedTimeSlot'].endTime)}"
+                : "N/A");
+      }
 
       numberOfSessions = bookingData['sessionCount']?.toString() ?? "1";
 
-      // Calculate fees
-      courtFees = "${(bookingData['sessionPrice'] ?? 0).toStringAsFixed(0)} Ks";
+      final walkInPrice = double.tryParse(
+        bookingData['walk_in_price']?.toString() ?? '',
+      );
+      courtFees = "${(walkInPrice ?? bookingData['sessionPrice'] ?? 0).toStringAsFixed(0)} Ks";
 
       // Calculate equipment rental fees
       int totalRentalFees = 0;
@@ -369,7 +376,7 @@ class _WalkinPaymentState extends State<WalkinPayment> {
               const SizedBox(height: 1),
               _information("Rental Items", rentalItems),
               const Divider(),
-              _information("Court Fees :", courtFees),
+              _information("Walk-in Fees :", courtFees),
               const SizedBox(height: 1),
               _information("Equipment Rental Fees :", equipmentFees),
               const Divider(),
@@ -414,7 +421,7 @@ class _WalkinPaymentState extends State<WalkinPayment> {
           ),
           const Expanded(
             child: Text(
-              "Wali-In Payment",
+              "Walk-in Payment",
               style: TextStyle(
                 fontFamily: "Custom",
                 color: Colors.white,
@@ -694,13 +701,7 @@ class _WalkinPaymentState extends State<WalkinPayment> {
             borderRadius: BorderRadius.circular(30),
           ),
         ),
-        // onPressed: _isProcessing ? null : _submitBookingToAPI,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => WalkInSlip()),
-          );
-        },
+        onPressed: _isProcessing ? null : _submitBookingToAPI,
         child: _isProcessing
             ? const SizedBox(
                 width: 20,
@@ -804,18 +805,17 @@ class _WalkinPaymentState extends State<WalkinPayment> {
       print("Court Time Slot IDs: $courtTimeSlotIds");
 
       // Submit to API
-      final result = await RentalBookingApi.addMobileRentalBooking(
+      final result = await WalkinBookinApi.addWalkInBooking(
         venueId: bookingData['venueId'] ?? '',
         courtId: bookingData['courtId'] ?? '',
-        paymentId: int.parse(selectedPaymentId!),
+        walkInId: bookingData['walkInId'] ?? 0,
+        paymentMethod: selectedPaymentMethod?.paymentMethod ?? '',
         date: formattedDate,
         name: customerName,
         phone: customerPhone,
-        remark: bookingData['remark'] ?? '',
-        courtTimeSlotIds: courtTimeSlotIds,
         department: 'equipment',
         items: items,
-        paymentImage: _transactionImage,
+        paymentImage: _transactionImage!,
         token: token ?? '',
       );
 
@@ -823,12 +823,12 @@ class _WalkinPaymentState extends State<WalkinPayment> {
 
       if (result['success'] == true) {
         // Parse response data
-        RentalBooking? rentalBooking;
+        WalkinBookin? walkinBooking;
         final responseData = result['data'];
         if (responseData != null && responseData['data'] != null) {
           final dataList = responseData['data'];
           if (dataList is List && dataList.isNotEmpty) {
-            rentalBooking = RentalBooking.fromJson(dataList[0]);
+            walkinBooking = WalkinBookin.fromJson(dataList[0]);
           }
         }
 
@@ -836,11 +836,11 @@ class _WalkinPaymentState extends State<WalkinPayment> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => rentalSlip(
+            builder: (context) => WalkInSlip(
               bookingData: bookingData,
               paymentMethod: selectedPaymentMethod?.paymentMethod ?? "N/A",
               transactionNumber: input.text.trim(),
-              rentalBooking: rentalBooking,
+              walkinBooking: walkinBooking,
               courtName: courtName,
             ),
           ),

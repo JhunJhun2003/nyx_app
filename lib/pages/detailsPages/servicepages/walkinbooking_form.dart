@@ -24,6 +24,7 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
   double courtFee = 0;
   double rentalFees = 0;
   double totalCharges = 0;
+  String selectedVenueName = "";
   String selectedCourtName = "";
   String selectedTimeSlotDisplay = "";
   String selectedDateDisplay = "";
@@ -39,9 +40,16 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
   void _loadBookingData() {
     if (widget.bookingData != null) {
       setState(() {
+        selectedVenueName =
+          widget.bookingData!['venue_name']?.toString() ??
+          widget.bookingData!['venueName']?.toString() ??
+          "";
         selectedCourtName = widget.bookingData!['courtName'] ?? "";
-        sessionPrice = widget.bookingData!['sessionPrice'] ?? 0;
-        courtFee = widget.bookingData!['courtPrice'] ?? sessionPrice;
+        final walkInPrice = double.tryParse(
+          widget.bookingData!['walk_in_price']?.toString() ?? '',
+        );
+        sessionPrice = walkInPrice ?? widget.bookingData!['sessionPrice'] ?? 0;
+        courtFee = sessionPrice;
         totalCharges = widget.bookingData!['totalCharges'] ?? 0;
 
         // Format date
@@ -52,12 +60,21 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
           dobController.text = selectedDateDisplay;
         }
 
-        // Format time slot
-        var timeSlot = widget.bookingData!['selectedTimeSlot'];
-        if (timeSlot != null) {
+        // Use the venue opening hours supplied by the previous page.
+        final openAt = widget.bookingData!['open_at']?.toString();
+        final closeAt = widget.bookingData!['close_at']?.toString();
+        if (openAt != null && closeAt != null) {
           selectedTimeSlotDisplay =
-              "${_formatTime(timeSlot.startTime)} - ${_formatTime(timeSlot.endTime)}";
+              "${_formatTime(openAt)} - ${_formatTime(closeAt)}";
           TimeSlot = selectedTimeSlotDisplay;
+        } else {
+          // Format time slot when opening hours are unavailable.
+          var timeSlot = widget.bookingData!['selectedTimeSlot'];
+          if (timeSlot != null) {
+            selectedTimeSlotDisplay =
+                "${_formatTime(timeSlot.startTime)} - ${_formatTime(timeSlot.endTime)}";
+            TimeSlot = selectedTimeSlotDisplay;
+          }
         }
 
         // Load equipment quantities
@@ -161,7 +178,7 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
               _displaySelectedTimeSlot(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.015),
               _formInput1(
-                "Court Fee (per hour)",
+                "Walkin Fee (per day)",
                 "Auto Fill",
                 null,
                 screenWidth,
@@ -214,6 +231,36 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            "Selected Venue",
+            style: TextStyle(
+              color: const Color.fromARGB(255, 13, 27, 42),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Custom',
+              fontSize: screenWidth * 0.045,
+            ),
+          ),
+          SizedBox(height: screenHeight * 0.008),
+
+          Container(
+            height: screenHeight * 0.06,
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 13, 27, 42),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                selectedVenueName,
+                style: TextStyle(
+                  fontFamily: "Custom",
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.04,
+                ),
+              ),
+            ),
+          ),
+                    Text(
             "Selected Court",
             style: TextStyle(
               color: const Color.fromARGB(255, 13, 27, 42),
@@ -254,7 +301,7 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Selected Time Slot",
+            "Time",
             style: TextStyle(
               color: const Color.fromARGB(255, 13, 27, 42),
               fontWeight: FontWeight.w500,
@@ -524,10 +571,13 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
 
           final updatedBookingData = {
             'courtName': selectedCourtName,
+            'walk_in_price': widget.bookingData?['walk_in_price'],
             'courtPrice': courtFee,
             'sessionPrice': sessionPrice,
             'selectedDate': widget.bookingData?['selectedDate'],
             'selectedTimeSlot': widget.bookingData?['selectedTimeSlot'],
+            'open_at': widget.bookingData?['open_at'],
+            'close_at': widget.bookingData?['close_at'],
             // 'timeSlotIds': timeSlotIds,
             'sessionCount': widget.bookingData?['sessionCount'] ?? 1,
             'totalCharges': totalCharges,
@@ -541,6 +591,7 @@ class _WalkInBookingFormState extends State<WalkInBookingForm> {
             'phone': phoneController.text,
             'venueId': widget.bookingData?['venueId'] ?? 1,
             'courtId': widget.bookingData?['courtId'] ?? 1,
+            'walkInId': widget.bookingData?['walkInId'],
           };
           // Use rentalPayment as a constructor (with capital R and P)
           Navigator.push(

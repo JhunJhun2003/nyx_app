@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nyxproject/models/RentalBooking.dart';
+import 'package:nyxproject/models/WalkinBookin.dart';
 import 'package:nyxproject/pages/main_dashboard.dart';
 import 'package:nyxproject/services/cart_service.dart';
 import 'package:nyxproject/services/session_service.dart';
@@ -9,7 +9,7 @@ class WalkInSlip extends StatefulWidget {
   final Map<String, dynamic>? bookingData;
   final String? paymentMethod;
   final String? transactionNumber;
-  final RentalBooking? rentalBooking;
+  final WalkinBookin? walkinBooking;
   final String? courtName;
 
   const WalkInSlip({
@@ -17,7 +17,7 @@ class WalkInSlip extends StatefulWidget {
     this.bookingData,
     this.paymentMethod,
     this.transactionNumber,
-    this.rentalBooking,
+    this.walkinBooking,
     this.courtName,
   });
 
@@ -39,7 +39,7 @@ class _WalkInSlipState extends State<WalkInSlip> {
       ":" +
       DateTime.now().minute.toString().padLeft(2, '0');
 
-  List<RentalItem> _rentalItems = [];
+  List<WalkinItem> _rentalItems = [];
 
   @override
   void initState() {
@@ -51,9 +51,9 @@ class _WalkInSlipState extends State<WalkInSlip> {
     final bookingData = widget.bookingData ?? {};
 
     // First try to get from API response model
-    if (widget.rentalBooking != null &&
-        widget.rentalBooking!.items.isNotEmpty) {
-      _rentalItems = widget.rentalBooking!.items
+    if (widget.walkinBooking != null &&
+        widget.walkinBooking!.items.isNotEmpty) {
+      _rentalItems = widget.walkinBooking!.items
           .where((item) => item.quantity != null && item.quantity! > 0)
           .toList();
     }
@@ -77,7 +77,7 @@ class _WalkInSlipState extends State<WalkInSlip> {
               : (entry.value as num).toInt();
 
           _rentalItems.add(
-            RentalItem(
+            WalkinItem(
               equipment: entry.key,
               quantity: quantityValue,
               price: priceValue,
@@ -101,15 +101,15 @@ class _WalkInSlipState extends State<WalkInSlip> {
     final bookingData = widget.bookingData ?? {};
     final paymentMethod = widget.paymentMethod ?? "N/A";
     final transactionNumber = widget.transactionNumber ?? "N/A";
-    final rentalBooking = widget.rentalBooking;
+    final walkinBooking = widget.walkinBooking;
 
     // Extract booking details
     String courtName =
         widget.courtName ??
-        rentalBooking?.courtName ??
+        walkinBooking?.courtName ??
         bookingData['courtName']?.toString() ??
         'Court';
-    String selectedDate = rentalBooking?.date ?? "";
+    String selectedDate = walkinBooking?.date ?? "";
     if (selectedDate.isEmpty && bookingData['selectedDate'] != null) {
       DateTime dateObj = bookingData['selectedDate'];
       selectedDate =
@@ -118,25 +118,21 @@ class _WalkInSlipState extends State<WalkInSlip> {
       selectedDate = bookingData['date']?.toString() ?? date;
     }
 
-    // Get time slot display - priority: API response > booking data
-    String timeSlot = "";
-
-    // Try to get from API response first
-    if (rentalBooking != null && rentalBooking.items.isNotEmpty) {
-      // If API has time slot info, you can extract it
-      timeSlot = bookingData['timeSlotDisplay'] ?? "N/A";
-    } else {
-      // Get from booking data
-      timeSlot =
-          bookingData['timeSlotDisplay'] ??
-          (bookingData['selectedTimeSlot'] != null
-              ? "${_formatTime(bookingData['selectedTimeSlot'].startTime)} - ${_formatTime(bookingData['selectedTimeSlot'].endTime)}"
-              : "N/A");
-    }
+    final openAt = bookingData['open_at']?.toString();
+    final closeAt = bookingData['close_at']?.toString();
+    final hasOpeningHours =
+      openAt != null && openAt.isNotEmpty &&
+      closeAt != null && closeAt.isNotEmpty;
+    final timeSlot = hasOpeningHours
+      ? "${_formatTime(openAt)} - ${_formatTime(closeAt)}"
+      : bookingData['timeSlotDisplay'] ??
+        (bookingData['selectedTimeSlot'] != null
+          ? "${_formatTime(bookingData['selectedTimeSlot'].startTime)} - ${_formatTime(bookingData['selectedTimeSlot'].endTime)}"
+          : "N/A");
 
     int sessions = bookingData['sessionCount'] ?? 1;
     double totalAmount =
-        rentalBooking?.total?.toDouble() ??
+        walkinBooking?.total.toDouble() ??
         (bookingData['totalCharges'] is double
             ? bookingData['totalCharges']
             : (bookingData['totalCharges'] ?? 0).toDouble());
@@ -253,7 +249,7 @@ class _WalkInSlipState extends State<WalkInSlip> {
           const SizedBox(height: 8),
           _infoRow("Booking Date :", selectedDate),
           const SizedBox(height: 8),
-          _infoRow("Time Slot :", timeSlot),
+          _infoRow("Open & Close :", timeSlot),
           const SizedBox(height: 8),
           _infoRow("Sessions :", "$sessions session${sessions > 1 ? 's' : ''}"),
           const SizedBox(height: 15),
@@ -337,7 +333,7 @@ class _WalkInSlipState extends State<WalkInSlip> {
     );
   }
 
-  Widget _rentalItemRow(RentalItem item) {
+  Widget _rentalItemRow(WalkinItem item) {
     int priceValue = item.price ?? 0;
     int quantity = item.quantity ?? 0;
     int totalPrice = item.total ?? (priceValue * quantity);
