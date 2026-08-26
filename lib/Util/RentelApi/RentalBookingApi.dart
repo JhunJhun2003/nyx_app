@@ -12,7 +12,7 @@ class RentalBookingApi {
     required String date,
     required String name,
     required String phone,
-    required String remark,
+    String? remark,
     required List<int> courtTimeSlotIds,
     required String department,
     required List<Map<String, dynamic>> items,
@@ -38,7 +38,7 @@ class RentalBookingApi {
       request.fields['date'] = date;
       request.fields['name'] = name;
       request.fields['phone'] = phone;
-      request.fields['remark'] = remark;
+      request.fields['remark'] = remark ?? '-';
       request.fields['court_time_slot_ids'] = courtTimeSlotIdsJson;
       request.fields['department'] = department;
       request.fields['items'] = itemsJson;

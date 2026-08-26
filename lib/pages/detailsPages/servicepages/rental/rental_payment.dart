@@ -806,7 +806,7 @@ Future<void> _submitBookingToAPI() async {
       date: formattedDate,
       name: customerName,
       phone: customerPhone,
-      remark: bookingData['remark'] ?? '',
+      remark: (bookingData['remark'] as String?)?.isNotEmpty == true ? bookingData['remark'] : '-',
       courtTimeSlotIds: courtTimeSlotIds,
       department: 'equipment',
       items: items,

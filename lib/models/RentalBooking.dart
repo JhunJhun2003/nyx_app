@@ -34,7 +34,7 @@ class RentalBooking {
     }
     
     return RentalBooking(
-      id: _toInt(json['id']) ?? 0,
+      id: _toInt(json['booking_id'] ?? json['id']) ?? 0,
       venueName: json['venue_name']?.toString() ?? '',
       courtName: json['court_name']?.toString() ?? '',
       paymentMethod: json['payment_method']?.toString() ?? '',
