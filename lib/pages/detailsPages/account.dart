@@ -4,12 +4,11 @@ import 'package:nyxproject/pages/detailsPages/accountpages/changepassword.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/contactus.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/deleteaccount.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/editprofile.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/help.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myclasses.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/myBookingList.dart';
 // import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/orderHistory.dart';
-import 'package:nyxproject/pages/detailsPages/accountpages/setting.dart';
+import 'package:nyxproject/pages/detailsPages/accountpages/walkinBooking.dart';
 import 'package:nyxproject/pages/detailsPages/accountpages/terms.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/account_menu_item.dart';
 import 'package:nyxproject/pages/detailsPages/widgets/accountWidgets/account_section.dart';
@@ -82,6 +81,18 @@ class _AccountPageState extends State<AccountPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const orderHistory(),
+                    ),
+                  );
+                },
+              ),
+              AccountMenuItem(
+                icon: Icons.shopping_cart_outlined,
+                title: "Walkin Booking List",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Walkinbooking(),
                     ),
                   );
                 },
