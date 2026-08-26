@@ -34,7 +34,11 @@ class WalkInCourt {
   factory WalkInCourt.fromJson(Map<String, dynamic> json) {
     final price = json['walk_in_price'];
     final images = json['court_images'];
-    final equipmentData = json['equipment'];
+    final equipmentData =
+        json['equipment'] ??
+        json['equipments'] ??
+        json['rental_equipment'] ??
+        json['rental_items'];
 
     return WalkInCourt(
       venueId: (json['venue_id'] as num?)?.toInt(),
@@ -52,13 +56,18 @@ class WalkInCourt {
       walkInId: (json['walk_in_id'] as num?)?.toInt(),
       bookedCount: (json['booked_count'] as num?)?.toInt(),
       remainingCapacity: (json['remaining_capacity'] as num?)?.toInt(),
-      equipment: equipmentData is List
-          ? equipmentData
-              .whereType<Map<String, dynamic>>()
-              .map(WalkInEquipment.fromJson)
-              .toList()
-          : const [],
+      equipment: _parseEquipment(equipmentData),
     );
+  }
+
+  static List<WalkInEquipment> _parseEquipment(dynamic value) {
+    if (value is! List) return const [];
+
+    return value
+        .whereType<Map<String, dynamic>>()
+        .map(WalkInEquipment.fromJson)
+        .where((item) => item.name.isNotEmpty)
+        .toList();
   }
 }
 
@@ -77,13 +86,26 @@ class WalkInEquipment {
 
   factory WalkInEquipment.fromJson(Map<String, dynamic> json) {
     final price = json['rental_price'] ?? json['price'];
-    final quantity = json['qty_total'] ?? json['quantity'] ?? json['max_qty'];
+    final quantity =
+        json['qty_total'] ??
+        json['quantity'] ??
+        json['max_qty'] ??
+        json['max_quantity'] ??
+        json['available_quantity'];
 
     return WalkInEquipment(
-      name: (json['product_name'] ?? json['name'])?.toString() ?? '',
+      name:
+          (json['product_name'] ?? json['equipment_name'] ?? json['name'])
+              ?.toString() ??
+          '',
       price: price?.toString() ?? '0',
-      maxQuantity: (quantity as num?)?.toInt() ?? 99,
-      id: (json['id'] ?? json['equipment_id'] as num?)?.toInt(),
+      maxQuantity: _toInt(quantity) ?? 99,
+      id: _toInt(json['id'] ?? json['equipment_id']),
     );
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 }

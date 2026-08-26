@@ -34,13 +34,28 @@ class WalkInCourtApi {
                 final venueCourts = venue['courts'];
                 if (venueCourts is! List) return <Map<String, dynamic>>[];
 
-                return venueCourts
-                    .whereType<Map<String, dynamic>>()
-                    .map((court) => {
-                      ...court,
-                      'venue_id': venue['venue_id'],
-                      'venue_name': venueName,
-                    });
+                return venueCourts.whereType<Map<String, dynamic>>().map((
+                  court,
+                ) {
+                  final courtEquipment =
+                      court['equipment'] ??
+                      court['equipments'] ??
+                      court['rental_equipment'] ??
+                      court['rental_items'];
+                  final venueEquipment =
+                      venue['equipment'] ??
+                      venue['equipments'] ??
+                      venue['rental_equipment'] ??
+                      venue['rental_items'];
+
+                  return {
+                    ...court,
+                    'venue_id': venue['venue_id'],
+                    'venue_name': venueName,
+                    if (courtEquipment is! List && venueEquipment is List)
+                      'equipment': venueEquipment,
+                  };
+                });
               })
               .toList();
         } else {

@@ -65,8 +65,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
               _courtDetails(screenWidth),
               SizedBox(height: screenHeight * 0.01),
               _bookDate(screenWidth, screenHeight),
-              SizedBox(height: screenHeight * 0.01),
-              _timeSchedule(screenWidth, screenHeight),
+
               SizedBox(height: screenHeight * 0.01),
               _rentalSection(screenWidth, screenHeight),
               SizedBox(height: screenHeight * 0.01),
@@ -171,15 +170,13 @@ class _WalkInCourtState extends State<WalkInCourt> {
         borderRadius: BorderRadius.circular(10),
         child: widget.court.courtImages.isNotEmpty
             ? Image.network(
-          widget.court.courtImages.first,
-          fit: BoxFit.cover,
-          height: screenHeight * 0.25,
-          width: screenWidth,
-          errorBuilder: (context, error, stackTrace) => _fallbackImage(
-            screenWidth,
-            screenHeight,
-          ),
-        )
+                widget.court.courtImages.first,
+                fit: BoxFit.cover,
+                height: screenHeight * 0.25,
+                width: screenWidth,
+                errorBuilder: (context, error, stackTrace) =>
+                    _fallbackImage(screenWidth, screenHeight),
+              )
             : _fallbackImage(screenWidth, screenHeight),
       ),
     );
@@ -370,7 +367,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
         vertical: screenHeight * 0.01,
         horizontal: screenWidth * 0.03,
       ),
-);
+    );
   }
 
   Widget _rentalSection(double screenWidth, double screenHeight) {
@@ -439,29 +436,57 @@ class _WalkInCourtState extends State<WalkInCourt> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.035),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                ),
+                Text(
+                  'Available: $maxQuantity',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.028,
+                  ),
+                ),
+              ],
             ),
           ),
-          Text(price, style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.035)),
+          Text(
+            price,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: screenWidth * 0.035,
+            ),
+          ),
           IconButton(
             onPressed: equipmentQuantities[name]! > 0
                 ? () => setState(
-                    () => equipmentQuantities[name] = equipmentQuantities[name]! - 1,
+                    () => equipmentQuantities[name] =
+                        equipmentQuantities[name]! - 1,
                   )
                 : null,
             icon: const Icon(Icons.remove, color: Colors.white, size: 18),
           ),
           Text(
             '${equipmentQuantities[name]}',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           IconButton(
             onPressed: equipmentQuantities[name]! < maxQuantity
-                ? () => setState(() => equipmentQuantities[name] = equipmentQuantities[name]! + 1)
+                ? () => setState(
+                    () => equipmentQuantities[name] =
+                        equipmentQuantities[name]! + 1,
+                  )
                 : null,
             icon: const Icon(Icons.add, color: Colors.white, size: 18),
           ),
@@ -471,8 +496,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
   }
 
   Widget _confirm(double screenWidth, double screenHeight) {
-    return Container(
-      margin: EdgeInsets.only(right: 30),
+    return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
@@ -503,9 +527,7 @@ class _WalkInCourtState extends State<WalkInCourt> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WalkInBookingForm(
-                bookingData: bookingData,
-              ),
+              builder: (context) => WalkInBookingForm(bookingData: bookingData),
             ),
           );
         },
@@ -551,5 +573,4 @@ class _WalkInCourtState extends State<WalkInCourt> {
       ),
     );
   }
-
 }
