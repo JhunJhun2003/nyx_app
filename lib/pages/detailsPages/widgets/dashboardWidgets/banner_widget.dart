@@ -25,44 +25,59 @@ class _BannerWidgetState extends State<BannerWidget> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CarouselSlider(
-          items: widget.images.map((item) => Container(
-            margin: const EdgeInsets.all(0),
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(item),
-                fit: BoxFit.cover
+          items: widget.images
+              .map(
+                (item) => Container(
+                  margin: const EdgeInsets.all(0),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: item.startsWith('http')
+                          ? NetworkImage(item)
+                          : AssetImage(item) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               )
-            ),
-          )).toList(), 
+              .toList(),
           options: CarouselOptions(
             height: 180,
             autoPlay: true,
             autoPlayInterval: const Duration(seconds: 5),
             autoPlayAnimationDuration: const Duration(milliseconds: 900),
             enlargeCenterPage: true,
-            aspectRatio: 16/9,
+            aspectRatio: 16 / 9,
             viewportFraction: 1,
             onPageChanged: (index, reason) {
               setState(() {
                 currentIndex = index;
               });
               widget.onPageChanged(index);
-            }
-          )
+            },
+          ),
         ),
-        const SizedBox(height: 5),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: widget.images.asMap().entries.map((item) => Container(
-            height: 7,
-            width: 7,
-            margin: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: currentIndex == item.key ? Colors.black : Colors.grey,
-            ),
-          )).toList(),
-        ),
+        if (widget.images.isNotEmpty) const SizedBox(height: 5),
+        if (widget.images.isNotEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: widget.images
+                .asMap()
+                .entries
+                .map(
+                  (item) => Container(
+                    height: 7,
+                    width: 7,
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: currentIndex == item.key
+                          ? Colors.black
+                          : Colors.grey,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
       ],
     );
   }

@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         title: 'Nyx Project',
         theme: ThemeData(primarySwatch: Colors.blue),
         home: SplashScreen(
-          // ✅ Show splash screen first
+          //  Show splash screen first
           sessionService: sessionService,
           cartService: cartService,
         ),

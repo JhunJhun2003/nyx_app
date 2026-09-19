@@ -1,7 +1,9 @@
 // lib/pages/dashboard.dart
 import 'package:flutter/material.dart';
+import 'package:nyxproject/Util/BannerApi/HomeBannerApi.dart';
 import 'package:nyxproject/Util/GetallproductApi.dart';
 import 'package:nyxproject/models/Category.dart';
+import 'package:nyxproject/models/HomeBanner.dart';
 import 'package:nyxproject/models/Product.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/categoryPage.dart';
 import 'package:nyxproject/pages/detailsPages/shoppages/tagPage.dart';
@@ -26,19 +28,16 @@ class DashBoard extends StatefulWidget {
 class _DashBoardState extends State<DashBoard> {
   List<Category> _categoriesList = [];
   List<Product> _allProducts = [];
+  List<HomeBanner> _banners = [];
 
   bool _isLoadingCategories = true;
   bool _isLoadingProducts = true;
+  bool _isLoadingBanners = true;
   bool _isRefreshing = false;
 
   String? _categoriesError;
   String? _productsError;
-  
-  List<String> images = [
-    "assets/classes/Badminton.png",
-    "assets/classes/Futsal.png",
-    "assets/classes/Tennis.png",
-  ];
+  String? _bannersError;
 
   @override
   void initState() {
@@ -64,7 +63,32 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Future<void> _loadAllData() async {
-    await Future.wait([_loadCategories(), _loadProducts()]);
+    await Future.wait([_loadBanners(), _loadCategories(), _loadProducts()]);
+  }
+
+  Future<void> _loadBanners() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingBanners = true;
+      _bannersError = null;
+    });
+
+    try {
+      final banners = await HomeBannerApi.getBanners();
+
+      if (!mounted) return;
+      setState(() {
+        _banners = banners;
+        _isLoadingBanners = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _bannersError = 'Error loading banners: $e';
+        _isLoadingBanners = false;
+      });
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -165,10 +189,18 @@ class _DashBoardState extends State<DashBoard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              BannerWidget(
-                images: images,
-                onPageChanged: (index) {},
-              ),
+              if (_isLoadingBanners && !_isRefreshing)
+                const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_bannersError != null)
+                const SizedBox(height: 40)
+              else if (_banners.isNotEmpty)
+                BannerWidget(
+                  images: _banners.map((banner) => banner.imagePath).toList(),
+                  onPageChanged: (index) {},
+                ),
               const SizedBox(height: 3),
               // const Divider(thickness: 1, height: 2),
               SectionHeader(
